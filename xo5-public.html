@@ -193,19 +193,16 @@ canvas{display:block; touch-action:none;}
 
 <script>
 /* =========================================================================
-   1) DÁN CONFIG FIREBASE CỦA BẠN VÀO ĐÂY (Firebase Console > Project settings
-      > General > Your apps > SDK setup and configuration).
-   2) Đổi ADMIN_EMAIL thành email tài khoản của BẠN (email bạn sẽ dùng để
-      đăng ký/đăng nhập trên chính web này). Chỉ email này mới thấy nút
-      "Quản trị" và xem được kết quả mọi trận đấu.
+   CẤU HÌNH FIREBASE DỰ ÁN MỚI
+   Dán đè config từ Firebase Console vào khối bên dưới nếu cần thay đổi.
    ========================================================================= */
 const firebaseConfig = {
-  apiKey: "AIzaSyDViyTQxszvmdGc5dJS79fCUoD21VbgXSo",
-  authDomain: "vua36maycongatuoi.firebaseapp.com",
-  projectId: "vua36maycongatuoi",
-  storageBucket: "vua36maycongatuoi.firebasestorage.app",
-  messagingSenderId: "160690935396",
-  appId: "1:160690935396:web:a1aa147d1f0fb169aff171"
+  apiKey: "AIzaSyB5JvBOd6bd41kS1tP9t0tlpROxU7vJciw",
+  authDomain: "caro-5dc87.firebaseapp.com",
+  projectId: "caro-5dc87",
+  storageBucket: "caro-5dc87.firebasestorage.app",
+  messagingSenderId: "144133411489",
+  appId: "1:144133411489:web:f69a34eef390419bf616e0"
 };
 const ADMIN_EMAIL = "duong158209@gmail.com";
 /* ========================================================================= */
@@ -268,7 +265,6 @@ auth.onAuthStateChanged(async user=>{
     const snap=await db.collection('users').doc(user.uid).get();
     const udata = snap.exists ? snap.data() : {};
     currentUsername = udata.username || user.email;
-    // Mã bạn bè: nếu tài khoản cũ chưa có, tạo từ uid và lưu lại (chỉ chạy 1 lần).
     myFriendCode = udata.code || user.uid.slice(-6).toUpperCase();
     if(!udata.code){ db.collection('users').doc(user.uid).set({code:myFriendCode},{merge:true}).catch(()=>{}); }
     if(snap.exists && udata.username){ db.collection('codes').doc(myFriendCode).set({uid:user.uid, name:udata.username}).catch(()=>{}); }
@@ -320,7 +316,6 @@ async function loadAdminMatches(){
     });
   }catch(e){ list.innerHTML='Lỗi tải dữ liệu (kiểm tra Firestore rules).'; }
 }
-// Danh sách tất cả tài khoản đã đăng ký — chỉ ADMIN_EMAIL mới thấy được mục này.
 async function loadAdminUsers(){
   const list=document.getElementById('adminList');
   list.innerHTML='Đang tải...';
@@ -351,7 +346,7 @@ async function recordMatch(result, mode, opponent){
     await db.collection('users').doc(currentUser.uid).update({
       [field]: firebase.firestore.FieldValue.increment(1)
     });
-  }catch(e){ /* ignore write errors silently for gameplay */ }
+  }catch(e){ }
 }
 
 // ---------- LỊCH SỬ ĐẤU (chỉ chế độ Online) ----------
@@ -505,8 +500,6 @@ async function declineFriendRequest(reqId){
   try{ await db.collection('friendRequests').doc(reqId).delete(); }catch(e){}
 }
 
-// Mời bạn bè vào chơi trực tiếp: tự tạo phòng + gửi mã phòng cho bạn qua
-// Firestore, bạn không cần nhập mã tay — chỉ cần bấm "Vào chơi" ở banner.
 async function inviteFriendToPlay(uid,name){
   document.getElementById('friendsScreen').style.display='none';
   setMode('online');
@@ -532,7 +525,7 @@ async function declineInvite(inviteId){
 }
 
 // =====================================================================
-// GAME LOGIC (bàn 64x64, vẽ bằng canvas, chơi máy / 2 người / online)
+// GAME LOGIC
 // =====================================================================
 const SIZE=32;
 const idx=(r,c)=>r*SIZE+c;
@@ -638,7 +631,6 @@ function endPointer(e, allowTap){
     }
     dragging=false;
   } else if(ptrs.size===1){
-    // nhả 1 ngón sau khi chụm: tiếp tục kéo bằng ngón còn lại, không tính là chạm
     const q=[...ptrs.values()][0];
     dragging=true; moved=true;
     startX=q.x; startY=q.y; startOffX=offX; startOffY=offY;
@@ -646,7 +638,6 @@ function endPointer(e, allowTap){
 }
 cv.addEventListener('pointerup', e=>endPointer(e,true));
 cv.addEventListener('pointercancel', e=>endPointer(e,false));
-// Cuộn chuột để zoom (máy tính)
 cv.addEventListener('wheel', e=>{
   e.preventDefault();
   const rect=cv.getBoundingClientRect();
@@ -680,7 +671,6 @@ function endGame(winner, cells){
   document.getElementById('scO').textContent=scores.O;
   document.getElementById('scD').textContent=scores.D;
   draw();
-  // Chế độ máy / 2 người: không lưu lịch sử (chỉ Online mới lưu).
 }
 function placeLocal(r,c,p){
   if(gameOver||board[idx(r,c)]!==0) return false;
@@ -889,10 +879,8 @@ async function onlineTap(r,c){
   if(!roomRef||gameOver||!mySeat||placingMove) return;
   const i=idx(r,c);
   const myVal = mySeat==='X'?1:2;
-  // Kiểm tra hợp lệ dựa trên state đã đồng bộ qua onSnapshot (turn/board luôn
-  // được cập nhật ngay khi có thay đổi thật từ server, nên dùng để check là an toàn).
-  if(turn!==myVal) return;   // chưa tới lượt mình
-  if(board[i]!==0) return;   // ô đã có quân
+  if(turn!==myVal) return;
+  if(board[i]!==0) return;
 
   placingMove=true;
   const newBoard=board.slice();
@@ -905,10 +893,6 @@ async function onlineTap(r,c){
   else { upd.turn = myVal===1?2:1; upd.status='playing'; }
 
   try{
-    // QUAN TRỌNG: dùng update() thường (không dùng runTransaction) — Firestore sẽ
-    // áp thay đổi vào cache cục bộ và bắn onSnapshot NGAY LẬP TỨC (trước khi server
-    // phản hồi), nên quân cờ của người vừa đánh hiện ra gần như tức thì, không còn
-    // phải chờ round-trip đầy đủ như transaction cũ. Đây chính là điểm gây delay trước đây.
     await roomRef.update(upd);
   }catch(e){
     statusEl.textContent='Có lỗi khi đánh, thử lại.';
