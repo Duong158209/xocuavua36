@@ -24,6 +24,9 @@ h1{font-size:1.05rem; text-align:center; margin:10px 0 8px;}
 .btn.hell.active{border-color:var(--danger); color:var(--danger);}
 .sideLbl{flex:none; align-self:center; font-size:.82rem; color:var(--sub); padding:0 2px 0 4px;}
 #sideX{color:var(--x);} #sideO{color:var(--o);}
+#botRow.four .btn{font-size:.8rem; padding:10px 2px;}
+#hellMem{text-align:center; font-size:.8rem; color:var(--sub); padding:0 8px 4px;}
+#hellMemReset{text-decoration:underline; cursor:pointer;}
 .btn:disabled{opacity:.45;}
 .btn.small{flex:none; padding:8px 12px; font-size:.82rem;}
 input.field{width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border); background:var(--panel); color:var(--text); font-size:.95rem; outline:none;}
@@ -129,9 +132,11 @@ canvas{display:block; touch-action:none;}
     <div class="score"><div class="lbl" style="color:var(--o)">O</div><div class="val" id="scO">0</div></div>
   </div>
   <div id="status">Lượt của X</div>
+  <div id="hellMem" class="hidden"></div>
   <div id="boardWrap"><canvas id="cv"></canvas></div>
-  <div class="row" style="padding-top:6px;">
+  <div class="row" id="botRow" style="padding-top:6px;">
     <div class="btn" id="zoomOut">Thu nhỏ −</div>
+    <div class="btn hidden" id="undoAi">↶ Đi lại</div>
     <div class="btn" id="newGame">Ván mới</div>
     <div class="btn" id="zoomIn">Phóng to +</div>
   </div>
@@ -347,12 +352,17 @@ const Hell=(()=>{
     }
     return -1;
   }
-  function think(){
+  function think(pen){
     hb=new Uint8Array(N); w1=new Uint8Array(4*N); w2=new Uint8Array(4*N); near=new Uint8Array(N);
     E=0; four1=0; four2=0; won=false;
     let stones=0;
     for(let i=0;i<N;i++) if(board[i]){ put(i,board[i]); stones++; }
-    if(!stones) return idx(SIZE>>1,SIZE>>1);
+    if(!stones){
+      const c0=idx(SIZE>>1,SIZE>>1), opts=[c0,c0+1,c0-1,c0+SIZE,c0-SIZE,c0+SIZE+1,c0-SIZE-1,c0+SIZE-1,c0-SIZE+1];
+      let bc=c0, bp=(pen&&pen[c0])||0;
+      for(let q=1;q<opts.length;q++){ const pp=(pen&&pen[opts[q]])||0; if(pp<bp){ bp=pp; bc=opts[q]; } }
+      return bc;
+    }
     deadline=performance.now()+HELL_TIME; aborted=false; nodes=0; vn=0;
     let m;
     if(four2>0&&(m=findFour(2))>=0) return m;      // thắng ngay
@@ -365,12 +375,13 @@ const Hell=(()=>{
     for(let depth=2;depth<=14;depth+=2){
       let alpha=-INF, bi=-1, bs=-INF, done=true;
       for(let j=0;j<order.length;j++){
-        const i=order[j];
+        const i=order[j], pn=(pen&&pen[i])||0;
         const w=put(i,2);
-        const sc=w?WINV:-nm(depth-1,-INF,-alpha,1,1,0);
+        const sc=w?WINV:-nm(depth-1,-INF,-(alpha+pn),1,1,0);
         undo(i);
         if(aborted){ done=false; break; }
-        if(sc>bs){ bs=sc; bi=i; }
+        const adj=sc>=WINV-100?sc:sc-pn;     // nước thắng chắc thì không bị trừ điểm
+        if(adj>bs){ bs=adj; bi=i; }
         if(bs>alpha) alpha=bs;
         if(w) break;
       }
@@ -460,6 +471,7 @@ function translateAuthErr(code){
 document.getElementById('logoutBtn').onclick=()=>auth.signOut();
 
 auth.onAuthStateChanged(async user=>{
+  hellMem=null; hellLearnDelta=null;
   if(user){
     currentUser=user;
     const snap=await db.collection('users').doc(user.uid).get();
@@ -929,6 +941,7 @@ function endGame(winner, cells){
   if(winner===1){scores.X++; statusEl.textContent='X thắng!';}
   else if(winner===2){scores.O++; statusEl.textContent='O thắng!';}
   else {scores.D++; statusEl.textContent='Hòa!';}
+  if(mode==='ai'&&difficulty==='hell'&&winner===mySide){ hellLearn(); statusEl.textContent+=' 🧠 Máy đã ghi nhớ ván thua này'; }
   document.getElementById('scX').textContent=scores.X;
   document.getElementById('scO').textContent=scores.O;
   document.getElementById('scD').textContent=scores.D;
@@ -948,21 +961,37 @@ function placeLocal(r,c,p){
   setStatus();
   return true;
 }
-function undoLocal(){
-  if(mode!=='local'||!moveHistory.length) return;
+function popMove(){
   const last=moveHistory.pop();
   board[idx(last.r,last.c)]=0;
   if(last.endedWin){
     if(last.endedWin===1){scores.X=Math.max(0,scores.X-1); document.getElementById('scX').textContent=scores.X;}
     else {scores.O=Math.max(0,scores.O-1); document.getElementById('scO').textContent=scores.O;}
+    if(mode==='ai'&&last.endedWin===mySide) hellUnlearn();   // rút lại bài học nếu mình đi lại nước thắng
   } else if(last.endedDraw){
     scores.D=Math.max(0,scores.D-1); document.getElementById('scD').textContent=scores.D;
   }
   gameOver=false; winCells=[];
   turn=last.p;
+  return last;
+}
+function afterUndo(){
   setStatus();
   const pm=moveHistory[moveHistory.length-1];
   setLastMove(pm?pm.r:null, pm?pm.c:null);
+}
+function undoLocal(){
+  if(mode!=='local'||!moveHistory.length) return;
+  popMove(); afterUndo();
+}
+// chơi với máy: lùi lại cả nước của máy lẫn nước của mình (hoặc hủy nước máy đang nghĩ)
+function undoAi(){
+  if(mode!=='ai'||!moveHistory.length) return;
+  const bs=3-mySide;
+  if(moveHistory[moveHistory.length-1].p===bs&&moveHistory.length<2) return; // chỉ có nước mở đầu của máy
+  hellCancel();
+  if(popMove().p===bs&&moveHistory.length) popMove();
+  afterUndo();
 }
 function cellTapped(r,c){
   if(mode==='ai'){
@@ -1016,7 +1045,7 @@ function aiMove(){
         const b=candidates().map(([r,c])=>[r,c,scoreCell(r,c,bs)]).sort((x,y)=>y[2]-x[2])[0];
         placeLocal(b[0],b[1],bs);
       } else placeLocal(Math.floor(i/SIZE), i%SIZE, bs);
-    }, bs);
+    }, bs, hellMemLoad().pen[posKey(board)]||null);
     return;
   }
   const cands=candidates();
@@ -1032,6 +1061,72 @@ function aiMove(){
   }
   placeLocal(pick[0],pick[1],bs);
 }
+// <<HELLMEM
+// Bộ nhớ ván thua của bot Địa ngục: sau mỗi lần thua, các nước máy đã đi trong ván đó bị trừ điểm
+// tại đúng thế cờ đó (nước càng gần cuối trừ càng nhiều, cộng dồn qua các lần thua).
+// Lần sau gặp lại thế cờ cũ máy sẽ ưu tiên nước khác nếu có nước tương đương.
+let hellMem=null, hellLearnDelta=null;
+function hellMemKey(){ return 'xo5_hell_mem_v1_'+(currentUser?currentUser.uid:'guest'); }
+function hellMemLoad(){
+  if(hellMem) return hellMem;
+  try{ const raw=localStorage.getItem(hellMemKey()); hellMem=raw?JSON.parse(raw):null; }catch(e){ hellMem=null; }
+  if(!hellMem||typeof hellMem!=='object'||!hellMem.pen) hellMem={n:0,pen:{}};
+  return hellMem;
+}
+function hellMemSave(){ try{ localStorage.setItem(hellMemKey(), JSON.stringify(hellMem)); }catch(e){} }
+function posKey(bd){
+  let h1=2166136261, h2=5381, n=0;
+  for(let i=0;i<bd.length;i++){
+    const v=bd[i]; if(!v) continue;
+    const x=i*2+(v-1)+1;
+    h1=Math.imul(h1^x,16777619)>>>0;
+    h2=(Math.imul(h2,33)+x)>>>0;
+    n++;
+  }
+  return n+'.'+h1.toString(36)+h2.toString(36);
+}
+function hellLearn(){
+  const bs=3-mySide, m=hellMemLoad();
+  const tmp=new Uint8Array(SIZE*SIZE), bm=[];
+  for(const mv of moveHistory){
+    if(mv.p===bs) bm.push([posKey(tmp), idx(mv.r,mv.c)]);
+    tmp[idx(mv.r,mv.c)]=mv.p;
+  }
+  const delta=[];
+  for(let j=0;j<bm.length;j++){
+    const back=bm.length-1-j;                 // 0 = nước cuối cùng của máy
+    const add=Math.max(120,600-80*back);
+    const k=bm[j][0], c=bm[j][1];
+    const e=m.pen[k]||(m.pen[k]={});
+    const old=e[c]||0, nv=Math.min(2500,old+add);
+    e[c]=nv; delta.push([k,c,nv-old]);
+  }
+  m.n++;
+  const keys=Object.keys(m.pen);
+  if(keys.length>6000) keys.slice(0,1500).forEach(k=>delete m.pen[k]);
+  hellLearnDelta=delta; hellMemSave(); updateHellMemUI();
+}
+function hellUnlearn(){
+  if(!hellLearnDelta||!hellMem) return;
+  for(const d of hellLearnDelta){
+    const e=hellMem.pen[d[0]]; if(!e) continue;
+    e[d[1]]=(e[d[1]]||0)-d[2];
+    if(e[d[1]]<=0) delete e[d[1]];
+    if(!Object.keys(e).length) delete hellMem.pen[d[0]];
+  }
+  hellMem.n=Math.max(0,hellMem.n-1); hellLearnDelta=null; hellMemSave(); updateHellMemUI();
+}
+function updateHellMemUI(){
+  const el=document.getElementById('hellMem');
+  const show=mode==='ai'&&difficulty==='hell';
+  el.classList.toggle('hidden',!show);
+  if(!show) return;
+  el.innerHTML='🧠 Bot đã học từ '+hellMemLoad().n+' ván thua · <span id="hellMemReset">Xóa trí nhớ</span>';
+  document.getElementById('hellMemReset').onclick=()=>{
+    if(confirm('Xóa toàn bộ những gì bot Địa ngục đã học?')){ hellMem={n:0,pen:{}}; hellLearnDelta=null; hellMemSave(); updateHellMemUI(); }
+  };
+}
+// HELLMEM>>
 // nếu mình chọn O thì máy (X) phải đi trước
 function startAiIfNeeded(){
   if(mode==='ai'&&mySide===2&&!gameOver&&turn===1&&!moveHistory.length) setTimeout(aiMove,300);
@@ -1043,19 +1138,19 @@ function hellCancel(){
   hellJob++;
   if(hellWorker){ try{hellWorker.terminate();}catch(e){} hellWorker=null; }
 }
-function hellThink(cb,bot){
+function hellThink(cb,bot,pen){
   const id=++hellJob;
   try{
     if(!hellWorker){
       const src=document.getElementById('hellSrc').textContent;
       const pre='const SIZE='+SIZE+';const idx=(r,c)=>r*SIZE+c;const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;let board=new Uint8Array(SIZE*SIZE);\n';
-      const post='\nonmessage=function(e){board=new Uint8Array(e.data.b);var m=-1;try{m=Hell.think();}catch(err){}postMessage({id:e.data.id,m:m});};';
+      const post='\nonmessage=function(e){board=new Uint8Array(e.data.b);var m=-1;try{m=Hell.think(e.data.pen);}catch(err){}postMessage({id:e.data.id,m:m});};';
       hellWorker=new Worker(URL.createObjectURL(new Blob([pre+src+post],{type:'application/javascript'})));
       hellWorker.onerror=()=>{ hellWorker=null; if(id===hellJob) cb(-1); };
     }
     hellWorker.onmessage=e=>{ if(e.data.id===hellJob) cb(e.data.m); };
     const snap=bot===1?board.map(v=>v?3-v:0):board.slice();
-    hellWorker.postMessage({id,b:snap.buffer},[snap.buffer]);
+    hellWorker.postMessage({id,b:snap.buffer,pen:pen||null},[snap.buffer]);
   }catch(err){ cb(-1); }
 }
 
@@ -1086,6 +1181,9 @@ function setMode(m){
   scores={X:0,O:0,D:0};
   document.getElementById('scX').textContent=0;document.getElementById('scO').textContent=0;document.getElementById('scD').textContent=0;
   document.getElementById('sideRow').classList.toggle('hidden', m==='local');
+  document.getElementById('undoAi').classList.toggle('hidden', m!=='ai');
+  document.getElementById('botRow').classList.toggle('four', m==='ai');
+  updateHellMemUI();
   document.getElementById('sideLbl').textContent = m==='online' ? 'Tạo phòng:' : 'Bạn chơi:';
   startAiIfNeeded();
 }
@@ -1099,6 +1197,7 @@ function setDiff(d){
   difficulty=d;
   ['diffEasy','diffMed','diffHard','diffHell'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById(d==='easy'?'diffEasy':d==='medium'?'diffMed':d==='hard'?'diffHard':'diffHell').classList.add('active');
+  updateHellMemUI();
 }
 document.getElementById('modeAi').onclick=()=>setMode('ai');
 document.getElementById('modeLocal').onclick=()=>setMode('local');
@@ -1108,6 +1207,7 @@ document.getElementById('diffMed').onclick=()=>setDiff('medium');
 document.getElementById('diffHard').onclick=()=>setDiff('hard');
 document.getElementById('diffHell').onclick=()=>setDiff('hell');
 document.getElementById('newGame').onclick=()=>{ if(mode==='online') onlineNewGame(); else { resetBoardState(); startAiIfNeeded(); } };
+document.getElementById('undoAi').onclick=undoAi;
 document.getElementById('sideX').onclick=()=>setSide(1);
 document.getElementById('sideO').onclick=()=>setSide(2);
 
