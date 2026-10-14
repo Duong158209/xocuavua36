@@ -52,6 +52,11 @@ canvas{display:block; touch-action:none;}
 .dot{position:absolute; top:-3px; right:-3px; width:9px; height:9px; border-radius:50%; background:var(--danger);}
 #friendsScreen,#historyScreen{position:fixed; inset:0; background:var(--bg); z-index:60; display:none; flex-direction:column; overflow:hidden;}
 .ftabs{display:flex; gap:6px; padding:0 12px 6px;}
+
+.btn.maint{border-color:var(--danger)!important; color:var(--danger)!important; opacity:.85; position:relative;}
+.btn.maint .maintTag{display:block; font-size:.65rem; font-weight:700; letter-spacing:.02em; line-height:1.1; margin-top:2px; color:var(--danger);}
+.btn.maint.active{background:#fdecea;}
+
 .ftab{position:relative; flex:1; padding:8px 4px; text-align:center; border-radius:10px; border:1.5px solid var(--border); background:var(--panel); font-size:.85rem; cursor:pointer; user-select:none;}
 .ftab.active{border-color:var(--accent); font-weight:700;}
 #friendsBody{flex:1; overflow:auto; padding:8px 12px;}
@@ -164,6 +169,7 @@ canvas{display:block; touch-action:none;}
   <div class="ftabs">
     <div class="ftab active" id="adminTabMatches">Trận đấu</div>
     <div class="ftab" id="adminTabUsers">Tài khoản</div>
+    <div class="ftab" id="adminTabFeatures">Tính năng</div>
   </div>
   <div id="adminList"></div>
 </div>
@@ -609,6 +615,7 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById('app').classList.remove('hidden');
     setTimeout(()=>{resize(); centerBoard(); draw();},0);
     startFriendListeners();
+    startFeatureListener();
   } else {
     currentUser=null;
     document.getElementById('app').classList.add('hidden');
@@ -618,6 +625,86 @@ auth.onAuthStateChanged(async user=>{
   }
 });
 
+// ---------- FEATURE FLAGS (admin bảo trì) ----------
+const FEATURE_DEFS = [
+  {key:'mode_ai', label:'Chơi với máy', el:'modeAi'},
+  {key:'mode_local', label:'2 người', el:'modeLocal'},
+  {key:'mode_online', label:'Online', el:'modeOnline'},
+  {key:'diff_easy', label:'Độ khó: Dễ', el:null},
+  {key:'diff_medium', label:'Độ khó: Vừa', el:null},
+  {key:'diff_hard', label:'Độ khó: Khó', el:null},
+  {key:'diff_hell', label:'🔥 Địa ngục', el:null},
+  {key:'friends', label:'Bạn bè', el:'friendsBtn'},
+  {key:'history', label:'Lịch sử', el:'historyBtn'},
+];
+const FEATURE_DEFAULTS = Object.fromEntries(FEATURE_DEFS.map(f=>[f.key, true]));
+let featureFlags = {...FEATURE_DEFAULTS};
+let unsubFeatures = null;
+
+function startFeatureListener(){
+  if(unsubFeatures) return;
+  unsubFeatures = db.collection('config').doc('features').onSnapshot(snap=>{
+    const d = snap.exists ? snap.data() : {};
+    featureFlags = {...FEATURE_DEFAULTS, ...d};
+    applyFeatureUI();
+  }, e=>{
+    featureFlags = {...FEATURE_DEFAULTS};
+    applyFeatureUI();
+  });
+}
+function isFeatureOn(key){ return featureFlags[key] !== false; }
+
+function markMaint(el, on, labelHtml){
+  if(!el) return;
+  el.classList.toggle('maint', !on);
+  // preserve structure: put tag under text
+  const tag = el.querySelector('.maintTag');
+  if(!on){
+    if(!tag){
+      const span = document.createElement('span');
+      span.className = 'maintTag';
+      span.textContent = 'Bảo trì';
+      el.appendChild(span);
+    }
+  } else if(tag) tag.remove();
+}
+
+let _applyingFeatures=false;
+function applyFeatureUI(){
+  if(_applyingFeatures) return;
+  _applyingFeatures=true;
+  try{
+  // mode buttons
+  markMaint(document.getElementById('modeAi'), isFeatureOn('mode_ai'));
+  markMaint(document.getElementById('modeLocal'), isFeatureOn('mode_local'));
+  markMaint(document.getElementById('modeOnline'), isFeatureOn('mode_online'));
+  markMaint(document.getElementById('friendsBtn'), isFeatureOn('friends'));
+  markMaint(document.getElementById('historyBtn'), isFeatureOn('history'));
+  // difficulty buttons (may be recreated)
+  const map = {easy:'diff_easy', medium:'diff_medium', hard:'diff_hard', hell:'diff_hell'};
+  ['diffEasy','diffMed','diffHard','diffHell'].forEach((id,i)=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const keys = ['diff_easy','diff_medium','diff_hard','diff_hell'];
+    markMaint(el, isFeatureOn(keys[i]));
+  });
+  // if current mode/diff disabled, bounce to a safe option
+  if(mode==='online' && !isFeatureOn('mode_online')) setMode('ai');
+  else if(mode==='local' && !isFeatureOn('mode_local')) setMode('ai');
+  else if(mode==='ai' && !isFeatureOn('mode_ai')){
+    if(isFeatureOn('mode_local')) setMode('local');
+    else if(isFeatureOn('mode_online')) setMode('online');
+  }
+  if(mode==='ai' && difficulty==='hell' && !isFeatureOn('diff_hell')) setDiff('medium');
+  if(mode==='ai' && difficulty==='hard' && !isFeatureOn('diff_hard')) setDiff('medium');
+  if(mode==='ai' && difficulty==='easy' && !isFeatureOn('diff_easy')) setDiff('medium');
+  if(mode==='ai' && difficulty==='medium' && !isFeatureOn('diff_medium')){
+    if(isFeatureOn('diff_easy')) setDiff('easy');
+    else if(isFeatureOn('diff_hard')) setDiff('hard');
+  }
+  } finally { _applyingFeatures=false; }
+}
+
 // ---------- ADMIN DASHBOARD ----------
 document.getElementById('adminBtn').onclick=()=>{
   document.getElementById('adminScreen').style.display='flex';
@@ -626,13 +713,37 @@ document.getElementById('adminBtn').onclick=()=>{
 document.getElementById('adminClose').onclick=()=>{document.getElementById('adminScreen').style.display='none';};
 document.getElementById('adminTabMatches').onclick=()=>showAdminTab('matches');
 document.getElementById('adminTabUsers').onclick=()=>showAdminTab('users');
+document.getElementById('adminTabFeatures').onclick=()=>showAdminTab('features');
 
 let adminTab='matches';
 function showAdminTab(t){
   adminTab=t;
   document.getElementById('adminTabMatches').classList.toggle('active', t==='matches');
   document.getElementById('adminTabUsers').classList.toggle('active', t==='users');
-  if(t==='matches') loadAdminMatches(); else loadAdminUsers();
+  document.getElementById('adminTabFeatures').classList.toggle('active', t==='features');
+  if(t==='matches') loadAdminMatches();
+  else if(t==='users') loadAdminUsers();
+  else loadAdminFeatures();
+}
+function loadAdminFeatures(){
+  const list=document.getElementById('adminList');
+  list.innerHTML='<div style="color:var(--sub); font-size:.82rem; padding:4px 0 10px;">Tắt tính năng → người chơi thấy nút đỏ + chữ «Bảo trì». Bật lại bất cứ lúc nào.</div>';
+  FEATURE_DEFS.forEach(f=>{
+    const on = isFeatureOn(f.key);
+    const row=document.createElement('div');
+    row.className='mrow';
+    row.style.alignItems='center';
+    row.innerHTML=`<span><b>${escapeHtml(f.label)}</b><br><span style="color:var(--sub); font-size:.75rem;">${on?'Đang mở':'Đang bảo trì'}</span></span>
+      <div class="smallbtn ${on?'decline':'accept'}" style="min-width:88px; text-align:center;">${on?'Đóng':'Mở lại'}</div>`;
+    row.querySelector('.smallbtn').onclick=async()=>{
+      try{
+        const next = {...featureFlags, [f.key]: !on};
+        await db.collection('config').doc('features').set(next, {merge:true});
+        // snapshot will refresh UI
+      }catch(e){ alert('Không lưu được (kiểm tra Firestore rules cho config/features).'); }
+    };
+    list.appendChild(row);
+  });
 }
 async function loadAdminMatches(){
   const list=document.getElementById('adminList');
@@ -686,6 +797,7 @@ async function recordMatch(result, mode, opponent){
 
 // ---------- LỊCH SỬ ĐẤU (chỉ chế độ Online) ----------
 document.getElementById('historyBtn').onclick=()=>{
+  if(!isFeatureOn('history')){ statusEl.textContent='Lịch sử đang bảo trì.'; return; }
   document.getElementById('historyScreen').style.display='flex';
   loadHistory();
 };
@@ -715,6 +827,7 @@ async function loadHistory(){
 
 // ---------- FRIENDS & INVITES ----------
 document.getElementById('friendsBtn').onclick=()=>{
+  if(!isFeatureOn('friends')){ statusEl.textContent='Bạn bè đang bảo trì.'; return; }
   document.getElementById('friendsScreen').style.display='flex';
   showFriendTab('list');
 };
@@ -1282,6 +1395,9 @@ function hellThink(cb,bot,pen){
 const subRow=document.getElementById('subRow');
 function resetBoardState(){hellCancel(); board=new Uint8Array(SIZE*SIZE); lastMove=null; turn=1; gameOver=false; winCells=[]; moveHistory=[]; setStatus(); draw();}
 function setMode(m){
+  if(m==='ai' && !isFeatureOn('mode_ai')){ statusEl.textContent='Chơi với máy đang bảo trì.'; return; }
+  if(m==='local' && !isFeatureOn('mode_local')){ statusEl.textContent='Chế độ 2 người đang bảo trì.'; return; }
+  if(m==='online' && !isFeatureOn('mode_online')){ statusEl.textContent='Online đang bảo trì.'; return; }
   mode=m;
   ['modeAi','modeLocal','modeOnline'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById(m==='ai'?'modeAi':m==='local'?'modeLocal':'modeOnline').classList.add('active');
@@ -1310,6 +1426,7 @@ function setMode(m){
   document.getElementById('botRow').classList.toggle('four', m==='ai');
   updateHellMemUI();
   document.getElementById('sideLbl').textContent = m==='online' ? 'Tạo phòng:' : 'Bạn chơi:';
+  applyFeatureUI();
   startAiIfNeeded();
 }
 function setSide(sd){
@@ -1319,6 +1436,10 @@ function setSide(sd){
   if(mode==='ai'){ resetBoardState(); startAiIfNeeded(); }
 }
 function setDiff(d){
+  if(d==='easy' && !isFeatureOn('diff_easy')){ statusEl.textContent='Độ khó Dễ đang bảo trì.'; return; }
+  if(d==='medium' && !isFeatureOn('diff_medium')){ statusEl.textContent='Độ khó Vừa đang bảo trì.'; return; }
+  if(d==='hard' && !isFeatureOn('diff_hard')){ statusEl.textContent='Độ khó Khó đang bảo trì.'; return; }
+  if(d==='hell' && !isFeatureOn('diff_hell')){ statusEl.textContent='Địa ngục đang bảo trì.'; return; }
   difficulty=d;
   ['diffEasy','diffMed','diffHard','diffHell'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById(d==='easy'?'diffEasy':d==='medium'?'diffMed':d==='hard'?'diffHard':'diffHell').classList.add('active');
