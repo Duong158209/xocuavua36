@@ -229,23 +229,53 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 
     <div id="status" style="text-align:center; font-size:.85rem; letter-spacing:.18em; color:#ff9a9a; font-weight:700;">LƯỢT CỦA BẠN – CHẠM ĐỂ ĐÁNH<br><span style="font-size:.72rem; opacity:.7; letter-spacing:.05em;">Sẵn sàng solo Hell Bot v11</span></div>
 
-    <!-- Hidden original controls for logic (keep functional but hidden) -->
-    <div style="display:none;">
-      <div class="btn active" id="modeAi">Chơi với máy</div>
-      <div class="btn" id="modeLocal">2 người</div>
-      <div class="btn" id="modeOnline">Online</div>
-      <div class="btn active" id="sideX">X · đi trước</div>
-      <div class="btn" id="sideO">O · đi sau</div>
-      <div class="btn" id="diffEasy">Dễ</div>
-      <div class="btn active" id="diffMed">Vừa</div>
-      <div class="btn" id="diffHard">Khó</div>
-      <div class="btn hell" id="diffHell">🔥 Địa ngục</div>
-      <div class="btn" id="zoomOut">Thu nhỏ −</div>
-      <div class="btn" id="zoomIn">Phóng to +</div>
-      <div class="btn hidden" id="undoAi">↶ Đi lại</div>
-      <div class="btn" id="newGame">Ván mới</div>
-      <div class="btn" id="hintBtn">💡 Gợi ý</div>
+
+    <!-- CHẾ ĐỘ CHƠI - restored -->
+    <div style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+      <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a8a; font-weight:800;">CHẾ ĐỘ CHƠI</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+        <div class="btn active" id="modeAi">🤖 Máy</div>
+        <div class="btn" id="modeLocal">👥 2 người</div>
+        <div class="btn" id="modeOnline">🌐 Online</div>
+      </div>
+      <div id="onlinePanel" style="display:none; flex-direction:column; gap:8px; background:#0e0c15; border:1px solid #2a2236; border-radius:12px; padding:10px;">
+        <div style="font-size:.75rem; opacity:.6; letter-spacing:.1em;">PHÒNG ONLINE</div>
+        <div style="display:flex; gap:8px;">
+          <input id="roomCode" placeholder="Mã 4 ký tự" maxlength="4" style="flex:1; padding:10px 12px; border-radius:10px; border:1.5px solid #4a355e; background:#17131f; color:#fff; text-transform:uppercase; letter-spacing:2px; font-weight:800; text-align:center;">
+          <div class="btn small" id="createRoomBtn" style="flex:none; padding:10px 14px;">Tạo phòng</div>
+          <div class="btn small active" id="joinRoomBtn" style="flex:none; padding:10px 14px;">Vào</div>
+        </div>
+        <div id="onlineStatus" style="font-size:.78rem; opacity:.7; text-align:center;"></div>
+      </div>
     </div>
+
+    <!-- BOT + BÊN CHƠI - restored -->
+    <div style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a8a; font-weight:800;">ĐỘ KHÓ BOT</div>
+        <div style="font-size:.72rem; opacity:.5;" id="sideLbl">Bạn chơi:</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px;">
+        <div class="btn" id="diffEasy">Dễ</div>
+        <div class="btn active" id="diffMed">Vừa</div>
+        <div class="btn" id="diffHard">Khó</div>
+        <div class="btn hell" id="diffHell">🔥 Ngục</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div class="btn active" id="sideX">X • đi trước</div>
+        <div class="btn" id="sideO">O • đi sau</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <div class="btn small" id="zoomOut" style="flex:1;">Thu nhỏ −</div>
+        <div class="btn small hidden" id="undoAi" style="flex:1;">↶ Đi lại</div>
+        <div class="btn small" id="zoomIn" style="flex:1;">Phóng to +</div>
+      </div>
+      <div style="display:none;">
+        <div class="btn" id="newGame">Ván mới</div>
+        <div class="btn" id="hintBtn">💡 Gợi ý</div>
+      </div>
+    </div>
+
 
     <div id="warnBar" class="hidden"></div>
     <div id="hellMem" class="hidden"></div>
@@ -268,8 +298,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
         <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Bạn là</span><span id="statusYou" style="font-weight:800;">X (đi trước)</span></div>
         <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Lượt</span><span id="statusTurn" style="font-weight:800; color:#ff8a8a;">Bạn</span></div>
         <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Tổng nước</span><span id="statusTotal">0</span></div>
-        <div style="height:1px; background:#2a2236; margin:4px 0;"></div>
-        <div style="font-size:.78rem; line-height:1.5; opacity:.55;">Bot v11: chặn thắng ngay → chặn open-four (011110) → đánh giá pattern 11111=1M, 011110=400k, 01111=50k, 01110=12k, 010110=8k + center bias. Quét trong 2 ô quanh quân đã có + kiểm tra an toàn.</div>
+
       </div>
     </div>
 
@@ -278,7 +307,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
       <div id="moveHistory" style="font-size:.85rem; opacity:.6;">Chưa có nước đi</div>
     </div>
 
-    <div style="font-size:.62rem; letter-spacing:.12em; opacity:.3; text-align:center; padding:8px 0;">MADE FOR SOLO – NO FIREBASE • LOCAL VS BOT • CARO_HELL_V11_SOLO.HTML</div>
+    <div style="font-size:.78rem; letter-spacing:.08em; opacity:.6; text-align:center; padding:12px 0; font-weight:700; color:#ffe4b5; text-shadow:0 0 8px #ff5a5a30;">web được tạo bởi HuuDuong(Vua36)</div>
 
   </div>
 
@@ -2085,6 +2114,34 @@ function updateCustomStatus(){
   }
 }
 setInterval(updateCustomStatus, 600);
+</script>
+<script>
+// Show online panel when mode Online active
+(function(){
+  const onlinePanel=document.getElementById('onlinePanel');
+  function checkMode(){
+    const isOnline=document.getElementById('modeOnline')?.classList.contains('active');
+    if(onlinePanel) onlinePanel.style.display = isOnline ? 'flex' : 'none';
+  }
+  ['modeAi','modeLocal','modeOnline'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('click', ()=>{ setTimeout(checkMode, 100); });
+  });
+  setTimeout(checkMode, 500);
+  // wire create/join buttons to existing functions if they exist
+  document.getElementById('createRoomBtn')?.addEventListener('click', ()=>{
+    const fn = window.createRoom || window.createOnlineRoom;
+    if(typeof createRoom==='function') createRoom();
+    else if(typeof window.createRoom==='function') window.createRoom();
+    else {
+      // fallback: try to trigger original hidden button if exists
+      const orig=document.querySelector('[onclick*="createRoom"]');
+      if(orig) orig.click();
+    }
+  });
+  document.getElementById('joinRoomBtn')?.addEventListener('click', ()=>{
+    if(typeof joinRoom==='function') joinRoom();
+  });
+})();
 </script>
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
