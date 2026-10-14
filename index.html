@@ -201,14 +201,14 @@ canvas{display:block; touch-action:none;}
 </div>
 
 <script type="text/plain" id="hellSrc">
-// ---------- ĐỊA NGỤC v2: alpha-beta + VCF + đe dọa kép, tối ưu tốc độ ----------
-// HELL_TIME thấp hơn nhưng ordering tốt + cắt nhánh sớm → vẫn nhìn xa >10 nước
-const HELL_TIME=2800;   // ms suy nghĩ tối đa mỗi nước (tối ưu tốc độ)
+// ---------- ĐỊA NGỤC v3: phòng thủ ưu tiên tuyệt đối + VCF sâu + ordering đe dọa kép ----------
+const HELL_TIME=4200;   // ms suy nghĩ mỗi nước
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
-  const W=[0,1,10,80,1200,100000];
-  const ATT=[1,8,55,420,100000], DEF=[0,7,48,380,80000];
-  const WINV=10000000, INF=1e9, MAXPLY=56, EXTMAX=18, VCF_NODES=90000;
+  const W=[0,1,12,100,1500,100000];
+  // DEF cao hơn ATT để ưu tiên chặn; ATT vẫn đủ mạnh để tạo đe dọa
+  const ATT=[1,10,70,500,100000], DEF=[0,12,90,700,120000];
+  const WINV=10000000, INF=1e9, MAXPLY=64, EXTMAX=22, VCF_NODES=120000;
   const cw=new Array(N), nbr=new Array(N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
     const i=idx(r,c), L=[];
@@ -264,23 +264,46 @@ const Hell=(()=>{
     }
     return -1;
   }
-  // ordering mạnh: đe dọa kép / open-three / four → cắt nhánh sớm, nghĩ nhanh hơn
+  // Tìm mọi ô tạo tứ (4 quân + 1 trống) của p → phải chặn/đi ngay
+  function allFours(p){
+    const A=p===1?w1:w2, B=p===1?w2:w1, out=[];
+    for(let i=0;i<N;i++){
+      if(hb[i]!==0||near[i]===0) continue;
+      const L=cw[i];
+      for(let k=0;k<L.length;k++){ const w=L[k]; if(A[w]===4&&B[w]===0){ out.push(i); break; } }
+    }
+    return out;
+  }
+  // Đếm open-three (3 quân 2 đầu trống) mà ô i tạo ra cho p
+  function threatScore(i,p){
+    const A=p===1?w1:w2, B=p===1?w2:w1;
+    const L=cw[i]; let th3=0, th4=0;
+    for(let k=0;k<L.length;k++){
+      const w=L[k], a=A[w], b=B[w];
+      if(b===0){ if(a===3) th3++; if(a===4) th4++; }
+    }
+    return th4*10000 + th3*100;
+  }
   function gen(me,forced,quiet,K){
     const A=me===1?w1:w2, B=me===1?w2:w1;
     const cells=[], scs=[], mks=[], blk=[];
     for(let i=0;i<N;i++){
       if(hb[i]!==0||near[i]===0) continue;
-      const L=cw[i]; let s=0, mk=0, bl=false, th3=0, th4=0;
+      const L=cw[i]; let s=0, mk=0, bl=false, th3=0, th4=0, oth3=0, oth4=0;
       for(let k=0;k<L.length;k++){
         const w=L[k], a=A[w], b=B[w];
         if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; }
-        if(a===0){ s+=DEF[b]; if(b===4) bl=true; if(b===3) s+=30; }
+        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; s+=50; } }
       }
-      if(th4>=1||th3>=2) s+=8000;
-      else if(th3>=1) s+=400;
+      // đe dọa kép của mình
+      if(th4>=1||th3>=2) s+=12000;
+      else if(th3>=1) s+=600;
+      // chặn đe dọa kép của đối thủ — ưu tiên cực cao
+      if(oth4>=1||oth3>=2) s+=15000;
+      else if(oth3>=1) s+=800;
       if(bl) blk.push(i);
-      if(quiet&&!mk&&th4===0) continue;
-      cells.push(i); scs.push(s); mks.push(mk||th4?1:0);
+      if(quiet&&!mk&&th4===0&&oth4===0) continue;
+      cells.push(i); scs.push(s); mks.push((mk||th4||oth4)?1:0);
     }
     if(forced&&blk.length){
       if(blk.length>1) return {lose:true,cells:[],mks:[]};
@@ -300,8 +323,7 @@ const Hell=(()=>{
     if(quiet&&ext>=EXTMAX) return ev(me);
     let best=-INF;
     if(quiet){ best=ev(me); if(best>=beta) return best; if(best>alpha) alpha=best; }
-    // quiet: ít ứng viên; non-quiet: branching vừa phải để tốc độ ổn
-    const g=gen(me,forced,quiet,quiet?6:Math.min(14,5+depth));
+    const g=gen(me,forced,quiet,quiet?8:Math.min(16,5+depth));
     if(g.lose) return -(WINV-ply-1);
     const cells=g.cells, mks=g.mks;
     if(!cells.length) return quiet?best:ev(me);
@@ -354,6 +376,19 @@ const Hell=(()=>{
     }
     return -1;
   }
+  // Chọn nước chặn tốt nhất khi đối thủ có nhiều tứ / đe dọa
+  function bestBlock(cands){
+    if(!cands.length) return -1;
+    if(cands.length===1) return cands[0];
+    let best=cands[0], bs=-INF;
+    for(const i of cands){
+      put(i,2);
+      const sc = four2>0 ? WINV : (threatScore(i,2) - threatScore(i,1)*0.5 + ev(2));
+      undo(i);
+      if(sc>bs){ bs=sc; best=i; }
+    }
+    return best;
+  }
   function think(pen){
     hb=new Uint8Array(N); w1=new Uint8Array(4*N); w2=new Uint8Array(4*N); near=new Uint8Array(N);
     E=0; four1=0; four2=0; won=false;
@@ -367,18 +402,32 @@ const Hell=(()=>{
     }
     deadline=performance.now()+HELL_TIME; aborted=false; nodes=0; vn=0;
     let m;
+
+    // 1) Thắng ngay nếu có tứ
     if(four2>0&&(m=findFour(2))>=0) return m;
-    if(four1>0&&(m=findFour(1))>=0) return m;
-    if((m=vcf(2,0,20))>=0) return m;               // VCF mình
-    if((m=vcf(1,0,16))>=0){                         // chặn VCF đối thủ
+
+    // 2) Chặn TẤT CẢ tứ của đối thủ (nếu nhiều tứ → chọn nước chặn tốt nhất / dual-purpose)
+    const opFours=allFours(1);
+    if(opFours.length){
+      // Nếu mình cũng tạo tứ tại ô đó thì đi luôn
+      for(const i of opFours){ if(threatScore(i,2)>=10000) return i; }
+      return bestBlock(opFours);
+    }
+
+    // 3) VCF tấn thắng
+    if((m=vcf(2,0,22))>=0) return m;
+
+    // 4) Chặn VCF của đối thủ (nhìn sâu)
+    if((m=vcf(1,0,20))>=0){
       if(hb[m]===0) return m;
     }
-    const g=gen(2,false,false,18);
+
+    // 5) Alpha-beta iterative deepening
+    const g=gen(2,false,false,20);
     if(!g.cells.length) return idx(SIZE>>1,SIZE>>1);
     let order=g.cells.slice(), best=order[0];
     if(order.length===1) return best;
-    // iterative deepening tới 18; ordering tốt → cắt sớm, thường xong trong <2.8s
-    for(let depth=2;depth<=18;depth+=2){
+    for(let depth=2;depth<=20;depth+=2){
       let alpha=-INF, bi=-1, bs=-INF, done=true;
       for(let j=0;j<order.length;j++){
         const i=order[j], pn=(pen&&pen[i])||0;
