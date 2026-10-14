@@ -448,14 +448,43 @@ const Hell=(()=>{
     let stones=0;
     for(let i=0;i<N;i++) if(board[i]){ put(i,board[i]); stones++; }
     if(!stones){
-      // Khai cuộc đa dạng: chọn ngẫu nhiên trong vùng trung tâm 3x3 (có trọng số tâm)
-      const c0=idx(SIZE>>1,SIZE>>1);
-      const opts=[c0,c0+1,c0-1,c0+SIZE,c0-SIZE,c0+SIZE+1,c0-SIZE-1,c0+SIZE-1,c0-SIZE+1];
-      const w=[5,2,2,2,2,1,1,1,1]; // tâm nặng hơn
-      let sum=0; for(const x of w) sum+=x;
-      let r=Math.random()*sum, pick=c0;
-      for(let q=0;q<opts.length;q++){ r-=w[q]; if(r<=0){ pick=opts[q]; break; } }
+      // Khai cuộc linh hoạt: vùng 5x5 quanh tâm, trọng số giảm dần ra ngoài
+      const mid=SIZE>>1, opts=[], wts=[];
+      for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
+        const r=mid+dr, c=mid+dc;
+        if(!inb(r,c)) continue;
+        opts.push(idx(r,c));
+        const d=Math.max(Math.abs(dr),Math.abs(dc));
+        wts.push(d===0?8:d===1?3:1);
+      }
+      let sum=0; for(const x of wts) sum+=x;
+      let r=Math.random()*sum, pick=opts[0];
+      for(let q=0;q<opts.length;q++){ r-=wts[q]; if(r<=0){ pick=opts[q]; break; } }
       return pick;
+    }
+    // Phản ứng nước đầu của đối thủ: đa dạng quanh quân đối thủ
+    if(stones===1){
+      let pi=-1; for(let i=0;i<N;i++) if(hb[i]===1){ pi=i; break; }
+      if(pi>=0){
+        const pr=pi/SIZE|0, pc=pi%SIZE;
+        const cand=[], cwts=[];
+        // ưu tiên các hướng "độc" kiểu star / diagonal
+        const dirs=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1],
+                    [0,2],[0,-2],[2,0],[-2,0],[2,2],[2,-2],[-2,2],[-2,-2],[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]];
+        for(let k=0;k<dirs.length;k++){
+          const r=pr+dirs[k][0], c=pc+dirs[k][1];
+          if(!inb(r,c)||hb[idx(r,c)]!==0) continue;
+          cand.push(idx(r,c));
+          const dist=Math.abs(dirs[k][0])+Math.abs(dirs[k][1]);
+          cwts.push(dist<=2?4:2);
+        }
+        if(cand.length){
+          let sum=0; for(const x of cwts) sum+=x;
+          let r=Math.random()*sum, pick=cand[0];
+          for(let q=0;q<cand.length;q++){ r-=cwts[q]; if(r<=0){ pick=cand[q]; break; } }
+          return pick;
+        }
+      }
     }
     deadline=performance.now()+HELL_TIME; aborted=false; nodes=0; vn=0;
     let m;
@@ -519,6 +548,14 @@ const Hell=(()=>{
       if(bs>=WINV-100||bs<=-WINV+100) break;
     }
     if(best<0||hb[best]!==0) best=order[0];
+    // Khai/trung cuộc: chọn ngẫu nhiên trong nhóm nước điểm gần bằng nhau → mỗi ván khác
+    if(stones < 12 && order.length > 1){
+      const pool=[best];
+      for(let q=1;q<Math.min(5, order.length);q++){
+        if(hb[order[q]]===0) pool.push(order[q]);
+      }
+      if(pool.length>1) best=pool[(Math.random()*pool.length)|0];
+    }
     return best;
   }
   return {think};
