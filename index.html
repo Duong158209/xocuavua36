@@ -1489,7 +1489,11 @@ document.getElementById('diffEasy').onclick=()=>setDiff('easy');
 document.getElementById('diffMed').onclick=()=>setDiff('medium');
 document.getElementById('diffHard').onclick=()=>setDiff('hard');
 document.getElementById('diffHell').onclick=()=>setDiff('hell');
-document.getElementById('newGame').onclick=()=>{ if(mode==='online') onlineNewGame(); else { resetBoardState(); startAiIfNeeded(); } };
+document.getElementById('newGame').onclick=()=>{
+  if(!confirm('Bạn có chắc muốn bắt đầu ván mới?')) return;
+  if(mode==='online') onlineNewGame();
+  else { resetBoardState(); startAiIfNeeded(); }
+};
 document.getElementById('undoAi').onclick=undoAi;
 document.getElementById('sideX').onclick=()=>setSide(1);
 document.getElementById('sideO').onclick=()=>setSide(2);
