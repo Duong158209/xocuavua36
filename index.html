@@ -202,11 +202,11 @@ canvas{display:block; touch-action:none;}
 
 <script type="text/plain" id="hellSrc">
 // ---------- ĐỊA NGỤC v4: phòng thủ cứng (không bỏ sót tứ) + không dùng memory penalty ----------
-const HELL_TIME=6000;
+const HELL_TIME=7000;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const W=[0,1,12,100,1500,100000];
-  const ATT=[1,12,90,650,100000], DEF=[0,20,160,1200,220000];
+  const ATT=[1,10,80,550,100000], DEF=[0,28,220,1600,300000];
   const WINV=10000000, INF=1e9, MAXPLY=64, EXTMAX=24, VCF_NODES=160000;
   const cw=new Array(N), nbr=new Array(N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -336,12 +336,13 @@ const Hell=(()=>{
       for(let k=0;k<L.length;k++){
         const w=L[k], a=A[w], b=B[w];
         if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; }
-        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; s+=80; } }
+        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; s+=150; } }
       }
-      if(th4>=1||th3>=2) s+=20000;
-      else if(th3>=1) s+=800;
-      if(oth4>=1||oth3>=2) s+=28000;
-      else if(oth3>=1) s+=1200;
+      if(th4>=1||th3>=2) s+=18000;
+      else if(th3>=1) s+=900;
+      // phòng thủ ưu tiên tuyệt đối khi đi sau
+      if(oth4>=1||oth3>=2) s+=45000;
+      else if(oth3>=1) s+=3500;
       if(bl) blk.push(i);
       if(quiet&&!mk&&th4===0&&oth4===0) continue;
       cells.push(i); scs.push(s); mks.push((mk||th4||oth4)?1:0);
@@ -466,24 +467,31 @@ const Hell=(()=>{
       return bestBlock(must);
     }
 
-    // 3) VCF mình
-    if((m=vcf(2,0,24))>=0) return m;
+    // 3) Chặn VCF đối thủ TRƯỚC (đi sau: sống sót quan trọng hơn tấn công sớm)
+    if((m=vcf(1,0,28))>=0){ if(hb[m]===0) return m; }
 
-    // 4) Chặn VCF đối thủ
-    if((m=vcf(1,0,20))>=0){ if(hb[m]===0) return m; }
+    // 4) VCF mình (phản công)
+    if((m=vcf(2,0,26))>=0) return m;
 
-    // 5) Ưu tiên chặn/đi open-three đôi
+    // 5) Open-three đôi của đối thủ → chặn bắt buộc
     if(opCrit.open3.length>=2){
-      // đe dọa kép open3 của đối thủ → chặn một ô nếu có thể dual
       return bestBlock(opCrit.open3);
     }
+    // 5b) Nhiều open3 lẻ: chặn ô nguy hiểm nhất (đi sau dễ bị ép)
+    if(opCrit.open3.length>=1 && stones>=6){
+      // nếu đối thủ có open3 và mình chưa có đe dọa tương đương → chặn
+      if(myCrit.open3.length < opCrit.open3.length){
+        return bestBlock(opCrit.open3);
+      }
+    }
 
-    // 6) Alpha-beta
-    const g=gen(2,false,false,20);
+    // 6) Alpha-beta — branching rộng hơn khi đi sau (stones lẻ = vừa bị đánh)
+    const rootK = (stones%2===1) ? 24 : 20;
+    const g=gen(2,false,false,rootK);
     if(!g.cells.length) return idx(SIZE>>1,SIZE>>1);
     let order=g.cells.slice(), best=order[0];
     if(order.length===1) return best;
-    for(let depth=2;depth<=24;depth+=2){
+    for(let depth=2;depth<=(stones%2===1?26:22);depth+=2){
       let alpha=-INF, bi=-1, bs=-INF, done=true;
       for(let j=0;j<order.length;j++){
         const i=order[j];
