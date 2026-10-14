@@ -535,6 +535,7 @@ const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;
 let board=new Uint8Array(SIZE*SIZE);
 let turn=1, gameOver=false, winCells=[];
 let moveHistory=[];
+let lastMove=null, lastMoveT=0, animRaf=0, lastAnimDraw=0;
 let scores={X:0,O:0,D:0};
 let mode='ai', difficulty='medium';
 let cellSize=44, offX=0, offY=0;
@@ -571,8 +572,15 @@ function draw(){
     for(let c=c0;c<c1;c++){
       const v=board[idx(r,c)];
       if(!v) continue;
-      const cx=offX+c*cs+cs/2, cy=offY+r*cs+cs/2, m=cs*0.32;
+      const cx=offX+c*cs+cs/2, cy=offY+r*cs+cs/2; let m=cs*0.32;
       const isWin=winCells.some(k=>k[0]===r&&k[1]===c);
+      const isLast=lastMove&&lastMove.r===r&&lastMove.c===c;
+      if(isLast){
+        const age=performance.now()-lastMoveT;
+        m*=1+0.5*Math.max(0,1-age/280);
+        ctx.shadowColor=v===1?xColor:oColor;
+        ctx.shadowBlur=10+6*Math.sin(performance.now()/180);
+      }
       ctx.strokeStyle = v===1?xColor:oColor;
       ctx.lineWidth = isWin?Math.max(2.5,cs*.12):Math.max(2,cs*.09);
       if(v===1){
@@ -581,8 +589,61 @@ function draw(){
       } else {
         ctx.beginPath(); ctx.arc(cx,cy,m,0,7); ctx.stroke();
       }
+      if(isLast) ctx.shadowBlur=0;
     }
   }
+  drawLastFx(cs,xColor,oColor);
+}
+function sparkle(x,y,s){
+  ctx.beginPath();
+  ctx.moveTo(x,y-s); ctx.lineTo(x+s*.22,y-s*.22); ctx.lineTo(x+s,y); ctx.lineTo(x+s*.22,y+s*.22);
+  ctx.lineTo(x,y+s); ctx.lineTo(x-s*.22,y+s*.22); ctx.lineTo(x-s,y); ctx.lineTo(x-s*.22,y-s*.22);
+  ctx.closePath(); ctx.fill();
+}
+function drawLastFx(cs,xColor,oColor){
+  if(!lastMove) return;
+  const {r,c}=lastMove, v=board[idx(r,c)];
+  if(!v) return;
+  const cx=offX+c*cs+cs/2, cy=offY+r*cs+cs/2;
+  if(cx<-cs||cy<-cs||cx>wrap.clientWidth+cs||cy>wrap.clientHeight+cs) return;
+  const col=v===1?xColor:oColor, now=performance.now(), t=now/1000, age=now-lastMoveT;
+  ctx.save();
+  // nền sáng nhấp nháy
+  ctx.globalAlpha=0.14+0.08*Math.sin(t*4);
+  ctx.fillStyle=col; ctx.fillRect(offX+c*cs+1,offY+r*cs+1,cs-1,cs-1);
+  // vòng sóng lan ra liên tục
+  const ph=(t*1.1)%1;
+  ctx.strokeStyle=col; ctx.lineWidth=Math.max(1.5,cs*.05);
+  ctx.globalAlpha=0.6*(1-ph);
+  ctx.beginPath(); ctx.arc(cx,cy,cs*(0.4+0.5*ph),0,7); ctx.stroke();
+  // vòng nổ lúc vừa đánh
+  if(age<500){
+    const k=age/500;
+    ctx.strokeStyle='#ffc933'; ctx.lineWidth=Math.max(2,cs*.08);
+    ctx.globalAlpha=1-k;
+    ctx.beginPath(); ctx.arc(cx,cy,cs*(0.3+1.0*k),0,7); ctx.stroke();
+  }
+  // 4 ngôi sao lấp lánh xoay quanh quân
+  ctx.fillStyle='#ffc933';
+  for(let k=0;k<4;k++){
+    const ang=t*0.9+k*Math.PI/2, rad=cs*(0.58+0.08*Math.sin(t*3+k));
+    const tw=0.5+0.5*Math.sin(t*5+k*1.7);
+    ctx.globalAlpha=0.35+0.65*tw;
+    sparkle(cx+Math.cos(ang)*rad, cy+Math.sin(ang)*rad, cs*(0.07+0.13*tw));
+  }
+  ctx.restore();
+}
+function animTick(ts){
+  animRaf=0;
+  if(!lastMove) return;
+  if(ts-lastAnimDraw>32){ lastAnimDraw=ts; draw(); }
+  animRaf=requestAnimationFrame(animTick);
+}
+function setLastMove(r,c){
+  lastMove=(r==null)?null:{r,c};
+  lastMoveT=performance.now();
+  if(lastMove&&!animRaf) animRaf=requestAnimationFrame(animTick);
+  draw();
 }
 let dragging=false,startX=0,startY=0,moved=false,startOffX=0,startOffY=0;
 const MIN_CELL=12, MAX_CELL=90;
@@ -677,6 +738,7 @@ function endGame(winner, cells){
 function placeLocal(r,c,p){
   if(gameOver||board[idx(r,c)]!==0) return false;
   board[idx(r,c)]=p;
+  setLastMove(r,c);
   const win=checkWin(r,c,p);
   draw();
   const full = !win && isFull();
@@ -700,7 +762,8 @@ function undoLocal(){
   gameOver=false; winCells=[];
   turn=last.p;
   setStatus();
-  draw();
+  const pm=moveHistory[moveHistory.length-1];
+  setLastMove(pm?pm.r:null, pm?pm.c:null);
 }
 function cellTapped(r,c){
   if(mode==='ai'){
@@ -961,7 +1024,7 @@ const Hell=(()=>{
 })();
 
 const subRow=document.getElementById('subRow');
-function resetBoardState(){board=new Uint8Array(SIZE*SIZE); turn=1; gameOver=false; winCells=[]; moveHistory=[]; setStatus(); draw();}
+function resetBoardState(){board=new Uint8Array(SIZE*SIZE); lastMove=null; turn=1; gameOver=false; winCells=[]; moveHistory=[]; setStatus(); draw();}
 function setMode(m){
   mode=m;
   ['modeAi','modeLocal','modeOnline'].forEach(id=>document.getElementById(id).classList.remove('active'));
@@ -1051,7 +1114,12 @@ function subscribeRoom(){
   unsub=roomRef.onSnapshot(snap=>{
     if(!snap.exists) return;
     const d=snap.data();
-    board=new Uint8Array(d.board||new Array(SIZE*SIZE).fill(0));
+    const prevBoard=board, nb=new Uint8Array(d.board||new Array(SIZE*SIZE).fill(0));
+    let diffCell=-1, diffCnt=0, filled=0;
+    for(let i=0;i<nb.length;i++){ if(nb[i]){ filled++; if(!prevBoard[i]){ diffCell=i; diffCnt++; } } }
+    board=nb;
+    if(!filled) lastMove=null;
+    else if(diffCnt===1) setLastMove(Math.floor(diffCell/SIZE), diffCell%SIZE);
     turn=d.turn||1;
     winCells=(d.winCells||[]).map(o=>[o.r,o.c]);
     const other = mySeat==='X' ? d.seats.O : d.seats.X;
