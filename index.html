@@ -202,12 +202,12 @@ canvas{display:block; touch-action:none;}
 
 <script type="text/plain" id="hellSrc">
 // ---------- ĐỊA NGỤC v4: phòng thủ cứng (không bỏ sót tứ) + không dùng memory penalty ----------
-const HELL_TIME=5000;
+const HELL_TIME=5500;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const W=[0,1,12,100,1500,100000];
-  const ATT=[1,10,70,500,100000], DEF=[0,14,110,900,150000];
-  const WINV=10000000, INF=1e9, MAXPLY=64, EXTMAX=24, VCF_NODES=140000;
+  const ATT=[1,12,90,650,100000], DEF=[0,20,160,1200,220000];
+  const WINV=10000000, INF=1e9, MAXPLY=64, EXTMAX=24, VCF_NODES=160000;
   const cw=new Array(N), nbr=new Array(N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
     const i=idx(r,c), L=[];
@@ -349,9 +349,9 @@ const Hell=(()=>{
         if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; }
         if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; s+=80; } }
       }
-      if(th4>=1||th3>=2) s+=15000;
+      if(th4>=1||th3>=2) s+=20000;
       else if(th3>=1) s+=800;
-      if(oth4>=1||oth3>=2) s+=20000;
+      if(oth4>=1||oth3>=2) s+=28000;
       else if(oth3>=1) s+=1200;
       if(bl) blk.push(i);
       if(quiet&&!mk&&th4===0&&oth4===0) continue;
@@ -494,7 +494,7 @@ const Hell=(()=>{
     if(!g.cells.length) return idx(SIZE>>1,SIZE>>1);
     let order=g.cells.slice(), best=order[0];
     if(order.length===1) return best;
-    for(let depth=2;depth<=22;depth+=2){
+    for(let depth=2;depth<=24;depth+=2){
       let alpha=-INF, bi=-1, bs=-INF, done=true;
       for(let j=0;j<order.length;j++){
         const i=order[j];
