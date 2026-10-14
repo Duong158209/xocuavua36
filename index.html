@@ -285,6 +285,36 @@
   max-height:36px !important;
 }
 
+
+/* Fix thanh chức năng - luôn ở ngoài màn hình, kéo trái/phải được */
+#sideDock{
+  position:fixed !important;
+  z-index:40 !important;
+  width:52px !important;
+  max-height:80vh !important;
+  overflow:visible !important;
+  touch-action:none !important;
+  user-select:none !important;
+  transition:width .25s ease, left .2s ease, right .2s ease, box-shadow .2s ease !important;
+  will-change:left,right,top;
+}
+#sideDock.dragging{
+  transition:none !important;
+  box-shadow:0 20px 50px #000c, 0 0 0 2px #ff6b4a80 !important;
+  border-color:#ff6b4a !important;
+  z-index:100 !important;
+}
+#sideDock.expanded{
+  width:160px !important;
+}
+#app{
+  transition:padding-left .25s ease, padding-right .25s ease !important;
+}
+@media(max-width:600px){
+  #sideDock{width:48px !important;}
+  #sideDock.expanded{width:150px !important;}
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -671,6 +701,36 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
   max-height:36px !important;
 }
 
+
+/* Fix thanh chức năng - luôn ở ngoài màn hình, kéo trái/phải được */
+#sideDock{
+  position:fixed !important;
+  z-index:40 !important;
+  width:52px !important;
+  max-height:80vh !important;
+  overflow:visible !important;
+  touch-action:none !important;
+  user-select:none !important;
+  transition:width .25s ease, left .2s ease, right .2s ease, box-shadow .2s ease !important;
+  will-change:left,right,top;
+}
+#sideDock.dragging{
+  transition:none !important;
+  box-shadow:0 20px 50px #000c, 0 0 0 2px #ff6b4a80 !important;
+  border-color:#ff6b4a !important;
+  z-index:100 !important;
+}
+#sideDock.expanded{
+  width:160px !important;
+}
+#app{
+  transition:padding-left .25s ease, padding-right .25s ease !important;
+}
+@media(max-width:600px){
+  #sideDock{width:48px !important;}
+  #sideDock.expanded{width:150px !important;}
+}
+
 </style>
 </head>
 <body>
@@ -719,10 +779,11 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
     <!-- CHẾ ĐỘ CHƠI - restored -->
     <div style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
       <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a8a; font-weight:800;">CHẾ ĐỘ CHƠI</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-        <div class="btn active" id="modeAi" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">🤖</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">Máy</span></div>
-        <div class="btn" id="modeLocal" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">👥</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">2 người</span></div>
-        <div class="btn" id="modeOnline" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">🌐</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">Online</span></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div class="btn active" id="modeAi" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:10px 4px; min-height:68px;"><span style="font-size:1.4rem; line-height:1;">🤖</span><span style="font-size:.82rem; font-weight:800; margin-top:4px; white-space:nowrap;">Máy</span></div>
+        <div class="btn" id="modeLocal" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:10px 4px; min-height:68px;"><span style="font-size:1.4rem; line-height:1;">👥</span><span style="font-size:.82rem; font-weight:800; margin-top:4px; white-space:nowrap;">2 người</span></div>
+        <div class="btn" id="modeOnline" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:10px 4px; min-height:68px;"><span style="font-size:1.4rem; line-height:1;">🌐</span><span style="font-size:.82rem; font-weight:800; margin-top:4px; white-space:nowrap;">Online</span></div>
+        <div class="btn" id="modeBotVsBot" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:10px 4px; min-height:68px; border-color:#ff8a3a30;"><span style="font-size:1.4rem; line-height:1;">⚔️</span><span style="font-size:.78rem; font-weight:800; margin-top:4px; white-space:nowrap;">Bot vs Bot</span></div>
       </div>
       <div id="onlinePanel" style="display:none; flex-direction:column; gap:8px; background:#0e0c15; border:1px solid #2a2236; border-radius:12px; padding:10px;">
         <div style="font-size:.75rem; opacity:.6; letter-spacing:.1em;">PHÒNG ONLINE</div>
@@ -731,8 +792,125 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
           <div class="btn small" id="createRoomBtn" style="flex:none; padding:10px 14px;">Tạo phòng</div>
           <div class="btn small active" id="joinRoomBtn" style="flex:none; padding:10px 14px;">Vào</div>
         </div>
-        <div id="onlineStatus" style="font-size:.78rem; opacity:.7; text-align:center;"></div>
+        
+      <div id="onlineStatus" style="font-size:.78rem; opacity:.7; text-align:center;">
+      
+        
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center;">
+          <!-- Bot X -->
+          <div style="background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #3b7cff50; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:2px solid #3b7cff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.85rem; color:#6ad4ff;">X</span>
+              <span style="font-weight:800; font-size:.85rem;">Bot X</span>
+            </div>
+            <select id="botXVersion" style="width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700; font-size:.85rem;">
+              <option value="v8">v8 - Cổ điển (1.5s)</option>
+              <option value="v9">v9 - Tấn công (3s)</option>
+              <option value="v10">v10 - Chiến thuật (5s)</option>
+              <option value="v11" selected>v11 - Địa ngục mới (8s)</option>
+            </select>
+            <div id="botXScore" style="text-align:center; font-size:.8rem; font-weight:800; color:#6ad4ff; background:rgba(59,124,255,.12); border-radius:6px; padding:4px;">0 thắng</div>
+          </div>
+
+      <div id="botVsBotPanel" style="display:none; flex-direction:column; gap:12px; background:linear-gradient(145deg,#0e0c15,#1a1628); border:1.5px solid #ff6b4a40; border-radius:14px; padding:14px; box-shadow:0 0 20px #ff3b3b15; margin-top:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:.78rem; letter-spacing:.15em; color:#ff8a6a; font-weight:800;">⚔️ ĐẤU ĐỊA NGỤC - BOT VS BOT</div>
+          <div id="botVsBotStatus" style="font-size:.72rem; color:#ffd4a3; font-weight:700; background:rgba(255,107,74,.15); border:1px solid #ff6b4a30; border-radius:8px; padding:3px 8px;">Sẵn sàng</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center;">
+          <div style="background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #3b7cff50; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:2px solid #3b7cff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.85rem; color:#6ad4ff;">X</span>
+              <span style="font-weight:800; font-size:.85rem;">Bot X</span>
+            </div>
+            <select id="botXVersion" style="width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700; font-size:.85rem;">
+              <option value="v8">v8 - Cổ điển (1.5s)</option>
+              <option value="v9">v9 - Tấn công (3s)</option>
+              <option value="v10">v10 - Chiến thuật (5s)</option>
+              <option value="v11" selected>v11 - Địa ngục mới (8s)</option>
+            </select>
+            <div id="botXScore" style="text-align:center; font-size:.8rem; font-weight:800; color:#6ad4ff; background:rgba(59,124,255,.12); border-radius:6px; padding:4px;">0 thắng</div>
+          </div>
+          <div style="font-weight:900; font-size:1.1rem; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60;">VS</div>
+          <div style="background:linear-gradient(145deg,#17131f,#1a1526); border:1.5px solid #ff7a7a50; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.85rem; color:#ff9a9a;">O</span>
+              <span style="font-weight:800; font-size:.85rem;">Bot O</span>
+            </div>
+            <select id="botOVersion" style="width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700; font-size:.85rem;">
+              <option value="v8">v8 - Cổ điển (1.5s)</option>
+              <option value="v9" selected>v9 - Tấn công (3s)</option>
+              <option value="v10">v10 - Chiến thuật (5s)</option>
+              <option value="v11">v11 - Địa ngục mới (8s)</option>
+            </select>
+            <div id="botOScore" style="text-align:center; font-size:.8rem; font-weight:800; color:#ff9a9a; background:rgba(255,122,122,.12); border-radius:6px; padding:4px;">0 thắng</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+          <div class="btn" id="botVsBotStart" style="background:linear-gradient(135deg,#ff5a3a,#a51f4c); border-color:#ff6b4a; color:#fff; font-weight:800; padding:10px;">▶️ Bắt đầu</div>
+          <div class="btn" id="botVsBotPause" style="padding:10px;">⏸️ Tạm dừng</div>
+          <div class="btn" id="botVsBotNew" style="padding:10px;">↻ Ván mới</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; justify-content:space-between;">
+          <div style="display:flex; align-items:center; gap:6px; font-size:.75rem; opacity:.7;">
+            <span>Tốc độ:</span>
+            <select id="botVsBotSpeed" style="padding:4px 6px; border-radius:6px; border:1px solid #4a355e; background:#0e0c15; color:#fff; font-size:.75rem;">
+              <option value="1500">Chậm (1.5s)</option>
+              <option value="800" selected>Vừa (0.8s)</option>
+              <option value="300">Nhanh (0.3s)</option>
+              <option value="50">Siêu tốc (0.05s)</option>
+            </select>
+          </div>
+          <div id="botVsBotMoveCount" style="font-size:.75rem; opacity:.6;">0 nước</div>
+        </div>
       </div>
+
+
+
+      
+
+
+      
+
+          
+          <div style="font-weight:900; font-size:1.1rem; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60;">VS</div>
+          
+          <!-- Bot O -->
+          <div style="background:linear-gradient(145deg,#17131f,#1a1526); border:1.5px solid #ff7a7a50; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.85rem; color:#ff9a9a;">O</span>
+              <span style="font-weight:800; font-size:.85rem;">Bot O</span>
+            </div>
+            <select id="botOVersion" style="width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700; font-size:.85rem;">
+              <option value="v8">v8 - Cổ điển (1.5s)</option>
+              <option value="v9" selected>v9 - Tấn công (3s)</option>
+              <option value="v10">v10 - Chiến thuật (5s)</option>
+              <option value="v11">v11 - Địa ngục mới (8s)</option>
+            </select>
+            <div id="botOScore" style="text-align:center; font-size:.8rem; font-weight:800; color:#ff9a9a; background:rgba(255,122,122,.12); border-radius:6px; padding:4px;">0 thắng</div>
+          </div>
+        </div>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+          <div class="btn" id="botVsBotStart" style="background:linear-gradient(135deg,#ff5a3a,#a51f4c); border-color:#ff6b4a; color:#fff; font-weight:800; padding:10px;">▶️ Bắt đầu</div>
+          <div class="btn" id="botVsBotPause" style="padding:10px;">⏸️ Tạm dừng</div>
+          <div class="btn" id="botVsBotNew" style="padding:10px;">↻ Ván mới</div>
+        </div>
+        
+        <div style="display:flex; gap:8px; align-items:center; justify-content:space-between;">
+          <div style="display:flex; align-items:center; gap:6px; font-size:.75rem; opacity:.7;">
+            <span>Tốc độ:</span>
+            <select id="botVsBotSpeed" style="padding:4px 6px; border-radius:6px; border:1px solid #4a355e; background:#0e0c15; color:#fff; font-size:.75rem;">
+              <option value="1500">Chậm (1.5s)</option>
+              <option value="800" selected>Vừa (0.8s)</option>
+              <option value="300">Nhanh (0.3s)</option>
+              <option value="50">Siêu tốc (0.05s)</option>
+            </select>
+          </div>
+          <div id="botVsBotMoveCount" style="font-size:.75rem; opacity:.6;">0 nước</div>
+        </div>
+      </div>
+
     </div>
 
     <!-- BOT + BÊN CHƠI - restored -->
@@ -2355,7 +2533,7 @@ function setMode(m){
   if(m==='local' && !isFeatureOn('mode_local')){ statusEl.textContent='Chế độ 2 người đang bảo trì.'; return; }
   if(m==='online' && !isFeatureOn('mode_online')){ statusEl.textContent='Online đang bảo trì.'; return; }
   mode=m;
-  ['modeAi','modeLocal','modeOnline'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  ['modeAi','modeLocal','modeOnline','modeBotVsBot'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
   document.getElementById(m==='ai'?'modeAi':m==='local'?'modeLocal':'modeOnline').classList.add('active');
   subRow.innerHTML='';
   if(m==='ai'){
@@ -2730,15 +2908,22 @@ setInterval(updateCustomStatus, 600);
     const isAi = document.getElementById('modeAi')?.classList.contains('active');
     const isLocal = document.getElementById('modeLocal')?.classList.contains('active');
     const isOnline = document.getElementById('modeOnline')?.classList.contains('active');
+    const isBotVsBot = document.getElementById('modeBotVsBot')?.classList.contains('active');
     const isHell = document.getElementById('diffHell')?.classList.contains('active');
 
-    // Ẩn bot khi online và 2 người
+    // Ẩn bot khi online, 2 người, hoặc bot vs bot (có panel riêng)
     if(botCard){
-      if(isOnline || isLocal){
+      if(isOnline || isLocal || isBotVsBot){
         botCard.style.display='none';
       } else {
         botCard.style.display='flex';
       }
+    }
+    
+    // Hiện panel bot vs bot
+    const botVsBotPanel = document.getElementById('botVsBotPanel');
+    if(botVsBotPanel){
+      botVsBotPanel.style.display = isBotVsBot ? 'flex' : 'none';
     }
 
     // Cập nhật nhãn thắng
@@ -2777,7 +2962,7 @@ setInterval(updateCustomStatus, 600);
   }
 
   // Gắn sự kiện
-  ['modeAi','modeLocal','modeOnline','diffEasy','diffMed','diffHard','diffHell'].forEach(id=>{
+  ['modeAi','modeLocal','modeOnline','modeBotVsBot','diffEasy','diffMed','diffHard','diffHell'].forEach(id=>{
     document.getElementById(id)?.addEventListener('click', ()=> setTimeout(updateUIByMode, 80));
   });
 
@@ -3044,8 +3229,11 @@ document.addEventListener('click', (e)=>{
 </script>
 
 
+
+
+
 <script>
-// Thanh chức năng kéo tự do trái/phải/trên/dưới nhưng không ở trong màn hình (luôn bám rìa)
+// Thanh chức năng - fix lỗi kéo xuống bị chui vào trong màn hình, cho kéo sang phải được
 (function(){
   const dock=document.getElementById('sideDock');
   if(!dock) return;
@@ -3055,57 +3243,52 @@ document.addEventListener('click', (e)=>{
     handle=document.createElement('div');
     handle.id='dockHandle';
     handle.textContent='⋯';
-    handle.title='Kéo để di chuyển - bám rìa màn hình';
+    handle.title='Kéo lên/xuống, kéo sang phải/trái để đổi bên';
     dock.insertBefore(handle, dock.firstChild);
   }
 
-  let isDragging=false, startX=0, startY=0, startLeft=0, startTop=0, hasMoved=false;
-  
-  // Khôi phục vị trí
+  let isDragging=false, startX=0, startY=0, hasMoved=false;
   let savedPos = JSON.parse(localStorage.getItem('sideDockPos')||'{"side":"left","percent":50}');
   
+  // Áp dụng vị trí - CHỈ trái/phải, luôn ở ngoài màn hình
   function applyPosition(pos){
-    // pos.side: left, right, top, bottom
-    // pos.percent: 0-100 vị trí dọc theo cạnh
-    dock.style.transition='none';
-    dock.style.transform='';
-    dock.style.top='';
-    dock.style.left='';
-    dock.style.right='';
-    dock.style.bottom='';
+    const margin = 8;
+    const vw = window.innerWidth;
+    const isRight = pos.side === 'right';
     
-    const margin=8;
-    if(pos.side==='left'){
-      dock.style.left=margin+'px';
-      dock.style.top=pos.percent+'%';
-      dock.style.transform='translateY(-50%)';
-      dock.style.right='auto';
-      dock.style.bottom='auto';
-    } else if(pos.side==='right'){
-      dock.style.right=margin+'px';
-      dock.style.top=pos.percent+'%';
-      dock.style.transform='translateY(-50%)';
-      dock.style.left='auto';
-      dock.style.bottom='auto';
-    } else if(pos.side==='top'){
-      dock.style.top=margin+'px';
-      dock.style.left=pos.percent+'%';
-      dock.style.transform='translateX(-50%)';
-      dock.style.flexDirection='row';
-      dock.style.right='auto';
-      dock.style.bottom='auto';
-    } else if(pos.side==='bottom'){
-      dock.style.bottom=margin+'px';
-      dock.style.left=pos.percent+'%';
-      dock.style.transform='translateX(-50%)';
-      dock.style.flexDirection='row';
-      dock.style.top='auto';
-      dock.style.right='auto';
+    // Reset tất cả
+    dock.style.top = pos.percent + '%';
+    dock.style.transform = 'translateY(-50%)';
+    dock.style.flexDirection = 'column';
+    dock.style.bottom = 'auto';
+    
+    if(isRight){
+      dock.style.left = 'auto';
+      dock.style.right = margin + 'px';
+      dock.style.transform = 'translateY(-50%)';
+    } else {
+      dock.style.left = margin + 'px';
+      dock.style.right = 'auto';
+      dock.style.transform = 'translateY(-50%)';
     }
+    
+    // Lưu
     localStorage.setItem('sideDockPos', JSON.stringify(pos));
+    
+    // Cập nhật padding app để bàn cờ không bị che
+    const app = document.getElementById('app');
+    if(app){
+      if(isRight){
+        app.style.paddingLeft = '0px';
+        app.style.paddingRight = '58px';
+      } else {
+        app.style.paddingLeft = '58px';
+        app.style.paddingRight = '0px';
+      }
+    }
   }
   
-  // Apply saved
+  // Khởi tạo
   applyPosition(savedPos);
   
   function getClient(e){
@@ -3113,13 +3296,14 @@ document.addEventListener('click', (e)=>{
   }
   
   function startDrag(e){
-    if(e.target.closest('.dockItem') || e.target.closest('#dockToggle')) return;
-    isDragging=true; hasMoved=false;
+    // Không kéo khi bấm vào nút chức năng
+    if(e.target.closest('.dockItem')) return;
+    if(e.target.closest('#dockToggle')) return;
+    isDragging=true; 
+    hasMoved=false;
     const c=getClient(e);
-    startX=c.x; startY=c.y;
-    const rect=dock.getBoundingClientRect();
-    startLeft=rect.left + rect.width/2;
-    startTop=rect.top + rect.height/2;
+    startX=c.x; 
+    startY=c.y;
     dock.classList.add('dragging');
     dock.style.transition='none';
     e.preventDefault();
@@ -3130,38 +3314,45 @@ document.addEventListener('click', (e)=>{
     const c=getClient(e);
     const dx=c.x-startX;
     const dy=c.y-startY;
-    if(Math.abs(dx)<3 && Math.abs(dy)<3) return;
+    
+    if(Math.abs(dx)<2 && Math.abs(dy)<2) return;
     hasMoved=true;
     
-    // Tính vị trí mới
-    let newX=startLeft+dx;
-    let newY=startTop+dy;
-    
-    // Xác định bám rìa nào gần nhất
     const vw=window.innerWidth;
     const vh=window.innerHeight;
-    const distLeft=newX;
-    const distRight=vw-newX;
-    const distTop=newY;
-    const distBottom=vh-newY;
-    const minDist=Math.min(distLeft, distRight, distTop, distBottom);
     
-    let newPos={side:'left', percent:50};
-    if(minDist===distLeft){
-      newPos.side='left';
-      newPos.percent=Math.max(10, Math.min(90, (newY/vh)*100));
-    } else if(minDist===distRight){
-      newPos.side='right';
-      newPos.percent=Math.max(10, Math.min(90, (newY/vh)*100));
-    } else if(minDist===distTop){
-      newPos.side='top';
-      newPos.percent=Math.max(10, Math.min(90, (newX/vw)*100));
+    // Tính phần trăm dọc theo chiều cao
+    const currentPercent = savedPos.percent;
+    const deltaPercent = (dy / vh) * 100;
+    let newPercent = currentPercent + deltaPercent;
+    newPercent = Math.max(12, Math.min(88, newPercent)); // Giới hạn không cho ra ngoài màn hình
+    
+    // Xác định bám trái hay phải dựa trên vị trí X hiện tại + dx
+    const centerX = (savedPos.side === 'right' ? vw - 40 : 40) + dx;
+    let newSide = savedPos.side;
+    
+    // Nếu kéo sang nửa phải màn hình thì đổi sang phải, ngược lại trái
+    if(centerX > vw/2){
+      newSide = 'right';
     } else {
-      newPos.side='bottom';
-      newPos.percent=Math.max(10, Math.min(90, (newX/vw)*100));
+      newSide = 'left';
     }
     
-    applyPosition(newPos);
+    // Áp dụng ngay để thấy di chuyển mượt
+    const newPos = {side: newSide, percent: newPercent};
+    // Cập nhật tạm thời không lưu ngay để tránh giật
+    const margin = 8;
+    dock.style.top = newPercent + '%';
+    if(newSide === 'right'){
+      dock.style.left = 'auto';
+      dock.style.right = margin + 'px';
+    } else {
+      dock.style.left = margin + 'px';
+      dock.style.right = 'auto';
+    }
+    
+    // Lưu lại để dùng cho lần kéo tiếp theo
+    savedPos = newPos;
   }
   
   function endDrag(){
@@ -3169,39 +3360,383 @@ document.addEventListener('click', (e)=>{
     isDragging=false;
     dock.classList.remove('dragging');
     dock.style.transition='';
-    setTimeout(()=>{ hasMoved=false; }, 100);
+    // Lưu vị trí cuối cùng
+    localStorage.setItem('sideDockPos', JSON.stringify(savedPos));
+    applyPosition(savedPos);
+    setTimeout(()=>{ hasMoved=false; }, 150);
   }
   
+  // Mouse
   dock.addEventListener('mousedown', startDrag);
   window.addEventListener('mousemove', onMove);
   window.addEventListener('mouseup', endDrag);
+  
+  // Touch
   dock.addEventListener('touchstart', startDrag, {passive:false});
-  window.addEventListener('touchmove', (e)=>{ if(isDragging) e.preventDefault(); onMove(e); }, {passive:false});
+  window.addEventListener('touchmove', (e)=>{ 
+    if(isDragging){ 
+      e.preventDefault(); 
+      onMove(e); 
+    }
+  }, {passive:false});
   window.addEventListener('touchend', endDrag);
   
+  // Double click reset về trái giữa
   handle.addEventListener('dblclick', ()=>{
-    const centerPos={side:'left', percent:50};
-    dock.style.transition='all .3s ease';
-    applyPosition(centerPos);
-    setTimeout(()=>{ dock.style.transition=''; }, 300);
+    const resetPos={side:'left', percent:50};
+    savedPos=resetPos;
+    dock.style.transition='all .3s cubic-bezier(.4,0,.2,1)';
+    applyPosition(resetPos);
+    setTimeout(()=>{ dock.style.transition=''; }, 350);
   });
   
+  // Chặn click khi vừa kéo
   dock.addEventListener('click', (e)=>{
-    if(hasMoved){ e.stopPropagation(); e.preventDefault(); }
+    if(hasMoved){
+      e.stopPropagation();
+      e.preventDefault();
+    }
   }, true);
   
-  // Đảm bảo không bao giờ ở trong màn hình (luôn bám rìa)
-  function ensureEdge(){
+  // Đảm bảo không bao giờ ở trong màn hình
+  function ensureOutside(){
     const rect=dock.getBoundingClientRect();
     const vw=window.innerWidth;
-    const vh=window.innerHeight;
-    // Nếu đang ở giữa màn hình (cách rìa > 100px), đẩy về left
-    if(rect.left>100 && rect.right < vw-100 && rect.top>100 && rect.bottom < vh-100){
-      applyPosition({side:'left', percent:50});
+    // Nếu dock đang ở giữa màn hình (cách rìa > 120px cả 2 bên) thì đẩy về trái
+    if(rect.left > 120 && rect.right < vw - 120){
+      savedPos = {side:'left', percent:50};
+      applyPosition(savedPos);
+    }
+    // Đảm bảo không vượt quá top/bottom
+    let percent = savedPos.percent;
+    if(percent < 12) percent = 12;
+    if(percent > 88) percent = 88;
+    if(percent !== savedPos.percent){
+      savedPos.percent = percent;
+      applyPosition(savedPos);
     }
   }
-  window.addEventListener('resize', ensureEdge);
-  setTimeout(ensureEdge, 1000);
+  
+  window.addEventListener('resize', ensureOutside);
+  // Kiểm tra sau khi load
+  setTimeout(ensureOutside, 500);
+})();
+</script>
+
+
+<script>
+// Bot vs Bot Mode - Địa ngục cũ vs mới cho người xem
+(function(){
+  const BOT_VERSIONS = {
+    v8: { time: 1500, depth: 2, name: 'v8 Cổ điển', color: '#888' },
+    v9: { time: 3000, depth: 3, name: 'v9 Tấn công', color: '#ff8a3a' },
+    v10: { time: 5000, depth: 4, name: 'v10 Chiến thuật', color: '#ff5a3a' },
+    v11: { time: 8000, depth: 6, name: 'v11 Địa ngục mới', color: '#ff0000' }
+  };
+  
+  let botVsBotRunning = false;
+  let botVsBotPaused = false;
+  let botVsBotTimer = null;
+  let botXWins = 0;
+  let botOWins = 0;
+  let moveCount = 0;
+  
+  function getBotVersionConfig(ver){
+    return BOT_VERSIONS[ver] || BOT_VERSIONS.v11;
+  }
+  
+  function updateBotVsBotUI(){
+    const isBotVsBot = document.getElementById('modeBotVsBot')?.classList.contains('active');
+    const panel = document.getElementById('botVsBotPanel');
+    const botCard = document.getElementById('botCard');
+    const onlinePanel = document.getElementById('onlinePanel');
+    
+    if(panel){
+      panel.style.display = isBotVsBot ? 'flex' : 'none';
+    }
+    if(botCard){
+      // Ẩn botCard khi ở chế độ Bot vs Bot, vì có panel riêng
+      if(isBotVsBot){
+        botCard.style.display = 'none';
+      } else {
+        // Để logic cũ xử lý
+        const isOnline = document.getElementById('modeOnline')?.classList.contains('active');
+        const isLocal = document.getElementById('modeLocal')?.classList.contains('active');
+        if(isOnline || isLocal){
+          botCard.style.display = 'none';
+        } else {
+          botCard.style.display = 'flex';
+        }
+      }
+    }
+    if(onlinePanel && isBotVsBot){
+      onlinePanel.style.display = 'none';
+    }
+    
+    // Cập nhật nhãn tỉ số cho Bot vs Bot
+    const labelX = document.getElementById('labelX');
+    const labelO = document.getElementById('labelO');
+    if(isBotVsBot){
+      const xVer = document.getElementById('botXVersion')?.value || 'v11';
+      const oVer = document.getElementById('botOVersion')?.value || 'v9';
+      if(labelX) labelX.textContent = `BOT ${xVer.toUpperCase()} (X)`;
+      if(labelO) labelO.textContent = `BOT ${oVer.toUpperCase()} (O)`;
+    }
+  }
+  
+  function resetBotVsBotBoard(){
+    try{
+      if(typeof board !== 'undefined'){
+        board = new Uint8Array(SIZE*SIZE);
+        if(typeof moveHistory !== 'undefined') moveHistory = [];
+        if(typeof moveHist !== 'undefined') moveHist = [];
+        if(typeof lastMove !== 'undefined') lastMove = null;
+        if(typeof winCells !== 'undefined') winCells = [];
+        if(typeof gameOver !== 'undefined') gameOver = false;
+        if(typeof turn !== 'undefined') turn = 1;
+        if(typeof hintCell !== 'undefined') hintCell = null;
+        if(typeof dangerCells !== 'undefined') dangerCells = [];
+        if(typeof draw === 'function') draw();
+        if(typeof setStatus === 'function') setStatus();
+        const st=document.getElementById('statusTotal'); if(st) st.textContent='0';
+        const mh=document.getElementById('moveHistory'); if(mh) mh.textContent='Chưa có nước đi - Bot vs Bot';
+      }
+      if(typeof resetBoardState === 'function'){ resetBoardState(); }
+    }catch(e){ console.log(e); }
+    moveCount = 0;
+    const mc = document.getElementById('botVsBotMoveCount');
+    if(mc) mc.textContent = '0 nước';
+    const status = document.getElementById('botVsBotStatus');
+    if(status) status.textContent = 'Sẵn sàng';
+  }
+  
+  async function makeBotMove(){
+    if(!botVsBotRunning || botVsBotPaused) return;
+    if(typeof gameOver !== 'undefined' && gameOver) {
+      handleBotVsBotGameOver();
+      return;
+    }
+    
+    const currentTurn = (typeof turn !== 'undefined') ? turn : 1;
+    const verSelect = currentTurn === 1 ? document.getElementById('botXVersion') : document.getElementById('botOVersion');
+    const ver = verSelect ? verSelect.value : 'v11';
+    const config = getBotVersionConfig(ver);
+    const statusEl = document.getElementById('botVsBotStatus');
+    
+    if(statusEl){
+      statusEl.textContent = `BOT ${ver.toUpperCase()} (${currentTurn===1?'X':'O'}) đang nghĩ...`;
+      statusEl.style.background = currentTurn===1 ? 'rgba(59,124,255,.15)' : 'rgba(255,122,122,.15)';
+    }
+    
+    // Cập nhật status chính
+    const mainStatus = document.getElementById('status');
+    if(mainStatus){
+      mainStatus.textContent = `LƯỢT BOT ${ver.toUpperCase()} (${currentTurn===1?'X':'O'}) - ĐANG TÍNH...`;
+      mainStatus.classList.add('bot-thinking');
+    }
+    
+    try{
+      let moveIdx = -1;
+      
+      // Dùng Hell engine nếu có, với time limit theo version
+      if(typeof Hell !== 'undefined' && Hell.getMove){
+        // Set time limit tạm thời
+        const origTime = typeof HELL_TIME !== 'undefined' ? HELL_TIME : 8000;
+        if(typeof Hell.setTime === 'function'){
+          Hell.setTime(config.time);
+        }
+        moveIdx = await Hell.getMove(board, currentTurn, config.time);
+        if(typeof Hell.setTime === 'function'){
+          Hell.setTime(origTime);
+        }
+      } else if(typeof getBestMove === 'function'){
+        moveIdx = getBestMove(currentTurn, config.depth);
+      } else {
+        // Fallback: random trong vùng gần
+        const empties = [];
+        for(let i=0;i<board.length;i++) if(board[i]===0) empties.push(i);
+        // Ưu tiên gần trung tâm
+        empties.sort((a,b)=>{
+          const ar=Math.floor(a/SIZE), ac=a%SIZE;
+          const br=Math.floor(b/SIZE), bc=b%SIZE;
+          const ad=Math.abs(ar-SIZE/2)+Math.abs(ac-SIZE/2);
+          const bd=Math.abs(br-SIZE/2)+Math.abs(bc-SIZE/2);
+          return ad-bd;
+        });
+        moveIdx = empties[0] || Math.floor(Math.random()*board.length);
+      }
+      
+      if(moveIdx >=0 && board[moveIdx]===0){
+        // Đánh
+        if(typeof makeMove === 'function'){
+          makeMove(moveIdx, currentTurn);
+        } else {
+          board[moveIdx]=currentTurn;
+          if(typeof draw === 'function') draw();
+          if(typeof checkWin === 'function'){
+            const win = checkWin(moveIdx, currentTurn);
+            if(win){
+              gameOver=true;
+              if(typeof showWin === 'function') showWin(win, currentTurn);
+            }
+          }
+          if(typeof turn !== 'undefined') turn = 3-currentTurn;
+          moveCount++;
+          const mc=document.getElementById('botVsBotMoveCount');
+          if(mc) mc.textContent = moveCount + ' nước';
+        }
+        
+        if(typeof gameOver !== 'undefined' && gameOver){
+          handleBotVsBotGameOver();
+          return;
+        }
+      }
+    }catch(e){
+      console.log('Bot move error', e);
+    }
+    
+    // Tiếp tục nước tiếp theo
+    if(botVsBotRunning && !botVsBotPaused){
+      const speed = parseInt(document.getElementById('botVsBotSpeed')?.value || '800');
+      botVsBotTimer = setTimeout(makeBotMove, speed);
+    }
+  }
+  
+  function handleBotVsBotGameOver(){
+    botVsBotRunning = false;
+    const statusEl = document.getElementById('botVsBotStatus');
+    let winner = null;
+    // Xác định ai thắng dựa trên turn hoặc winCells
+    if(typeof lastWinPlayer !== 'undefined'){
+      winner = lastWinPlayer;
+    } else if(typeof turn !== 'undefined'){
+      // turn đã đổi sau khi thắng, nên người thắng là 3-turn
+      winner = 3 - turn;
+    }
+    
+    if(winner===1){
+      botXWins++;
+      if(statusEl) statusEl.textContent = `BOT X (${document.getElementById('botXVersion')?.value.toUpperCase()}) THẮNG!`;
+      const el=document.getElementById('botXScore');
+      if(el) el.textContent = botXWins + ' thắng';
+      // Cập nhật tỉ số chính
+      const scX=document.getElementById('scX');
+      if(scX) scX.innerHTML = `<span>${botXWins}</span><span style="font-size:.85em; opacity:.9;">thắng</span>`;
+    } else if(winner===2){
+      botOWins++;
+      if(statusEl) statusEl.textContent = `BOT O (${document.getElementById('botOVersion')?.value.toUpperCase()}) THẮNG!`;
+      const el=document.getElementById('botOScore');
+      if(el) el.textContent = botOWins + ' thắng';
+      const scO=document.getElementById('scO');
+      if(scO) scO.innerHTML = `<span>${botOWins}</span><span style="font-size:.85em; opacity:.9;">thắng</span>`;
+    } else {
+      if(statusEl) statusEl.textContent = 'Hòa!';
+    }
+    
+    const mainStatus=document.getElementById('status');
+    if(mainStatus){
+      mainStatus.textContent = statusEl ? statusEl.textContent : 'Ván kết thúc';
+      mainStatus.classList.remove('bot-thinking');
+    }
+    
+    // Tự động ván mới sau 2.5s nếu đang ở chế độ liên tục
+    if(document.getElementById('modeBotVsBot')?.classList.contains('active')){
+      setTimeout(()=>{
+        if(!botVsBotRunning){ // Chỉ auto nếu không đang chạy (tránh double)
+          // Không auto, để người xem bấm
+        }
+      }, 2500);
+    }
+  }
+  
+  // Gắn sự kiện
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.btn');
+    if(!btn) return;
+    
+    if(btn.id === 'modeBotVsBot'){
+      // Đổi chế độ
+      document.querySelectorAll('#modeAi, #modeLocal, #modeOnline, #modeBotVsBot').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      botVsBotRunning = false;
+      botVsBotPaused = false;
+      if(botVsBotTimer) clearTimeout(botVsBotTimer);
+      resetBotVsBotBoard();
+      updateBotVsBotUI();
+      return;
+    }
+    
+    // Các nút cũ
+    if(btn.id === 'modeAi' || btn.id === 'modeLocal' || btn.id === 'modeOnline'){
+      botVsBotRunning = false;
+      if(botVsBotTimer) clearTimeout(botVsBotTimer);
+      const panel=document.getElementById('botVsBotPanel');
+      if(panel) panel.style.display='none';
+    }
+    
+    if(btn.id === 'botVsBotStart'){
+      if(botVsBotRunning && !botVsBotPaused) return;
+      if(botVsBotPaused){
+        botVsBotPaused = false;
+        const st=document.getElementById('botVsBotStatus');
+        if(st) st.textContent = 'Tiếp tục...';
+        makeBotMove();
+        return;
+      }
+      botVsBotRunning = true;
+      botVsBotPaused = false;
+      if(typeof gameOver !== 'undefined' && gameOver){
+        resetBotVsBotBoard();
+      }
+      makeBotMove();
+    }
+    
+    if(btn.id === 'botVsBotPause'){
+      if(!botVsBotRunning) return;
+      botVsBotPaused = !botVsBotPaused;
+      const st=document.getElementById('botVsBotStatus');
+      if(st) st.textContent = botVsBotPaused ? 'Tạm dừng' : 'Tiếp tục...';
+      btn.textContent = botVsBotPaused ? '▶️ Tiếp tục' : '⏸️ Tạm dừng';
+      if(!botVsBotPaused){
+        makeBotMove();
+      } else {
+        if(botVsBotTimer) clearTimeout(botVsBotTimer);
+      }
+    }
+    
+    if(btn.id === 'botVsBotNew'){
+      botVsBotRunning = false;
+      botVsBotPaused = false;
+      if(botVsBotTimer) clearTimeout(botVsBotTimer);
+      resetBotVsBotBoard();
+      const st=document.getElementById('botVsBotStatus');
+      if(st) st.textContent = 'Sẵn sàng - Bấm Bắt đầu';
+      const pauseBtn=document.getElementById('botVsBotPause');
+      if(pauseBtn) pauseBtn.textContent = '⏸️ Tạm dừng';
+    }
+  });
+  
+  // Đổi version thì cập nhật nhãn
+  document.addEventListener('change', (e)=>{
+    if(e.target.id === 'botXVersion' || e.target.id === 'botOVersion'){
+      updateBotVsBotUI();
+    }
+  });
+  
+  // Override updateUIByMode nếu có để xử lý Bot vs Bot
+  const checkInterval = setInterval(()=>{
+    if(typeof updateUIByMode === 'function'){
+      const orig = updateUIByMode;
+      window.updateUIByMode = function(){
+        orig.apply(this, arguments);
+        updateBotVsBotUI();
+      };
+      clearInterval(checkInterval);
+    }
+  }, 500);
+  
+  // Khởi tạo
+  setTimeout(updateBotVsBotUI, 800);
 })();
 </script>
 
