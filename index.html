@@ -201,14 +201,13 @@ canvas{display:block; touch-action:none;}
 </div>
 
 <script type="text/plain" id="hellSrc">
-// ---------- ĐỊA NGỤC v3: phòng thủ ưu tiên tuyệt đối + VCF sâu + ordering đe dọa kép ----------
-const HELL_TIME=4200;   // ms suy nghĩ mỗi nước
+// ---------- ĐỊA NGỤC v4: phòng thủ cứng (không bỏ sót tứ) + không dùng memory penalty ----------
+const HELL_TIME=5000;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const W=[0,1,12,100,1500,100000];
-  // DEF cao hơn ATT để ưu tiên chặn; ATT vẫn đủ mạnh để tạo đe dọa
-  const ATT=[1,10,70,500,100000], DEF=[0,12,90,700,120000];
-  const WINV=10000000, INF=1e9, MAXPLY=64, EXTMAX=22, VCF_NODES=120000;
+  const ATT=[1,10,70,500,100000], DEF=[0,14,110,900,150000];
+  const WINV=10000000, INF=1e9, MAXPLY=64, EXTMAX=24, VCF_NODES=140000;
   const cw=new Array(N), nbr=new Array(N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
     const i=idx(r,c), L=[];
@@ -255,34 +254,89 @@ const Hell=(()=>{
     for(let k=0;k<5;k++){ const c=s+k*st; if(hb[c]===0) return c; }
     return -1;
   }
-  function findFour(p){
-    const A=p===1?w1:w2, B=p===1?w2:w1;
-    for(let i=0;i<N;i++){
-      if(hb[i]!==0||near[i]===0) continue;
-      const L=cw[i];
-      for(let k=0;k<L.length;k++){ const w=L[k]; if(A[w]===4&&B[w]===0) return i; }
+  // Quét trực tiếp 4 hướng: tìm ô trống tạo đủ 5 hoặc tạo tứ (phải chặn)
+  // Không phụ thuộc near[] → không bỏ sót
+  function scanCritical(p){
+    const win=[], four=[], open3=[];
+    const seenW={}, seenF={}, seen3={};
+    for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+      const i=idx(r,c);
+      if(hb[i]!==0) continue;
+      for(let d=0;d<4;d++){
+        const dr=DR[d], dc=DC[d];
+        // đếm liên tiếp 2 phía
+        let a=0,b=0;
+        for(let k=1;k<5;k++){
+          const nr=r+dr*k, nc=c+dc*k;
+          if(!inb(nr,nc)||hb[idx(nr,nc)]!==p) break;
+          a++;
+        }
+        for(let k=1;k<5;k++){
+          const nr=r-dr*k, nc=c-dc*k;
+          if(!inb(nr,nc)||hb[idx(nr,nc)]!==p) break;
+          b++;
+        }
+        const total=a+b;
+        if(total>=4){ if(!seenW[i]){ seenW[i]=1; win.push(i);} continue; }
+        if(total===3){
+          // kiểm tra 2 đầu có trống không (open four nếu 1 đầu trống phía ngoài chuỗi)
+          const f1r=r+dr*(a+1), f1c=c+dc*(a+1);
+          const f2r=r-dr*(b+1), f2c=c-dc*(b+1);
+          const o1=inb(f1r,f1c)&&hb[idx(f1r,f1c)]===0;
+          const o2=inb(f2r,f2c)&&hb[idx(f2r,f2c)]===0;
+          // tứ: 3+ô trống hiện tại = 4 quân liên tiếp khi đánh
+          if(!seenF[i]){ seenF[i]=1; four.push(i); }
+          continue;
+        }
+        if(total===2){
+          const f1r=r+dr*(a+1), f1c=c+dc*(a+1);
+          const f2r=r-dr*(b+1), f2c=c-dc*(b+1);
+          const o1=inb(f1r,f1c)&&hb[idx(f1r,f1c)]===0;
+          const o2=inb(f2r,f2c)&&hb[idx(f2r,f2c)]===0;
+          if(o1&&o2&&!seen3[i]){ seen3[i]=1; open3.push(i); }
+        }
+      }
+      // pattern XX_X / X_XX trong cửa sổ 5
+      for(let d=0;d<4;d++){
+        const dr=DR[d], dc=DC[d];
+        for(let off=-4;off<=0;off++){
+          const cells=[];
+          let ok=true, cnt=0, emptyAt=-1;
+          for(let k=0;k<5;k++){
+            const nr=r+dr*(off+k), nc=c+dc*(off+k);
+            if(!inb(nr,nc)){ ok=false; break; }
+            const v=hb[idx(nr,nc)];
+            if(v===3-p){ ok=false; break; }
+            if(v===p) cnt++;
+            else if(v===0){ if(emptyAt>=0){ ok=false; break;} emptyAt=k; }
+          }
+          if(!ok||emptyAt<0) continue;
+          const ei=idx(r+dr*(off+emptyAt), c+dc*(off+emptyAt));
+          if(cnt===4&&!seenW[ei]){ seenW[ei]=1; win.push(ei); }
+          else if(cnt===3&&!seenF[ei]){ seenF[ei]=1; four.push(ei); }
+        }
+      }
     }
-    return -1;
+    return {win, four, open3};
   }
-  // Tìm mọi ô tạo tứ (4 quân + 1 trống) của p → phải chặn/đi ngay
+  function findFour(p){
+    const s=scanCritical(p);
+    return s.win[0]>=0?s.win[0]:(s.four[0]>=0?s.four[0]:-1);
+  }
   function allFours(p){
-    const A=p===1?w1:w2, B=p===1?w2:w1, out=[];
-    for(let i=0;i<N;i++){
-      if(hb[i]!==0||near[i]===0) continue;
-      const L=cw[i];
-      for(let k=0;k<L.length;k++){ const w=L[k]; if(A[w]===4&&B[w]===0){ out.push(i); break; } }
-    }
+    const s=scanCritical(p);
+    // win + four đều phải xử lý ngay
+    const out=[], seen={};
+    for(const i of s.win.concat(s.four)){ if(!seen[i]){ seen[i]=1; out.push(i);} }
     return out;
   }
-  // Đếm open-three (3 quân 2 đầu trống) mà ô i tạo ra cho p
   function threatScore(i,p){
-    const A=p===1?w1:w2, B=p===1?w2:w1;
-    const L=cw[i]; let th3=0, th4=0;
-    for(let k=0;k<L.length;k++){
-      const w=L[k], a=A[w], b=B[w];
-      if(b===0){ if(a===3) th3++; if(a===4) th4++; }
-    }
-    return th4*10000 + th3*100;
+    const s=scanCritical(p);
+    let sc=0;
+    if(s.win.indexOf(i)>=0) sc+=100000;
+    if(s.four.indexOf(i)>=0) sc+=10000;
+    if(s.open3.indexOf(i)>=0) sc+=500;
+    return sc;
   }
   function gen(me,forced,quiet,K){
     const A=me===1?w1:w2, B=me===1?w2:w1;
@@ -293,14 +347,12 @@ const Hell=(()=>{
       for(let k=0;k<L.length;k++){
         const w=L[k], a=A[w], b=B[w];
         if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; }
-        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; s+=50; } }
+        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; s+=80; } }
       }
-      // đe dọa kép của mình
-      if(th4>=1||th3>=2) s+=12000;
-      else if(th3>=1) s+=600;
-      // chặn đe dọa kép của đối thủ — ưu tiên cực cao
-      if(oth4>=1||oth3>=2) s+=15000;
-      else if(oth3>=1) s+=800;
+      if(th4>=1||th3>=2) s+=15000;
+      else if(th3>=1) s+=800;
+      if(oth4>=1||oth3>=2) s+=20000;
+      else if(oth3>=1) s+=1200;
       if(bl) blk.push(i);
       if(quiet&&!mk&&th4===0&&oth4===0) continue;
       cells.push(i); scs.push(s); mks.push((mk||th4||oth4)?1:0);
@@ -376,67 +428,81 @@ const Hell=(()=>{
     }
     return -1;
   }
-  // Chọn nước chặn tốt nhất khi đối thủ có nhiều tứ / đe dọa
   function bestBlock(cands){
     if(!cands.length) return -1;
     if(cands.length===1) return cands[0];
     let best=cands[0], bs=-INF;
     for(const i of cands){
       put(i,2);
-      const sc = four2>0 ? WINV : (threatScore(i,2) - threatScore(i,1)*0.5 + ev(2));
+      let sc=ev(2);
+      // ưu tiên ô vừa chặn vừa tạo đe dọa của mình
+      const my=scanCritical(2);
+      if(my.win.indexOf(i)>=0) sc+=WINV;
+      else if(my.four.indexOf(i)>=0) sc+=50000;
+      else if(my.open3.indexOf(i)>=0) sc+=3000;
       undo(i);
       if(sc>bs){ bs=sc; best=i; }
     }
     return best;
   }
   function think(pen){
+    // pen bị bỏ qua — luôn chơi ở mức mạnh nhất, không bị memory lệch
     hb=new Uint8Array(N); w1=new Uint8Array(4*N); w2=new Uint8Array(4*N); near=new Uint8Array(N);
     E=0; four1=0; four2=0; won=false;
     let stones=0;
     for(let i=0;i<N;i++) if(board[i]){ put(i,board[i]); stones++; }
     if(!stones){
-      const c0=idx(SIZE>>1,SIZE>>1), opts=[c0,c0+1,c0-1,c0+SIZE,c0-SIZE,c0+SIZE+1,c0-SIZE-1,c0+SIZE-1,c0-SIZE+1];
-      let bc=c0, bp=(pen&&pen[c0])||0;
-      for(let q=1;q<opts.length;q++){ const pp=(pen&&pen[opts[q]])||0; if(pp<bp){ bp=pp; bc=opts[q]; } }
-      return bc;
+      // Khai cuộc đa dạng: chọn ngẫu nhiên trong vùng trung tâm 3x3 (có trọng số tâm)
+      const c0=idx(SIZE>>1,SIZE>>1);
+      const opts=[c0,c0+1,c0-1,c0+SIZE,c0-SIZE,c0+SIZE+1,c0-SIZE-1,c0+SIZE-1,c0-SIZE+1];
+      const w=[5,2,2,2,2,1,1,1,1]; // tâm nặng hơn
+      let sum=0; for(const x of w) sum+=x;
+      let r=Math.random()*sum, pick=c0;
+      for(let q=0;q<opts.length;q++){ r-=w[q]; if(r<=0){ pick=opts[q]; break; } }
+      return pick;
     }
     deadline=performance.now()+HELL_TIME; aborted=false; nodes=0; vn=0;
     let m;
 
-    // 1) Thắng ngay nếu có tứ
-    if(four2>0&&(m=findFour(2))>=0) return m;
+    // 1) Thắng ngay
+    const myCrit=scanCritical(2);
+    if(myCrit.win.length) return myCrit.win[0];
 
-    // 2) Chặn TẤT CẢ tứ của đối thủ (nếu nhiều tứ → chọn nước chặn tốt nhất / dual-purpose)
-    const opFours=allFours(1);
-    if(opFours.length){
-      // Nếu mình cũng tạo tứ tại ô đó thì đi luôn
-      for(const i of opFours){ if(threatScore(i,2)>=10000) return i; }
-      return bestBlock(opFours);
+    // 2) Chặn MỌI nước thắng/tứ của đối thủ (scan trực tiếp, không bỏ sót)
+    const opCrit=scanCritical(1);
+    const must=opCrit.win.concat(opCrit.four);
+    if(must.length){
+      // dual-purpose: ô vừa chặn vừa thắng/tứ mình
+      for(const i of must){ if(myCrit.win.indexOf(i)>=0||myCrit.four.indexOf(i)>=0) return i; }
+      return bestBlock(must);
     }
 
-    // 3) VCF tấn thắng
-    if((m=vcf(2,0,22))>=0) return m;
+    // 3) VCF mình
+    if((m=vcf(2,0,24))>=0) return m;
 
-    // 4) Chặn VCF của đối thủ (nhìn sâu)
-    if((m=vcf(1,0,20))>=0){
-      if(hb[m]===0) return m;
+    // 4) Chặn VCF đối thủ
+    if((m=vcf(1,0,20))>=0){ if(hb[m]===0) return m; }
+
+    // 5) Ưu tiên chặn/đi open-three đôi
+    if(opCrit.open3.length>=2){
+      // đe dọa kép open3 của đối thủ → chặn một ô nếu có thể dual
+      return bestBlock(opCrit.open3);
     }
 
-    // 5) Alpha-beta iterative deepening
+    // 6) Alpha-beta
     const g=gen(2,false,false,20);
     if(!g.cells.length) return idx(SIZE>>1,SIZE>>1);
     let order=g.cells.slice(), best=order[0];
     if(order.length===1) return best;
-    for(let depth=2;depth<=20;depth+=2){
+    for(let depth=2;depth<=22;depth+=2){
       let alpha=-INF, bi=-1, bs=-INF, done=true;
       for(let j=0;j<order.length;j++){
-        const i=order[j], pn=(pen&&pen[i])||0;
+        const i=order[j];
         const w=put(i,2);
-        const sc=w?WINV:-nm(depth-1,-INF,-(alpha+pn),1,1,0);
+        const sc=w?WINV:-nm(depth-1,-INF,-alpha,1,1,0);
         undo(i);
         if(aborted){ done=false; break; }
-        const adj=sc>=WINV-100?sc:sc-pn;
-        if(adj>bs){ bs=adj; bi=i; }
+        if(sc>bs){ bs=sc; bi=i; }
         if(bs>alpha) alpha=bs;
         if(w) break;
       }
@@ -996,13 +1062,8 @@ function endGame(winner, cells){
   if(winner===1){scores.X++; statusEl.textContent='X thắng!';}
   else if(winner===2){scores.O++; statusEl.textContent='O thắng!';}
   else {scores.D++; statusEl.textContent='Hòa!';}
-  if(mode==='ai'&&difficulty==='hell'){
-    const bs=3-mySide;
-    const res = winner===0 ? 'draw' : (winner===bs ? 'win' : 'lose');
-    hellLearn(res);
-    const msg = res==='win' ? ' 🧠 Máy học từ ván thắng' : res==='lose' ? ' 🧠 Máy học từ ván thua' : ' 🧠 Máy học từ ván hòa';
-    statusEl.textContent+=msg;
-  }
+  // Địa ngục v4: không học từ ván — luôn chơi mức mạnh nhất
+  
   document.getElementById('scX').textContent=scores.X;
   document.getElementById('scO').textContent=scores.O;
   document.getElementById('scD').textContent=scores.D;
@@ -1028,10 +1089,8 @@ function popMove(){
   if(last.endedWin){
     if(last.endedWin===1){scores.X=Math.max(0,scores.X-1); document.getElementById('scX').textContent=scores.X;}
     else {scores.O=Math.max(0,scores.O-1); document.getElementById('scO').textContent=scores.O;}
-    if(mode==='ai'&&difficulty==='hell') hellUnlearn();
   } else if(last.endedDraw){
     scores.D=Math.max(0,scores.D-1); document.getElementById('scD').textContent=scores.D;
-    if(mode==='ai'&&difficulty==='hell') hellUnlearn();
   }
   gameOver=false; winCells=[];
   turn=last.p;
@@ -1107,7 +1166,7 @@ function aiMove(){
         const b=candidates().map(([r,c])=>[r,c,scoreCell(r,c,bs)]).sort((x,y)=>y[2]-x[2])[0];
         placeLocal(b[0],b[1],bs);
       } else placeLocal(Math.floor(i/SIZE), i%SIZE, bs);
-    }, bs, hellMemLoad().pen[posKey(board)]||null);
+    }, bs, null);
     return;
   }
   const cands=candidates();
@@ -1190,10 +1249,7 @@ function updateHellMemUI(){
   const show=mode==='ai'&&difficulty==='hell';
   el.classList.toggle('hidden',!show);
   if(!show) return;
-  el.innerHTML='🧠 Bot đã học từ '+hellMemLoad().n+' ván (thắng/hòa/thua) · <span id="hellMemReset">Xóa trí nhớ</span>';
-  document.getElementById('hellMemReset').onclick=()=>{
-    if(confirm('Xóa toàn bộ những gì bot Địa ngục đã học?')){ hellMem={n:0,pen:{}}; hellLearnDelta=null; hellMemSave(); updateHellMemUI(); }
-  };
+  el.innerHTML='🔥 Địa ngục — luôn mức mạnh nhất (không học lệch nước)';
 }
 // HELLMEM>>
 // nếu mình chọn O thì máy (X) phải đi trước
