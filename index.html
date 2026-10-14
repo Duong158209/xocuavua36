@@ -225,35 +225,82 @@
 }
 
 
-/* 2 cây đuốc lửa khi chọn hell */
+
+/* 2 cây đuốc lửa - TO HƠN, LỰC HƠN */
 #hellTorches{
   position:fixed; inset:0; pointer-events:none; z-index:35; display:none;
 }
 #hellTorches.show{display:block;}
 .torch{
-  position:fixed; width:48px; height:120px; display:flex; flex-direction:column; align-items:center;
-  filter:drop-shadow(0 0 12px #ff6a00) drop-shadow(0 0 20px #ff0000);
-  animation:torchFlicker .15s ease-in-out infinite alternate;
+  position:fixed; width:80px; height:180px; display:flex; flex-direction:column; align-items:center;
+  filter:drop-shadow(0 0 18px #ff6a00) drop-shadow(0 0 35px #ff0000) drop-shadow(0 0 50px #ff8a00);
+  animation:torchFlicker .12s ease-in-out infinite alternate;
 }
-.torch.left{left:2px; top:50%; transform:translateY(-50%);}
-.torch.right{right:2px; top:50%; transform:translateY(-50%);}
+.torch.left{left:4px; top:50%; transform:translateY(-50%);}
+.torch.right{right:4px; top:50%; transform:translateY(-50%);}
 .torch .flame{
-  font-size:32px; line-height:1; animation:flameDance .2s ease-in-out infinite alternate;
-  text-shadow:0 0 10px #ff6a00, 0 0 20px #ff0000, 0 0 30px #ff8a00;
+  font-size:56px; line-height:1; animation:flameDance .18s ease-in-out infinite alternate;
+  text-shadow:0 0 12px #ffec00, 0 0 20px #ff6a00, 0 0 35px #ff0000, 0 0 50px #ff3b00, 0 0 70px #ff0000;
+  filter:brightness(1.2) saturate(1.3);
 }
-.torch .stick{width:6px; height:50px; background:linear-gradient(180deg, #8B4513, #5D2F0A); border-radius:3px; margin-top:2px; box-shadow:inset 0 1px #a0522d;}
+.torch .flame::before{
+  content:'🔥'; position:absolute; font-size:42px; opacity:.7; animation:flameInner .15s infinite alternate; margin-top:8px;
+}
+.torch .stick{
+  width:10px; height:80px; 
+  background:linear-gradient(180deg, #a0522d 0%, #8B4513 20%, #654321 50%, #4a2511 100%);
+  border-radius:5px; margin-top:4px; 
+  box-shadow:inset 2px 0 3px #c4703a, inset -1px 0 2px #3d1f0f, 0 2px 8px #000a;
+  position:relative;
+}
+.torch .stick::after{
+  content:''; position:absolute; left:-3px; top:-2px; right:-3px; height:14px;
+  background:radial-gradient(50% 100% at 50% 0%, rgba(255,200,0,.5) 0%, rgba(255,100,0,.3) 40%, transparent 80%);
+  border-radius:50%;
+}
 .torch .glow{
-  position:absolute; top:10px; width:60px; height:60px; background:radial-gradient(50% 50% at 50% 50%, rgba(255,100,0,.4) 0%, rgba(255,50,0,.15) 40%, transparent 70%);
-  animation:torchGlow 1.5s ease-in-out infinite alternate;
+  position:absolute; top:5px; width:100px; height:100px; 
+  background:radial-gradient(50% 50% at 50% 30%, rgba(255,180,0,.6) 0%, rgba(255,100,0,.4) 25%, rgba(255,40,0,.25) 50%, transparent 75%);
+  animation:torchGlow 1s ease-in-out infinite alternate;
+  filter:blur(2px);
 }
-@keyframes torchFlicker{0%{transform:translateY(-50%) rotate(-1deg) scale(1);}100%{transform:translateY(-50%) rotate(1deg) scale(1.05);}}
-@keyframes flameDance{0%{transform:scale(1) translateY(0) rotate(-2deg);}100%{transform:scale(1.1) translateY(-2px) rotate(2deg);}}
-@keyframes torchGlow{0%{opacity:.6; transform:scale(1);}100%{opacity:1; transform:scale(1.2);}}
+.torch .sparks{
+  position:absolute; top:0; width:2px; height:2px; background:#ffec00; border-radius:50%;
+  box-shadow:0 0 6px #ffec00, 0 0 12px #ff6a00;
+  animation:sparkFly 1.2s ease-out infinite;
+}
+.torch .sparks:nth-child(2){ left:10px; animation-delay:.2s; }
+.torch .sparks:nth-child(3){ right:12px; animation-delay:.5s; }
+.torch .sparks:nth-child(4){ left:20px; animation-delay:.8s; }
+
+@keyframes torchFlicker{
+  0%{transform:translateY(-50%) rotate(-1.5deg) scale(1) translateX(0);}
+  100%{transform:translateY(-50%) rotate(1.5deg) scale(1.08) translateX(1px);}
+}
+@keyframes flameDance{
+  0%{transform:scale(1) translateY(0) rotate(-3deg) skewX(-1deg);}
+  100%{transform:scale(1.15) translateY(-4px) rotate(3deg) skewX(1deg);}
+}
+@keyframes flameInner{
+  0%{transform:scale(.8) translateY(2px); opacity:.6;}
+  100%{transform:scale(1.1) translateY(-2px); opacity:.9;}
+}
+@keyframes torchGlow{
+  0%{opacity:.7; transform:scale(1) translateY(0);}
+  100%{opacity:1; transform:scale(1.3) translateY(-3px);}
+}
+@keyframes sparkFly{
+  0%{transform:translateY(0) translateX(0) scale(1); opacity:1;}
+  100%{transform:translateY(-40px) translateX(var(--sx, 10px)) scale(0); opacity:0;}
+}
+
 @media(max-width:600px){
-  .torch{width:36px; height:90px;}
-  .torch .flame{font-size:24px;}
-  .torch .stick{height:35px; width:4px;}
+  .torch{width:60px; height:140px;}
+  .torch .flame{font-size:42px;}
+  .torch .stick{height:60px; width:7px;}
+  .torch .glow{width:75px; height:75px;}
 }
+
 
 </style>
 <meta charset="UTF-8">
@@ -581,35 +628,82 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 }
 
 
-/* 2 cây đuốc lửa khi chọn hell */
+
+/* 2 cây đuốc lửa - TO HƠN, LỰC HƠN */
 #hellTorches{
   position:fixed; inset:0; pointer-events:none; z-index:35; display:none;
 }
 #hellTorches.show{display:block;}
 .torch{
-  position:fixed; width:48px; height:120px; display:flex; flex-direction:column; align-items:center;
-  filter:drop-shadow(0 0 12px #ff6a00) drop-shadow(0 0 20px #ff0000);
-  animation:torchFlicker .15s ease-in-out infinite alternate;
+  position:fixed; width:80px; height:180px; display:flex; flex-direction:column; align-items:center;
+  filter:drop-shadow(0 0 18px #ff6a00) drop-shadow(0 0 35px #ff0000) drop-shadow(0 0 50px #ff8a00);
+  animation:torchFlicker .12s ease-in-out infinite alternate;
 }
-.torch.left{left:2px; top:50%; transform:translateY(-50%);}
-.torch.right{right:2px; top:50%; transform:translateY(-50%);}
+.torch.left{left:4px; top:50%; transform:translateY(-50%);}
+.torch.right{right:4px; top:50%; transform:translateY(-50%);}
 .torch .flame{
-  font-size:32px; line-height:1; animation:flameDance .2s ease-in-out infinite alternate;
-  text-shadow:0 0 10px #ff6a00, 0 0 20px #ff0000, 0 0 30px #ff8a00;
+  font-size:56px; line-height:1; animation:flameDance .18s ease-in-out infinite alternate;
+  text-shadow:0 0 12px #ffec00, 0 0 20px #ff6a00, 0 0 35px #ff0000, 0 0 50px #ff3b00, 0 0 70px #ff0000;
+  filter:brightness(1.2) saturate(1.3);
 }
-.torch .stick{width:6px; height:50px; background:linear-gradient(180deg, #8B4513, #5D2F0A); border-radius:3px; margin-top:2px; box-shadow:inset 0 1px #a0522d;}
+.torch .flame::before{
+  content:'🔥'; position:absolute; font-size:42px; opacity:.7; animation:flameInner .15s infinite alternate; margin-top:8px;
+}
+.torch .stick{
+  width:10px; height:80px; 
+  background:linear-gradient(180deg, #a0522d 0%, #8B4513 20%, #654321 50%, #4a2511 100%);
+  border-radius:5px; margin-top:4px; 
+  box-shadow:inset 2px 0 3px #c4703a, inset -1px 0 2px #3d1f0f, 0 2px 8px #000a;
+  position:relative;
+}
+.torch .stick::after{
+  content:''; position:absolute; left:-3px; top:-2px; right:-3px; height:14px;
+  background:radial-gradient(50% 100% at 50% 0%, rgba(255,200,0,.5) 0%, rgba(255,100,0,.3) 40%, transparent 80%);
+  border-radius:50%;
+}
 .torch .glow{
-  position:absolute; top:10px; width:60px; height:60px; background:radial-gradient(50% 50% at 50% 50%, rgba(255,100,0,.4) 0%, rgba(255,50,0,.15) 40%, transparent 70%);
-  animation:torchGlow 1.5s ease-in-out infinite alternate;
+  position:absolute; top:5px; width:100px; height:100px; 
+  background:radial-gradient(50% 50% at 50% 30%, rgba(255,180,0,.6) 0%, rgba(255,100,0,.4) 25%, rgba(255,40,0,.25) 50%, transparent 75%);
+  animation:torchGlow 1s ease-in-out infinite alternate;
+  filter:blur(2px);
 }
-@keyframes torchFlicker{0%{transform:translateY(-50%) rotate(-1deg) scale(1);}100%{transform:translateY(-50%) rotate(1deg) scale(1.05);}}
-@keyframes flameDance{0%{transform:scale(1) translateY(0) rotate(-2deg);}100%{transform:scale(1.1) translateY(-2px) rotate(2deg);}}
-@keyframes torchGlow{0%{opacity:.6; transform:scale(1);}100%{opacity:1; transform:scale(1.2);}}
+.torch .sparks{
+  position:absolute; top:0; width:2px; height:2px; background:#ffec00; border-radius:50%;
+  box-shadow:0 0 6px #ffec00, 0 0 12px #ff6a00;
+  animation:sparkFly 1.2s ease-out infinite;
+}
+.torch .sparks:nth-child(2){ left:10px; animation-delay:.2s; }
+.torch .sparks:nth-child(3){ right:12px; animation-delay:.5s; }
+.torch .sparks:nth-child(4){ left:20px; animation-delay:.8s; }
+
+@keyframes torchFlicker{
+  0%{transform:translateY(-50%) rotate(-1.5deg) scale(1) translateX(0);}
+  100%{transform:translateY(-50%) rotate(1.5deg) scale(1.08) translateX(1px);}
+}
+@keyframes flameDance{
+  0%{transform:scale(1) translateY(0) rotate(-3deg) skewX(-1deg);}
+  100%{transform:scale(1.15) translateY(-4px) rotate(3deg) skewX(1deg);}
+}
+@keyframes flameInner{
+  0%{transform:scale(.8) translateY(2px); opacity:.6;}
+  100%{transform:scale(1.1) translateY(-2px); opacity:.9;}
+}
+@keyframes torchGlow{
+  0%{opacity:.7; transform:scale(1) translateY(0);}
+  100%{opacity:1; transform:scale(1.3) translateY(-3px);}
+}
+@keyframes sparkFly{
+  0%{transform:translateY(0) translateX(0) scale(1); opacity:1;}
+  100%{transform:translateY(-40px) translateX(var(--sx, 10px)) scale(0); opacity:0;}
+}
+
 @media(max-width:600px){
-  .torch{width:36px; height:90px;}
-  .torch .flame{font-size:24px;}
-  .torch .stick{height:35px; width:4px;}
+  .torch{width:60px; height:140px;}
+  .torch .flame{font-size:42px;}
+  .torch .stick{height:60px; width:7px;}
+  .torch .glow{width:75px; height:75px;}
 }
+
 
 </style>
 </head>
@@ -2936,13 +3030,16 @@ setInterval(updateCustomStatus, 600);
 
 
 <div id="hellTorches">
+  <style>:root{--sx:10px}</style>
   <div class="torch left">
     <div class="glow"></div>
+    <span class="sparks"></span><span class="sparks"></span><span class="sparks"></span><span class="sparks"></span>
     <div class="flame">🔥</div>
     <div class="stick"></div>
   </div>
   <div class="torch right">
     <div class="glow"></div>
+    <span class="sparks"></span><span class="sparks"></span><span class="sparks"></span><span class="sparks"></span>
     <div class="flame">🔥</div>
     <div class="stick"></div>
   </div>
@@ -2990,6 +3087,77 @@ setInterval(updateCustomStatus, 600);
     showTorches(3500);
     if(origTrigger) origTrigger();
   };
+})();
+</script>
+
+
+<script>
+// Cập nhật nhãn BẠN / BOT theo bên chơi X/O ngay lập tức
+(function(){
+  function updateLabelsBySide(){
+    const sideX=document.getElementById('sideX') || document.getElementById('sideXBtn') || document.querySelector('[id*="sideX"]');
+    const sideXActive = document.getElementById('sideX')?.classList.contains('active') || document.querySelector('.sideX.active') || document.getElementById('btnXFirst')?.classList.contains('active');
+    const sideOActive = document.getElementById('sideO')?.classList.contains('active') || document.querySelector('.sideO.active') || document.getElementById('btnOSecond')?.classList.contains('active');
+    // More robust: check which side button is active (X đi trước / O đi sau)
+    let playerIsX = true;
+    // Look for buttons X • đi trước and O • đi sau
+    const xFirstBtn = Array.from(document.querySelectorAll('.btn')).find(b=>b.textContent.includes('X') && b.textContent.includes('đi trước'));
+    const oSecondBtn = Array.from(document.querySelectorAll('.btn')).find(b=>b.textContent.includes('O') && b.textContent.includes('đi sau'));
+    if(xFirstBtn && oSecondBtn){
+      if(oSecondBtn.classList.contains('active')) playerIsX = false;
+      else playerIsX = true;
+    } else if(sideOActive) {
+      playerIsX = false;
+    }
+    
+    const labelX=document.getElementById('labelX');
+    const labelO=document.getElementById('labelO');
+    const isAi = document.getElementById('modeAi')?.classList.contains('active');
+    const isHell = document.getElementById('diffHell')?.classList.contains('active');
+    const isLocal = document.getElementById('modeLocal')?.classList.contains('active');
+    const isOnline = document.getElementById('modeOnline')?.classList.contains('active');
+    
+    if(isLocal || isOnline){
+      if(labelX) labelX.textContent='X';
+      if(labelO) labelO.textContent='O';
+      return;
+    }
+    
+    if(isAi){
+      if(playerIsX){
+        if(labelX) labelX.textContent='BẠN (X)';
+        if(labelO) labelO.textContent=isHell?'HELL (O)':'BOT (O)';
+      } else {
+        if(labelX) labelX.textContent=isHell?'HELL (X)':'BOT (X)';
+        if(labelO) labelO.textContent='BẠN (O)';
+      }
+    }
+  }
+  
+  // Gọi ngay khi load và khi đổi bên
+  setTimeout(updateLabelsBySide, 300);
+  setInterval(updateLabelsBySide, 600);
+  
+  // Bắt sự kiện click vào X đi trước / O đi sau và sideX/sideO
+  document.addEventListener('click', (e)=>{
+    const btn=e.target.closest('.btn');
+    if(!btn) return;
+    const txt=btn.textContent;
+    if(txt.includes('đi trước') || txt.includes('đi sau') || txt.includes('Bạn chơi') || btn.id.includes('side') || btn.id.includes('Side')){
+      setTimeout(updateLabelsBySide, 80);
+      setTimeout(updateLabelsBySide, 300);
+    }
+  });
+  
+  // Override updateUIByMode nếu có
+  if(window.updateUIByMode){
+    const orig=window.updateUIByMode;
+    window.updateUIByMode=function(){
+      orig.apply(this, arguments);
+      setTimeout(updateLabelsBySide, 50);
+    };
+  }
+  window.updateLabelsBySide=updateLabelsBySide;
 })();
 </script>
 
