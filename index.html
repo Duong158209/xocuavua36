@@ -239,6 +239,52 @@
 }
 
 
+
+/* Fix khung tỉ số nhảy lên xuống khi bot đánh trước */
+#scorePillX, #scorePillO{
+  min-height:62px !important;
+  max-height:62px !important;
+  height:62px !important;
+  flex:none !important;
+  transition:none !important;
+  will-change:auto !important;
+}
+#labelX, #labelO{
+  min-width:85px !important;
+  max-width:120px !important;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap !important;
+  display:inline-block;
+}
+#scX, #scO{
+  min-width:90px !important;
+  max-width:90px !important;
+  flex:none !important;
+}
+/* VS không nhảy */
+#vsBadge{
+  height:28px !important;
+  min-height:28px !important;
+  flex:none !important;
+}
+/* Status không làm nhảy layout khi bot suy nghĩ */
+#status{
+  min-height:28px !important;
+  height:28px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  transition:none !important;
+}
+#status.bot-thinking{
+  padding:4px 12px !important;
+  margin:4px auto !important;
+  min-height:28px !important;
+  height:auto !important;
+  max-height:36px !important;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -579,6 +625,52 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 }
 
 
+
+/* Fix khung tỉ số nhảy lên xuống khi bot đánh trước */
+#scorePillX, #scorePillO{
+  min-height:62px !important;
+  max-height:62px !important;
+  height:62px !important;
+  flex:none !important;
+  transition:none !important;
+  will-change:auto !important;
+}
+#labelX, #labelO{
+  min-width:85px !important;
+  max-width:120px !important;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap !important;
+  display:inline-block;
+}
+#scX, #scO{
+  min-width:90px !important;
+  max-width:90px !important;
+  flex:none !important;
+}
+/* VS không nhảy */
+#vsBadge{
+  height:28px !important;
+  min-height:28px !important;
+  flex:none !important;
+}
+/* Status không làm nhảy layout khi bot suy nghĩ */
+#status{
+  min-height:28px !important;
+  height:28px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  transition:none !important;
+}
+#status.bot-thinking{
+  padding:4px 12px !important;
+  margin:4px auto !important;
+  min-height:28px !important;
+  height:auto !important;
+  max-height:36px !important;
+}
+
 </style>
 </head>
 <body>
@@ -623,36 +715,6 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
       <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(145deg,#231b2f,#15111e); border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">H</div>
       <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v11</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
     </div>
-
-    <!-- VS SCORES - 2 hàng ngang cân đối -->
-    <div style="background:linear-gradient(145deg,#14111e,#0e0c15); border:1px solid #3a2a4a; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
-      <!-- Hàng 1: Bạn thắng -->
-      <div id="scorePillX" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #ff7a7a50; box-shadow:inset 0 1px #ffffff08, 0 0 12px #ff7a7a15;">
-        <div style="display:flex; align-items:center; gap:12px; flex:1;">
-          <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#ff9a9a;">X</span>
-          <span id="labelX" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2;">BẠN (X)</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span class="val" id="scX" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(255,122,122,.12); border:1px solid #ff7a7a30; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
-        </div>
-      </div>
-      <!-- VS ở giữa 2 hàng -->
-      <div id="vsBadge" style="display:flex; align-items:center; justify-content:center; gap:12px; font-weight:900; font-size:1rem; letter-spacing:.2em; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60; opacity:.9;">
-        <span style="flex:1; height:1px; background:linear-gradient(90deg, transparent, #4a355e);"></span>VS<span style="flex:1; height:1px; background:linear-gradient(90deg, #4a355e, transparent);"></span>
-      </div>
-      <!-- Hàng 2: Bot thắng -->
-      <div id="scorePillO" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#17131f,#14111e); border:1.5px solid #6a5a8a50; box-shadow:inset 0 1px #ffffff08;">
-        <div style="display:flex; align-items:center; gap:12px; flex:1;">
-          <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #8a6ab0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#c9a8d0;">O</span>
-          <span id="labelO" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2;">BOT (O)</span>
-        </div>
-        <span class="val" id="scO" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(138,106,176,.15); border:1px solid #8a6ab030; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
-      </div>
-      
-    </div>
-
-    <div id="status" style="text-align:center; font-size:.88rem; letter-spacing:.18em; color:#ff9a9a; font-weight:800; padding:4px 0;">LƯỢT CỦA BẠN – CHẠM ĐỂ ĐÁNH</div>
-
 
     <!-- CHẾ ĐỘ CHƠI - restored -->
     <div style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
@@ -699,6 +761,36 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
         <div class="btn" id="hintBtn">💡 Gợi ý</div>
       </div>
     </div>
+
+
+    <!-- VS SCORES - 2 hàng ngang cân đối -->
+    <div style="background:linear-gradient(145deg,#14111e,#0e0c15); border:1px solid #3a2a4a; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+      <!-- Hàng 1: Bạn thắng -->
+      <div id="scorePillX" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #ff7a7a50; box-shadow:inset 0 1px #ffffff08, 0 0 12px #ff7a7a15;">
+        <div style="display:flex; align-items:center; gap:12px; flex:1;">
+          <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#ff9a9a;">X</span>
+          <span id="labelX" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2;">BẠN (X)</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="val" id="scX" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(255,122,122,.12); border:1px solid #ff7a7a30; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
+        </div>
+      </div>
+      <!-- VS ở giữa 2 hàng -->
+      <div id="vsBadge" style="display:flex; align-items:center; justify-content:center; gap:12px; font-weight:900; font-size:1rem; letter-spacing:.2em; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60; opacity:.9;">
+        <span style="flex:1; height:1px; background:linear-gradient(90deg, transparent, #4a355e);"></span>VS<span style="flex:1; height:1px; background:linear-gradient(90deg, #4a355e, transparent);"></span>
+      </div>
+      <!-- Hàng 2: Bot thắng -->
+      <div id="scorePillO" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#17131f,#14111e); border:1.5px solid #6a5a8a50; box-shadow:inset 0 1px #ffffff08;">
+        <div style="display:flex; align-items:center; gap:12px; flex:1;">
+          <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #8a6ab0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#c9a8d0;">O</span>
+          <span id="labelO" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2;">BOT (O)</span>
+        </div>
+        <span class="val" id="scO" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(138,106,176,.15); border:1px solid #8a6ab030; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
+      </div>
+      
+    </div>
+
+    <div id="status" style="text-align:center; font-size:.88rem; letter-spacing:.18em; color:#ff9a9a; font-weight:800; padding:4px 0;">LƯỢT CỦA BẠN – CHẠM ĐỂ ĐÁNH</div>
 
 
     <div id="warnBar" class="hidden"></div>
@@ -2895,18 +2987,47 @@ document.addEventListener('click', (e)=>{
     }
   }
   
-  // Gọi ngay khi load và khi đổi bên
+  // Gọi ngay khi load và khi đổi bên - KHÔNG dùng setInterval để tránh nhảy liên tục
   setTimeout(updateLabelsBySide, 300);
-  setInterval(updateLabelsBySide, 600);
   
-  // Bắt sự kiện click vào X đi trước / O đi sau và sideX/sideO
+  // Bắt sự kiện click vào X đi trước / O đi sau và sideX/sideO - chỉ cập nhật khi người dùng thực sự đổi bên
+  let lastPlayerIsX = null;
+  const originalUpdateLabelsBySide = updateLabelsBySide;
+  updateLabelsBySide = function(){
+    const xFirstBtn = document.getElementById('sideX');
+    const oSecondBtn = document.getElementById('sideO');
+    let currentIsX = true;
+    if(oSecondBtn && oSecondBtn.classList.contains('active')) currentIsX = false;
+    else if(xFirstBtn && xFirstBtn.classList.contains('active')) currentIsX = true;
+    
+    // Chỉ cập nhật nếu thực sự đổi bên, tránh nhảy liên tục khi bot đánh trước
+    if(lastPlayerIsX !== null && lastPlayerIsX === currentIsX){
+      // Kiểm tra nếu label đã đúng thì không làm gì
+      const labelX=document.getElementById('labelX');
+      if(labelX){
+        const expected = currentIsX ? 'BẠN (X)' : (document.getElementById('diffHell')?.classList.contains('active') ? 'HELL (X)' : 'BOT (X)');
+        if(labelX.textContent === expected && !document.getElementById('modeLocal')?.classList.contains('active') && !document.getElementById('modeOnline')?.classList.contains('active')){
+          return;
+        }
+      }
+    }
+    lastPlayerIsX = currentIsX;
+    return originalUpdateLabelsBySide();
+  };
+  
   document.addEventListener('click', (e)=>{
     const btn=e.target.closest('.btn');
     if(!btn) return;
-    const txt=btn.textContent;
-    if(txt.includes('đi trước') || txt.includes('đi sau') || txt.includes('Bạn chơi') || btn.id.includes('side') || btn.id.includes('Side')){
-      setTimeout(updateLabelsBySide, 80);
-      setTimeout(updateLabelsBySide, 300);
+    const txt=btn.textContent || '';
+    const id=btn.id || '';
+    // Chỉ khi click vào nút đổi bên thực sự
+    if(id==='sideX' || id==='sideO' || txt.includes('đi trước') || txt.includes('đi sau')){
+      setTimeout(()=>{ lastPlayerIsX=null; updateLabelsBySide(); }, 50);
+      setTimeout(()=>{ updateLabelsBySide(); }, 250);
+    }
+    // Khi đổi chế độ chơi
+    if(id==='modeAi' || id==='modeLocal' || id==='modeOnline'){
+      setTimeout(()=>{ lastPlayerIsX=null; updateLabelsBySide(); }, 100);
     }
   });
   
