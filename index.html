@@ -257,15 +257,14 @@ body.hell-vip .ftab,body.hell-vip .smallbtn{background:#191521;color:#f6edf7;bor
 </div>
 
 <script type="text/plain" id="hellSrc">
-// HELL v6 — pattern eval (tứ mở/tứ chết, tam mở/tam gãy), TT lâu dài giữa các lượt,
-// aspiration window, killer moves, quiescence mở rộng theo đe dọa, VCF chứng minh.
-const HELL_TIME=15000;
+// HELL VIP v7 — tăng tìm kiếm chiến thuật, ưu tiên phòng thủ trước đòn thắng tức thì và mở rộng VCF.
+const HELL_TIME=18000;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
-  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=16, VCF_NODES=220000;
+  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=16, VCF_NODES=350000;
   const OPEN4=2000000, FOUR=240000, OPEN3=52000, BRK3=12000, THREE3=2500, DBL3=180000;
   const W=[0,2,16,120,900,0];
-  const ATT=[2,24,160,900,100000], DEF=[0,30,240,1600,320000];
+  const ATT=[2,30,210,1400,100000], DEF=[0,45,320,2600,420000];
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -369,8 +368,8 @@ const Hell=(()=>{
       }
       if(th4>=1||th3>=2) s+=22000;
       else if(th3>=1) s+=1100;
-      if(oth4>=1||oth3>=2) s+=52000;
-      else if(oth3>=1) s+=4200;
+      if(oth4>=1||oth3>=2) s+=68000;
+      else if(oth3>=1) s+=5600;
       if(bl) blk.push(i);
       if(quiet&&!mk&&th4===0&&oth4===0) continue;
       cells.push(i); scs.push(s+Math.min(hist[i],4000)); mks.push((mk||th4||oth4)?1:0);
@@ -411,7 +410,7 @@ const Hell=(()=>{
       if(best>alpha) alpha=best;
     }
     const g=forced?{lose:false,cells:enemy.slice(),scs:enemy.map(()=>0),mks:enemy.map(()=>1)}
-                  :gen(me,false,quiet,quiet?12:(ply<=2?26:20));
+                  :gen(me,false,quiet,quiet?16:(ply<=2?36:28));
     if(g.lose) return -WINV+ply+1;
     const cells=g.cells;
     if(!cells.length) return quiet?best:ev(me);
@@ -522,6 +521,8 @@ const Hell=(()=>{
     if(immediate.length){ stats.reason='win'; return immediate[0]; }
     const blocks=wins(1);
     if(blocks.length===1){ stats.reason='forced-block'; return blocks[0]; }
+    // Khi đối thủ có nhiều nước thắng trực tiếp, tiếp tục tìm kiếm thay vì bỏ cuộc sớm;
+    // alpha-beta sẽ ưu tiên nước tạo đe doạ phản công hoặc kéo dài thế cờ tốt nhất.
     const g0=gen(2,false,false,N);
     const cand=[];
     for(let j=0;j<g0.cells.length;j++){
@@ -536,7 +537,7 @@ const Hell=(()=>{
     let order=cand.slice(0,36).map(c=>c[0]);
     let best=order[0], completed=0, bestScore=-INF;
     const fullDeadline=deadline;
-    deadline=Math.min(fullDeadline, performance.now()+Math.min(1600,HELL_TIME*0.12));
+    deadline=Math.min(fullDeadline, performance.now()+Math.min(2200,HELL_TIME*0.14));
     const proof=vcf(2,0,44);
     deadline=fullDeadline; aborted=false;
     if(proof>=0){ stats={depth:0,nodes:nodes,vcfNodes:vn,ms:Math.round(performance.now()-started),reason:'proved-vcf'}; return proof; }
