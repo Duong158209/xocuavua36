@@ -21,6 +21,45 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
+</style><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+
+@keyframes hellFireBoard{
+  0%{box-shadow:0 0 0 1px #ff654240,0 16px 40px #0009; filter:brightness(1);}
+  15%{box-shadow:0 0 40px #ff3b3b90,0 0 80px #ff6a3d70; filter:brightness(1.4) saturate(1.5);}
+  50%{box-shadow:0 0 60px #ff0000a0,0 0 110px #ff4a0080; filter:brightness(1.5);}
+  100%{box-shadow:0 0 0 1px #ff65421a,0 16px 40px #0009; filter:brightness(1);}
+}
+#boardWrap.hell-fire{animation:hellFireBoard 2s ease-in-out; border-color:#ff3b3b !important;}
+#boardWrap.hell-fire::after{
+  content:'🔥 HELL MODE 🔥'; position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.6rem; font-weight:900; color:#ffcc88;
+  text-shadow:0 0 20px #ff0000,0 0 40px #ff6a00;
+  background:radial-gradient(60% 40% at 50% 50%, rgba(255,50,0,.35) 0%, transparent 70%);
+  pointer-events:none; z-index:5; animation:hellTextPop 2s ease-out;
+}
+@keyframes hellTextPop{0%{opacity:0; transform:scale(.5);}15%{opacity:1; transform:scale(1.15);}70%{opacity:1; transform:scale(1);}100%{opacity:0; transform:scale(1.1);}}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -164,6 +203,24 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 }
 .topbar .topbtns{display:none !important;} /* ẩn hàng ngang cũ */
 
+
+@keyframes hellFireBoard{
+  0%{box-shadow:0 0 0 1px #ff654240,0 16px 40px #0009; filter:brightness(1);}
+  15%{box-shadow:0 0 40px #ff3b3b90,0 0 80px #ff6a3d70; filter:brightness(1.4) saturate(1.5);}
+  50%{box-shadow:0 0 60px #ff0000a0,0 0 110px #ff4a0080; filter:brightness(1.5);}
+  100%{box-shadow:0 0 0 1px #ff65421a,0 16px 40px #0009; filter:brightness(1);}
+}
+#boardWrap.hell-fire{animation:hellFireBoard 2s ease-in-out; border-color:#ff3b3b !important;}
+#boardWrap.hell-fire::after{
+  content:'🔥 HELL MODE 🔥'; position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.6rem; font-weight:900; color:#ffcc88;
+  text-shadow:0 0 20px #ff0000,0 0 40px #ff6a00;
+  background:radial-gradient(60% 40% at 50% 50%, rgba(255,50,0,.35) 0%, transparent 70%);
+  pointer-events:none; z-index:5; animation:hellTextPop 2s ease-out;
+}
+@keyframes hellTextPop{0%{opacity:0; transform:scale(.5);}15%{opacity:1; transform:scale(1.15);}70%{opacity:1; transform:scale(1);}100%{opacity:0; transform:scale(1.1);}}
+
 </style>
 </head>
 <body>
@@ -210,24 +267,24 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
     </div>
 
     <!-- VS SCORES like image -->
-    <div style="background:linear-gradient(145deg,#14111e,#0e0c15); border:1px solid #3a2a4a; border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:10px;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <div id="scorePillX" style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:24px; background:#1a1526; border:1.5px solid #ff3b5a60; box-shadow:0 0 12px #ff3b3b20;">
-          <span style="width:28px; height:28px; border-radius:50%; background:#2a1a1e; border:1px solid #ff3b5a; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.85rem;">X</span>
-          <span style="font-weight:700; font-size:.85rem;">BẠN (X)</span><span class="val" id="scX" style="margin-left:auto; font-weight:900;">0 thắng</span>
+    <div style="background:linear-gradient(145deg,#14111e,#0e0c15); border:1px solid #3a2a4a; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div id="scorePillX" style="flex:1; display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:28px; background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #4a355e; box-shadow:inset 0 1px #ffffff08;">
+          <span style="width:32px; height:32px; border-radius:50%; background:#1a1526; border:1.5px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.9rem;">X</span>
+          <span id="labelX" style="font-weight:800; font-size:.9rem; letter-spacing:.02em;">X</span>
+          <span class="val" id="scX" style="margin-left:auto; font-weight:900; font-size:.95rem;">0 thắng</span>
         </div>
-        <span style="font-size:.8rem; opacity:.5;">VS</span>
-      </div>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <div style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:24px; background:#14111e; border:1px solid #4a355e;">
-          <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.85rem;">O</span>
-          <span style="font-weight:700; font-size:.85rem;">HELL (O)</span><span class="val" id="scO" style="margin-left:auto; font-weight:900;">0 thắng</span>
+        <div id="vsBadge" style="font-weight:900; font-size:1.05rem; letter-spacing:.1em; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60; padding:0 2px;">VS</div>
+        <div id="scorePillO" style="flex:1; display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:28px; background:linear-gradient(145deg,#17131f,#14111e); border:1.5px solid #4a355e; box-shadow:inset 0 1px #ffffff08;">
+          <span style="width:32px; height:32px; border-radius:50%; background:#1a1526; border:1.5px solid #6a5a8a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.9rem;">O</span>
+          <span id="labelO" style="font-weight:800; font-size:.9rem; letter-spacing:.02em;">O</span>
+          <span class="val" id="scO" style="margin-left:auto; font-weight:900; font-size:.95rem;">0 thắng</span>
         </div>
       </div>
-      <div style="display:flex; justify-content:space-between; font-size:.8rem; opacity:.6; padding:0 4px;"><span id="scD">0 hòa</span><span id="totalMoves">0 nước</span></div>
+      <div style="display:flex; justify-content:space-between; font-size:.82rem; opacity:.6; padding:0 6px;"><span id="scD">0 hòa</span><span id="totalMoves">0 nước</span></div>
     </div>
 
-    <div id="status" style="text-align:center; font-size:.85rem; letter-spacing:.18em; color:#ff9a9a; font-weight:700;">LƯỢT CỦA BẠN – CHẠM ĐỂ ĐÁNH<br><span style="font-size:.72rem; opacity:.7; letter-spacing:.05em;">Sẵn sàng solo Hell Bot v11</span></div>
+    <div id="status" style="text-align:center; font-size:.88rem; letter-spacing:.18em; color:#ff9a9a; font-weight:800; padding:4px 0;">LƯỢT CỦA BẠN – CHẠM ĐỂ ĐÁNH</div>
 
 
     <!-- CHẾ ĐỘ CHƠI - restored -->
@@ -250,7 +307,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
     </div>
 
     <!-- BOT + BÊN CHƠI - restored -->
-    <div style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+    <div id="botCard" style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a8a; font-weight:800;">ĐỘ KHÓ BOT</div>
         <div style="font-size:.72rem; opacity:.5;" id="sideLbl">Bạn chơi:</div>
@@ -1055,7 +1112,7 @@ function showLoseFx(){
   const el=document.getElementById('loseFx');
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
   clearTimeout(loseFxTimer);
-  loseFxTimer=setTimeout(()=>el.classList.remove('show'),1500);
+  loseFxTimer=setTimeout(()=>el.classList.remove('show'),2000);
 }
 const DIFF_LABEL={easy:'Dễ',medium:'Vừa',hard:'Khó',hell:'Địa ngục'};
 // Ghi ván đấu với bot (không cộng vào thống kê thắng/thua online)
@@ -1403,6 +1460,63 @@ function setLastMove(r,c){
   draw();
 }
 let dragging=false,startX=0,startY=0,moved=false,startOffX=0,startOffY=0;
+
+function clampOffsets(){
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const BW = SIZE * cellSize, BH = SIZE * cellSize;
+  // X
+  let minX, maxX;
+  if(BW <= W){
+    // board smaller than viewport -> center with small padding, not allow empty beyond
+    minX = 0;
+    maxX = W - BW;
+    // if we want centered, set both to (W-BW)/2? but allow dragging within that range
+    // For small board, clamp to stay inside: if offX < min, offX=min; if >max, max
+    // If board much smaller, keep it centered by default
+    if(BW < W*0.85){
+      const centerX = (W - BW)/2;
+      // allow slight movement but not beyond 20px padding
+      const pad = 20;
+      minX = Math.min(centerX - pad, 0);
+      maxX = Math.max(centerX + pad, W - BW);
+      // Actually if board small, keep near center
+      if(offX < minX) offX = minX;
+      if(offX > maxX) offX = maxX;
+    } else {
+      if(offX < minX) offX = minX;
+      if(offX > maxX) offX = maxX;
+    }
+  } else {
+    // board larger than viewport -> don't show empty beyond edges
+    minX = W - BW; // negative
+    maxX = 0;
+    if(offX < minX) offX = minX;
+    if(offX > maxX) offX = maxX;
+  }
+  // Y
+  let minY, maxY;
+  if(BH <= H){
+    minY = 0;
+    maxY = H - BH;
+    if(BH < H*0.85){
+      const centerY = (H - BH)/2;
+      const pad = 20;
+      const low = Math.min(centerY - pad, 0);
+      const high = Math.max(centerY + pad, H - BH);
+      if(offY < low) offY = low;
+      if(offY > high) offY = high;
+    } else {
+      if(offY < minY) offY = minY;
+      if(offY > maxY) offY = maxY;
+    }
+  } else {
+    minY = H - BH;
+    maxY = 0;
+    if(offY < minY) offY = minY;
+    if(offY > maxY) offY = maxY;
+  }
+}
+
 const MIN_CELL=8, MAX_CELL=64;
 const ptrs=new Map();
 let pinchDist0=0, pinchSize0=0, pinchWorld={x:0,y:0}, wasPinch=false;
@@ -1431,13 +1545,14 @@ cv.addEventListener('pointermove', e=>{
     cellSize=Math.max(MIN_CELL,Math.min(MAX_CELL,pinchSize0*p.dist/pinchDist0));
     offX=p.mx-rect.left-pinchWorld.x*cellSize;
     offY=p.my-rect.top-pinchWorld.y*cellSize;
+    clampOffsets();
     draw();
     return;
   }
   if(!dragging) return;
   const dx=e.clientX-startX, dy=e.clientY-startY;
   if(Math.abs(dx)>6||Math.abs(dy)>6) moved=true;
-  if(moved){ offX=startOffX+dx; offY=startOffY+dy; draw(); }
+  if(moved){ offX=startOffX+dx; offY=startOffY+dy; clampOffsets(); draw(); }
 });
 function endPointer(e, allowTap){
   if(!ptrs.has(e.pointerId)) return;
@@ -1464,10 +1579,11 @@ cv.addEventListener('wheel', e=>{
   const wx=(e.clientX-rect.left-offX)/cellSize, wy=(e.clientY-rect.top-offY)/cellSize;
   cellSize=Math.max(MIN_CELL,Math.min(MAX_CELL,cellSize*(e.deltaY<0?1.1:1/1.1)));
   offX=e.clientX-rect.left-wx*cellSize; offY=e.clientY-rect.top-wy*cellSize;
+  clampOffsets();
   draw();
 },{passive:false});
-document.getElementById('zoomOut').onclick=()=>{cellSize=Math.max(16,cellSize-6); draw();};
-document.getElementById('zoomIn').onclick=()=>{cellSize=Math.min(70,cellSize+6); draw();};
+document.getElementById('zoomOut').onclick=()=>{cellSize=Math.max(16,cellSize-6); clampOffsets(); draw();};
+document.getElementById('zoomIn').onclick=()=>{cellSize=Math.min(70,cellSize+6); clampOffsets(); draw();};
 
 function dirs(){return [[0,1],[1,0],[1,1],[1,-1]];}
 function checkWinOnArr(bd,r,c,p){
@@ -2017,7 +2133,7 @@ async function onlineNewGame(){
   if(!roomRef) return;
   try{ await roomRef.update({board:Array.from(new Uint8Array(SIZE*SIZE)), turn:1, status:'playing', winner:0, winCells:[]}); }catch(e){}
 }
-window.addEventListener('resize', resize);
+window.addEventListener('resize', ()=>{ resize(); clampOffsets(); draw(); });
 </script>
 
 <script>
@@ -2142,6 +2258,136 @@ setInterval(updateCustomStatus, 600);
     if(typeof joinRoom==='function') joinRoom();
   });
 })();
+<script>document.addEventListener("DOMContentLoaded",()=>{ setTimeout(()=>{ if(typeof clampOffsets==="function"){ clampOffsets(); if(typeof draw==="function") draw(); } }, 600); });</script>
+
+<script>
+// Logic ẩn hiện BOT khi online / 2 người + đổi label X/O vs Bạn/Hell/Bot + VS đậm + cân đối khung
+(function(){
+  const botCard=document.getElementById('botCard');
+  const labelX=document.getElementById('labelX');
+  const labelO=document.getElementById('labelO');
+  const vsBadge=document.getElementById('vsBadge');
+  function updateUIByMode(){
+    const isAi = document.getElementById('modeAi')?.classList.contains('active');
+    const isLocal = document.getElementById('modeLocal')?.classList.contains('active');
+    const isOnline = document.getElementById('modeOnline')?.classList.contains('active');
+    const isHell = document.getElementById('diffHell')?.classList.contains('active');
+
+    // Ẩn bot khi online và 2 người
+    if(botCard){
+      if(isOnline || isLocal){
+        botCard.style.display='none';
+      } else {
+        botCard.style.display='flex';
+      }
+    }
+
+    // Cập nhật nhãn thắng
+    if(!labelX || !labelO) return;
+    if(isAi){
+      // Khi đấu với máy: X là bạn, O là HELL/BOT
+      labelX.textContent = 'BẠN (X)';
+      if(isHell){
+        labelO.textContent = 'BOT (O)';
+      } else {
+        labelO.textContent = 'BOT (O)';
+      }
+      // Nếu muốn phân biệt Hell: đổi thành HELL khi hell active
+      if(isHell) labelO.textContent = 'HELL (O)';
+    } else {
+      // 2 người hoặc online: chỉ hiện X và O thôi, không hiện Bạn/Hell
+      labelX.textContent = 'X';
+      labelO.textContent = 'O';
+    }
+
+    // VS đậm hơn, luôn ngoài và cân đối
+    if(vsBadge){
+      vsBadge.style.fontWeight='900';
+      vsBadge.style.opacity='1';
+    }
+
+    // Cân đối khung: đảm bảo 2 pill bằng nhau
+    const pillX=document.getElementById('scorePillX');
+    const pillO=document.getElementById('scorePillO');
+    if(pillX && pillO){
+      pillX.style.flex='1';
+      pillO.style.flex='1';
+      pillX.style.minWidth='0';
+      pillO.style.minWidth='0';
+    }
+  }
+
+  // Gắn sự kiện
+  ['modeAi','modeLocal','modeOnline','diffEasy','diffMed','diffHard','diffHell'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('click', ()=> setTimeout(updateUIByMode, 80));
+  });
+
+  // Gọi lúc đầu và mỗi khi đổi chế độ
+  setTimeout(updateUIByMode, 300);
+  setInterval(updateUIByMode, 800);
+  window.updateUIByMode = updateUIByMode;
+})();
 </script>
+
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script>
+<script>
+(function(){
+  function triggerHellFire(){
+    const boardWrap=document.getElementById('boardWrap');
+    try{
+      // Xóa hết tất cả nước hiện tại trên bàn cờ
+      if(typeof board!=='undefined'){
+        board = new Uint8Array(SIZE*SIZE);
+        if(typeof moveHistory!=='undefined') moveHistory = [];
+        if(typeof moveHist!=='undefined') moveHist = [];
+        if(typeof lastMove!=='undefined') lastMove = null;
+        if(typeof winCells!=='undefined') winCells = [];
+        if(typeof gameOver!=='undefined') gameOver = false;
+        if(typeof turn!=='undefined') turn = 1;
+        if(typeof hintCell!=='undefined') hintCell = null;
+        if(typeof dangerCells!=='undefined') dangerCells = [];
+        if(typeof draw==='function') draw();
+        if(typeof setStatus==='function') setStatus();
+        // Cập nhật UI tổng nước
+        const st=document.getElementById('statusTotal'); if(st) st.textContent='0';
+        const tm=document.getElementById('totalMoves'); if(tm) tm.textContent='0 nước';
+        const mh=document.getElementById('moveHistory'); if(mh) mh.textContent='Chưa có nước đi';
+        const sc=document.getElementById('status'); if(sc) sc.textContent='LƯỢT CỦA BẠN - CHẠM ĐỂ ĐÁNH';
+      }
+      if(typeof resetBoardState==='function'){
+        // Gọi thêm để đảm bảo Firebase và các state khác cũng reset
+        resetBoardState();
+      }
+    }catch(e){ console.log('clear board error', e); }
+    if(!boardWrap) return;
+    // Hiệu ứng rực lửa 2 giây
+    boardWrap.classList.remove('hell-fire'); 
+    void boardWrap.offsetWidth; // reflow để restart animation
+    boardWrap.classList.add('hell-fire');
+    // Rung + flash màn hình
+    if(navigator.vibrate) navigator.vibrate([100,50,100,50,200]);
+    // Thêm hiệu ứng toàn màn hình nếu có
+    let overlay = document.getElementById('hellFullFx');
+    if(!overlay){
+      overlay = document.createElement('div');
+      overlay.id = 'hellFullFx';
+      overlay.style.cssText = 'position:fixed; inset:0; z-index:199; pointer-events:none; display:none; background:radial-gradient(80% 60% at 50% 20%, rgba(255,60,20,.35) 0%, rgba(255,20,0,.2) 30%, transparent 70%);';
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display='block';
+    overlay.style.animation='hellFullFlash 2s ease-out';
+    setTimeout(()=>{
+      boardWrap.classList.remove('hell-fire');
+      overlay.style.display='none';
+    }, 2000);
+  }
+  document.addEventListener('click', (e)=>{
+    const btn=e.target.closest('#diffHell');
+    if(!btn) return;
+    setTimeout(triggerHellFire, 100);
+  });
+})();
+</script>
+
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
