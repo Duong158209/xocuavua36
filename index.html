@@ -77,6 +77,36 @@
 @keyframes thinkingPulse{0%,100%{opacity:1;}50%{opacity:.6;}}
 #status.bot-thinking{background:rgba(255,47,47,.12); border:1px solid #ff2f2f40; border-radius:12px; padding:6px 12px !important; margin:4px 12px;}
 
+
+/* Giao diện cân đối toàn màn hình */
+#app{padding-left:78px; max-width:100vw; box-sizing:border-box;}
+#mainScroll{max-width:640px; width:100%; margin:0 auto; padding:8px 16px 20px 0 !important; gap:14px !important; box-sizing:border-box;}
+#boardWrap{margin:0 auto !important; width:100%; max-width:640px; aspect-ratio:1; flex:none !important; min-height: min(92vw, 640px) !important;}
+@media(min-width:800px){
+  #mainScroll{max-width:720px;}
+  #boardWrap{max-width:720px; min-height:720px !important;}
+}
+
+/* Thanh chức năng hàng dọc - kéo lên xuống tùy thích */
+#sideDock{
+  cursor:grab; touch-action:none; user-select:none;
+  transition:width .28s cubic-bezier(.4,0,.2,1), box-shadow .2s ease, border-color .2s ease;
+  will-change:top;
+}
+#sideDock.dragging{cursor:grabbing; box-shadow:0 20px 50px #000a, 0 0 0 2px #ff6b4a60 !important; border-color:#ff6b4a !important; transition:none !important;}
+#sideDock::before{
+  content:'⋮⋮'; position:absolute; top:4px; left:50%; transform:translateX(-50%);
+  font-size:10px; letter-spacing:2px; color:#4a355e; opacity:.6; pointer-events:none;
+}
+#sideDock.expanded::before{content:'';}
+#dockHandle{
+  width:100%; height:16px; display:flex; align-items:center; justify-content:center;
+  color:#4a355e; font-size:12px; letter-spacing:3px; cursor:grab; margin:-4px 0 2px;
+  border-radius:8px; transition:.15s;
+}
+#dockHandle:hover{color:#ff8a6a; background:rgba(255,107,74,.1);}
+#dockHandle:active{cursor:grabbing;}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -255,6 +285,36 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 @keyframes thinkingPulse{0%,100%{opacity:1;}50%{opacity:.6;}}
 #status.bot-thinking{background:rgba(255,47,47,.12); border:1px solid #ff2f2f40; border-radius:12px; padding:6px 12px !important; margin:4px 12px;}
 
+
+/* Giao diện cân đối toàn màn hình */
+#app{padding-left:78px; max-width:100vw; box-sizing:border-box;}
+#mainScroll{max-width:640px; width:100%; margin:0 auto; padding:8px 16px 20px 0 !important; gap:14px !important; box-sizing:border-box;}
+#boardWrap{margin:0 auto !important; width:100%; max-width:640px; aspect-ratio:1; flex:none !important; min-height: min(92vw, 640px) !important;}
+@media(min-width:800px){
+  #mainScroll{max-width:720px;}
+  #boardWrap{max-width:720px; min-height:720px !important;}
+}
+
+/* Thanh chức năng hàng dọc - kéo lên xuống tùy thích */
+#sideDock{
+  cursor:grab; touch-action:none; user-select:none;
+  transition:width .28s cubic-bezier(.4,0,.2,1), box-shadow .2s ease, border-color .2s ease;
+  will-change:top;
+}
+#sideDock.dragging{cursor:grabbing; box-shadow:0 20px 50px #000a, 0 0 0 2px #ff6b4a60 !important; border-color:#ff6b4a !important; transition:none !important;}
+#sideDock::before{
+  content:'⋮⋮'; position:absolute; top:4px; left:50%; transform:translateX(-50%);
+  font-size:10px; letter-spacing:2px; color:#4a355e; opacity:.6; pointer-events:none;
+}
+#sideDock.expanded::before{content:'';}
+#dockHandle{
+  width:100%; height:16px; display:flex; align-items:center; justify-content:center;
+  color:#4a355e; font-size:12px; letter-spacing:3px; cursor:grab; margin:-4px 0 2px;
+  border-radius:8px; transition:.15s;
+}
+#dockHandle:hover{color:#ff8a6a; background:rgba(255,107,74,.1);}
+#dockHandle:active{cursor:grabbing;}
+
 </style>
 </head>
 <body>
@@ -300,22 +360,32 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
       <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v11</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
     </div>
 
-    <!-- VS SCORES like image -->
+    <!-- VS SCORES - 2 hàng ngang cân đối -->
     <div style="background:linear-gradient(145deg,#14111e,#0e0c15); border:1px solid #3a2a4a; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <div id="scorePillX" style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:20px; background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #4a355e; box-shadow:inset 0 1px #ffffff08; min-width:0;">
-          <span style="flex:none; width:32px; height:32px; min-width:32px; min-height:32px; border-radius:50%; background:#1a1526; border:1.5px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.9rem; flex-shrink:0;">X</span>
-          <span id="labelX" style="font-weight:800; font-size:.82rem; letter-spacing:.02em; line-height:1.1; flex:1; min-width:0; white-space:normal;">BẠN<br>(X)</span>
-          <span class="val" id="scX" style="margin-left:auto; font-weight:900; font-size:.85rem; display:flex; flex-direction:column; align-items:center; line-height:1.05; flex-shrink:0;"><span>0</span><span style="font-size:.72em; opacity:.85; font-weight:700;">thắng</span></span>
+      <!-- Hàng 1: Bạn thắng -->
+      <div id="scorePillX" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #ff7a7a50; box-shadow:inset 0 1px #ffffff08, 0 0 12px #ff7a7a15;">
+        <div style="display:flex; align-items:center; gap:12px; flex:1;">
+          <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#ff9a9a;">X</span>
+          <span id="labelX" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2;">BẠN (X)</span>
         </div>
-        <div id="vsBadge" style="font-weight:900; font-size:1.05rem; letter-spacing:.1em; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60; padding:0 2px;">VS</div>
-        <div id="scorePillO" style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:20px; background:linear-gradient(145deg,#17131f,#14111e); border:1.5px solid #4a355e; box-shadow:inset 0 1px #ffffff08; min-width:0;">
-          <span style="flex:none; width:32px; height:32px; min-width:32px; min-height:32px; border-radius:50%; background:#1a1526; border:1.5px solid #6a5a8a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.9rem; flex-shrink:0;">O</span>
-          <span id="labelO" style="font-weight:800; font-size:.82rem; letter-spacing:.02em; line-height:1.1; flex:1; min-width:0; white-space:normal;">HELL<br>(O)</span>
-          <span class="val" id="scO" style="margin-left:auto; font-weight:900; font-size:.85rem; display:flex; flex-direction:column; align-items:center; line-height:1.05; flex-shrink:0;"><span>0</span><span style="font-size:.72em; opacity:.85; font-weight:700;">thắng</span></span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span id="vsBadgeInline" style="font-weight:900; font-size:.85rem; color:#ffd4a3; opacity:.8; margin-right:8px;">VS</span>
+          <span class="val" id="scX" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(255,122,122,.12); border:1px solid #ff7a7a30; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
         </div>
       </div>
-      <div style="display:flex; justify-content:space-between; font-size:.82rem; opacity:.6; padding:0 6px;"><span id="scD">0 hòa</span><span id="totalMoves">0 nước</span></div>
+      <!-- VS ở giữa 2 hàng -->
+      <div id="vsBadge" style="display:flex; align-items:center; justify-content:center; gap:12px; font-weight:900; font-size:1rem; letter-spacing:.2em; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60; opacity:.9;">
+        <span style="flex:1; height:1px; background:linear-gradient(90deg, transparent, #4a355e);"></span>VS<span style="flex:1; height:1px; background:linear-gradient(90deg, #4a355e, transparent);"></span>
+      </div>
+      <!-- Hàng 2: Bot thắng -->
+      <div id="scorePillO" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#17131f,#14111e); border:1.5px solid #6a5a8a50; box-shadow:inset 0 1px #ffffff08;">
+        <div style="display:flex; align-items:center; gap:12px; flex:1;">
+          <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #8a6ab0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#c9a8d0;">O</span>
+          <span id="labelO" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2;">BOT (O)</span>
+        </div>
+        <span class="val" id="scO" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(138,106,176,.15); border:1px solid #8a6ab030; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:.82rem; opacity:.6; padding:0 6px; margin-top:2px;"><span id="scD">0 hòa</span><span id="totalMoves">0 nước</span></div>
     </div>
 
     <div id="status" style="text-align:center; font-size:.88rem; letter-spacing:.18em; color:#ff9a9a; font-weight:800; padding:4px 0;">LƯỢT CỦA BẠN – CHẠM ĐỂ ĐÁNH</div>
@@ -324,10 +394,10 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
     <!-- CHẾ ĐỘ CHƠI - restored -->
     <div style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
       <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a8a; font-weight:800;">CHẾ ĐỘ CHƠI</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-        <div class="btn active" id="modeAi">🤖 Máy</div>
-        <div class="btn" id="modeLocal">👥 2 người</div>
-        <div class="btn" id="modeOnline">🌐 Online</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+        <div class="btn active" id="modeAi" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">🤖</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">Máy</span></div>
+        <div class="btn" id="modeLocal" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">👥</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">2 người</span></div>
+        <div class="btn" id="modeOnline" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">🌐</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">Online</span></div>
       </div>
       <div id="onlinePanel" style="display:none; flex-direction:column; gap:8px; background:#0e0c15; border:1px solid #2a2236; border-radius:12px; padding:10px;">
         <div style="font-size:.75rem; opacity:.6; letter-spacing:.1em;">PHÒNG ONLINE</div>
@@ -347,9 +417,9 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
         <div style="font-size:.72rem; opacity:.5;" id="sideLbl">Bạn chơi:</div>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px;">
-        <div class="btn" id="diffEasy">Dễ</div>
-        <div class="btn active" id="diffMed">Vừa</div>
-        <div class="btn" id="diffHard">Khó</div>
+        <div class="btn" id="diffEasy" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:64px; font-size:.82rem; font-weight:800;">Dễ</div>
+        <div class="btn active" id="diffMed" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:64px; font-size:.82rem; font-weight:800;">Vừa</div>
+        <div class="btn" id="diffHard" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:64px; font-size:.82rem; font-weight:800;">Khó</div>
         <div class="btn hell" id="diffHell" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">🔥</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">Địa ngục</span></div>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
@@ -1934,7 +2004,7 @@ function setMode(m){
   document.getElementById(m==='ai'?'modeAi':m==='local'?'modeLocal':'modeOnline').classList.add('active');
   subRow.innerHTML='';
   if(m==='ai'){
-    subRow.innerHTML=`<div class="btn" id="diffEasy">Dễ</div><div class="btn active" id="diffMed">Vừa</div><div class="btn" id="diffHard">Khó</div><div class="btn hell" id="diffHell" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">🔥</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">Địa ngục</span></div>`;
+    subRow.innerHTML=`<div class="btn" id="diffEasy" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:64px; font-size:.82rem; font-weight:800;">Dễ</div><div class="btn active" id="diffMed" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:64px; font-size:.82rem; font-weight:800;">Vừa</div><div class="btn" id="diffHard" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:64px; font-size:.82rem; font-weight:800;">Khó</div><div class="btn hell" id="diffHell" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">🔥</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">Địa ngục</span></div>`;
     difficulty='medium';
     document.body.classList.remove('hell-vip');
     document.getElementById('diffEasy').onclick=()=>setDiff('easy');
@@ -2472,6 +2542,100 @@ setInterval(updateCustomStatus, 600);
   }
   setInterval(fixScoreDisplay, 500);
   window.fixScoreDisplay=fixScoreDisplay;
+})();
+</script>
+
+
+<script>
+// Thanh chức năng hàng dọc kéo lên xuống tùy thích
+(function(){
+  const dock=document.getElementById('sideDock');
+  if(!dock) return;
+  
+  // Thêm handle
+  let handle=document.getElementById('dockHandle');
+  if(!handle){
+    handle=document.createElement('div');
+    handle.id='dockHandle';
+    handle.textContent='⋯';
+    handle.title='Kéo để di chuyển thanh';
+    dock.insertBefore(handle, dock.firstChild);
+  }
+
+  let isDragging=false, startY=0, startTop=0, hasMoved=false;
+  let currentTop = parseFloat(localStorage.getItem('sideDockTop')||'50');
+  
+  function applyTop(percent){
+    percent=Math.max(10, Math.min(90, percent));
+    dock.style.top=percent+'%';
+    dock.style.transform='translateY(-50%)';
+    localStorage.setItem('sideDockTop', percent);
+  }
+  
+  // Khôi phục vị trí cũ
+  applyTop(currentTop);
+  
+  function getClientY(e){
+    return e.touches ? e.touches[0].clientY : e.clientY;
+  }
+  
+  function startDrag(e){
+    // Không drag khi bấm vào nút bên trong
+    if(e.target.closest('.dockItem') || e.target.closest('#dockToggle')) return;
+    isDragging=true; hasMoved=false;
+    startY=getClientY(e);
+    const rect=dock.getBoundingClientRect();
+    startTop=(rect.top + rect.height/2) / window.innerHeight * 100;
+    dock.classList.add('dragging');
+    dock.style.transition='none';
+    e.preventDefault();
+  }
+  
+  function onMove(e){
+    if(!isDragging) return;
+    const y=getClientY(e);
+    const deltaY=y-startY;
+    const deltaPercent=(deltaY / window.innerHeight)*100;
+    let newTop=startTop+deltaPercent;
+    applyTop(newTop);
+    if(Math.abs(deltaY)>3) hasMoved=true;
+  }
+  
+  function endDrag(){
+    if(!isDragging) return;
+    isDragging=false;
+    dock.classList.remove('dragging');
+    dock.style.transition='';
+    if(hasMoved){
+      // Ngăn click khi vừa kéo
+      setTimeout(()=>{ hasMoved=false; }, 50);
+    }
+  }
+  
+  // Mouse events
+  dock.addEventListener('mousedown', startDrag);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', endDrag);
+  
+  // Touch events
+  dock.addEventListener('touchstart', startDrag, {passive:false});
+  window.addEventListener('touchmove', (e)=>{ if(isDragging) e.preventDefault(); onMove(e); }, {passive:false});
+  window.addEventListener('touchend', endDrag);
+  
+  // Double click để reset về giữa
+  handle.addEventListener('dblclick', ()=>{
+    applyTop(50);
+    dock.style.transition='top .3s ease';
+    setTimeout(()=>{ dock.style.transition=''; }, 300);
+  });
+  
+  // Ngăn click khi đang kéo
+  dock.addEventListener('click', (e)=>{
+    if(hasMoved){
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
 })();
 </script>
 
