@@ -69,7 +69,7 @@ h1{font-size:1.35rem; text-align:center; margin:10px 0 6px; font-weight:900; let
 .score .lbl{font-weight:800; font-size:.8rem; opacity:.6; letter-spacing:.08em; text-transform:uppercase; color:var(--sub);}
 .score .val{font-size:1.45rem; font-weight:900; margin-top:2px; color:#ffe0bb; text-shadow:0 0 12px #ff5a3640;}
 #status{text-align:center; font-size:.92rem; color:#ffd2b8; padding:4px 12px 8px; font-weight:700; text-shadow:0 1px 0 #000; min-height:22px;}
-#boardWrap{flex:1; margin:0 12px; border:1px solid #6a3a5a; border-radius:20px; overflow:hidden; position:relative; background:radial-gradient(140% 100% at 30% 10%,#251a33 0%,#15101e 55%,#0e0c15 100%); min-height:0; box-shadow:0 0 0 1px #ff65421a,0 16px 40px #0009,inset 0 0 40px #ff2e2212,0 0 0 1px #ffffff08 inset; animation:hellAura 4.5s ease-in-out infinite alternate;}
+#boardWrap{flex:1 1 0; min-height:340px; margin:0 12px; border:1px solid #6a3a5a; border-radius:20px; overflow:hidden; position:relative; background:radial-gradient(140% 100% at 30% 10%,#251a33 0%,#15101e 55%,#0e0c15 100%); min-height:0; box-shadow:0 0 0 1px #ff65421a,0 16px 40px #0009,inset 0 0 40px #ff2e2212,0 0 0 1px #ffffff08 inset; animation:hellAura 4.5s ease-in-out infinite alternate;}
 @keyframes hellAura{from{box-shadow:0 0 0 1px #ff65421a,0 16px 40px #0008,inset 0 0 24px #ff2e220a}to{box-shadow:0 0 0 1px #ff654240,0 20px 48px #0009,inset 0 0 44px #ff2e221e}}
 canvas{display:block; touch-action:none; width:100%; height:100%;}
 .topbar{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; gap:8px; background:rgba(20,14,28,.7); backdrop-filter:blur(16px); border-bottom:1px solid #4a325a;}
@@ -122,6 +122,48 @@ canvas{display:block; touch-action:none; width:100%; height:100%;}
 #inviteBanner .txt{font-size:.88rem; font-weight:600; color:#f6edf7;}
 input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px solid #4a355e; background:#17131f; color:#fff; font-size:.95rem; outline:none;}
 
+
+/* VERTICAL DOCK - tiết kiệm không gian */
+#sideDock{
+  position:fixed; left:8px; top:50%; transform:translateY(-50%);
+  width:56px; background:rgba(20,14,28,.88); backdrop-filter:blur(18px);
+  border:1px solid #4a355e; border-radius:18px; 
+  display:flex; flex-direction:column; gap:8px; padding:10px 6px; 
+  z-index:35; box-shadow:0 12px 32px #0008, inset 0 1px #ffffff10;
+  transition:width .28s cubic-bezier(.4,0,.2,1);
+}
+#sideDock.expanded{width:168px;}
+.dockItem{
+  width:42px; height:42px; border-radius:12px; 
+  display:flex; align-items:center; justify-content:flex-start;
+  gap:10px; font-size:20px; cursor:pointer; 
+  border:1.5px solid transparent; 
+  background:linear-gradient(145deg,#231b2f,#15111e); 
+  transition:all .22s ease; position:relative; overflow:hidden;
+  padding-left:10px;
+}
+#sideDock.expanded .dockItem{width:100%; padding-left:12px;}
+.dockItem:hover{border-color:#ff6b4a50; background:#2a1f3a; transform:scale(1.04);}
+.dockItem.active{background:linear-gradient(135deg,#ff5a3a,#a51f4c); border-color:#ff6b4a; color:#fff; box-shadow:0 4px 14px #ff3b3b40;}
+.dockIcon{flex:none; width:22px; text-align:center; font-size:18px;}
+.dockLabel{
+  font-size:.82rem; font-weight:700; white-space:nowrap; 
+  opacity:0; transform:translateX(-12px); transition:all .22s ease;
+  pointer-events:none;
+}
+#sideDock.expanded .dockLabel{opacity:1; transform:translateX(0); pointer-events:auto;}
+.dockItem .dot{position:absolute; top:4px; right:6px; width:9px; height:9px; border-radius:50%; background:#ff2f2f; border:2px solid #1a1526;}
+#dockToggle{width:42px; height:32px; border-radius:10px; background:rgba(255,107,74,.15); border:1px solid #ff6b4a30; color:#ff8a6a; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; margin-top:4px; transition:.18s;}
+#dockToggle:hover{background:rgba(255,107,74,.25);}
+#app{padding-left:72px;} /* chừa chỗ cho dock */
+@media(max-width:600px){
+  #sideDock{left:6px; width:48px; padding:8px 4px; border-radius:14px;}
+  #sideDock.expanded{width:150px;}
+  .dockItem{width:38px; height:38px;}
+  #app{padding-left:62px;}
+}
+.topbar .topbtns{display:none !important;} /* ẩn hàng ngang cũ */
+
 </style>
 </head>
 <body>
@@ -143,49 +185,103 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 </div>
 
 <!-- APP -->
-<div id="app" class="hidden"><h1 style="margin:10px 0 6px;">CỜ X O • HELL V11</h1> style="height:100%; display:flex; flex-direction:column;">
-  <div class="topbar">
+<div id="app" class="hidden" style="height:100%; display:flex; flex-direction:column;">
+  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V11</h1>
+
+  <div class="topbar" style="padding-left:8px;">
     <span class="who">Xin chào, <b id="whoName"></b></span>
-    <div class="topbtns">
-      <div class="btn small hidden" id="adminBtn">Quản trị</div>
-      <div class="btn small" id="historyBtn">Lịch sử</div>
-      <div class="btn small" id="friendsBtn">Bạn bè<span class="dot hidden" id="friendsDot"></span></div>
-      <div class="btn small" id="logoutBtn">Đăng xuất</div>
+    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V11 • 15×15</span>
+  </div>
+  <!-- VERTICAL ICON DOCK -->
+  <div id="sideDock" class="collapsed">
+    <div class="dockItem hidden" id="adminBtn" title="Quản trị"><span class="dockIcon">👑</span><span class="dockLabel">Quản trị</span></div>
+    <div class="dockItem" id="historyBtn" title="Lịch sử"><span class="dockIcon">📜</span><span class="dockLabel">Lịch sử</span></div>
+    <div class="dockItem" id="friendsBtn" title="Bạn bè"><span class="dockIcon">👥</span><span class="dockLabel">Bạn bè</span><span class="dot hidden" id="friendsDot"></span></div>
+    <div class="dockItem" id="logoutBtn" title="Đăng xuất"><span class="dockIcon">🚪</span><span class="dockLabel">Đăng xuất</span></div>
+    <div id="dockToggle" title="Mở rộng">☰</div>
+  </div>
+
+  <div id="mainScroll" style="flex:1; overflow:auto; display:flex; flex-direction:column; gap:12px; padding:8px 12px 12px 0;">
+
+    <!-- HELL HEADER like image -->
+    <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:linear-gradient(145deg,#1e162c,#14111e); border:1px solid #4a355e; border-radius:16px;">
+      <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(145deg,#231b2f,#15111e); border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">H</div>
+      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v11</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
     </div>
+
+    <!-- VS SCORES like image -->
+    <div style="background:linear-gradient(145deg,#14111e,#0e0c15); border:1px solid #3a2a4a; border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div id="scorePillX" style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:24px; background:#1a1526; border:1.5px solid #ff3b5a60; box-shadow:0 0 12px #ff3b3b20;">
+          <span style="width:28px; height:28px; border-radius:50%; background:#2a1a1e; border:1px solid #ff3b5a; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.85rem;">X</span>
+          <span style="font-weight:700; font-size:.85rem;">BẠN (X)</span><span class="val" id="scX" style="margin-left:auto; font-weight:900;">0 thắng</span>
+        </div>
+        <span style="font-size:.8rem; opacity:.5;">VS</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:24px; background:#14111e; border:1px solid #4a355e;">
+          <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.85rem;">O</span>
+          <span style="font-weight:700; font-size:.85rem;">HELL (O)</span><span class="val" id="scO" style="margin-left:auto; font-weight:900;">0 thắng</span>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:.8rem; opacity:.6; padding:0 4px;"><span id="scD">0 hòa</span><span id="totalMoves">0 nước</span></div>
+    </div>
+
+    <div id="status" style="text-align:center; font-size:.85rem; letter-spacing:.18em; color:#ff9a9a; font-weight:700;">LƯỢT CỦA BẠN – CHẠM ĐỂ ĐÁNH<br><span style="font-size:.72rem; opacity:.7; letter-spacing:.05em;">Sẵn sàng solo Hell Bot v11</span></div>
+
+    <!-- Hidden original controls for logic (keep functional but hidden) -->
+    <div style="display:none;">
+      <div class="btn active" id="modeAi">Chơi với máy</div>
+      <div class="btn" id="modeLocal">2 người</div>
+      <div class="btn" id="modeOnline">Online</div>
+      <div class="btn active" id="sideX">X · đi trước</div>
+      <div class="btn" id="sideO">O · đi sau</div>
+      <div class="btn" id="diffEasy">Dễ</div>
+      <div class="btn active" id="diffMed">Vừa</div>
+      <div class="btn" id="diffHard">Khó</div>
+      <div class="btn hell" id="diffHell">🔥 Địa ngục</div>
+      <div class="btn" id="zoomOut">Thu nhỏ −</div>
+      <div class="btn" id="zoomIn">Phóng to +</div>
+      <div class="btn hidden" id="undoAi">↶ Đi lại</div>
+      <div class="btn" id="newGame">Ván mới</div>
+      <div class="btn" id="hintBtn">💡 Gợi ý</div>
+    </div>
+
+    <div id="warnBar" class="hidden"></div>
+    <div id="hellMem" class="hidden"></div>
+
+    <div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas></div>
+    <div style="font-size:.7rem; letter-spacing:.12em; opacity:.45; padding:0 4px; line-height:1.4;">HỆ: 15×15 • CHUẨN GOMOKU • 5 LIÊN TIẾP THẮNG<br>Touch-friendly</div>
+
+    <!-- ĐIỀU KHIỂN card y hệt ảnh -->
+    <div style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:12px;">
+      <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a8a; font-weight:800;">ĐIỀU KHIỂN</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="ctrlBtn" id="ctrlNewGame" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#231b2f,#1a1526); border:1.5px solid #4a355e; text-align:center; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">↻ Ván mới</div>
+        <div class="ctrlBtn" id="ctrlUndo" style="padding:14px 10px; border-radius:14px; background:#14111e; border:1px solid #3a2a4a; text-align:center; font-weight:600; opacity:.6; cursor:pointer;">Lùi 1 nước</div>
+        <div class="ctrlBtn" id="ctrlSwitch" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#1e1a2e,#161326); border:1px solid #4a355e; text-align:center; font-weight:700; cursor:pointer;">Đổi bên X→O</div>
+        <div class="ctrlBtn" id="ctrlHint" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#2a2418,#1e1a12); border:1px solid #6a5a2a; text-align:center; font-weight:700; color:#ffe4a3; cursor:pointer;">💡 Gợi ý</div>
+      </div>
+
+      <div style="background:#0e0c15; border:1px solid #2a2236; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+        <div style="font-size:.72rem; letter-spacing:.18em; opacity:.5;">TRẠNG THÁI</div>
+        <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Bạn là</span><span id="statusYou" style="font-weight:800;">X (đi trước)</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Lượt</span><span id="statusTurn" style="font-weight:800; color:#ff8a8a;">Bạn</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Tổng nước</span><span id="statusTotal">0</span></div>
+        <div style="height:1px; background:#2a2236; margin:4px 0;"></div>
+        <div style="font-size:.78rem; line-height:1.5; opacity:.55;">Bot v11: chặn thắng ngay → chặn open-four (011110) → đánh giá pattern 11111=1M, 011110=400k, 01111=50k, 01110=12k, 010110=8k + center bias. Quét trong 2 ô quanh quân đã có + kiểm tra an toàn.</div>
+      </div>
+    </div>
+
+    <div style="background:linear-gradient(145deg,#14111e,#0e0c15); border:1px solid #3a2a4a30; border-radius:16px; padding:12px;">
+      <div style="font-size:.72rem; letter-spacing:.18em; opacity:.5; margin-bottom:8px;">LỊCH SỬ (5 NƯỚC CUỐI)</div>
+      <div id="moveHistory" style="font-size:.85rem; opacity:.6;">Chưa có nước đi</div>
+    </div>
+
+    <div style="font-size:.62rem; letter-spacing:.12em; opacity:.3; text-align:center; padding:8px 0;">MADE FOR SOLO – NO FIREBASE • LOCAL VS BOT • CARO_HELL_V11_SOLO.HTML</div>
+
   </div>
-  <div class="row">
-    <div class="btn active" id="modeAi">Chơi với máy</div>
-    <div class="btn" id="modeLocal">2 người</div>
-    <div class="btn" id="modeOnline">Online</div>
-  </div>
-  <div class="row" id="sideRow">
-    <div class="sideLbl" id="sideLbl">Bạn chơi:</div>
-    <div class="btn active" id="sideX">X · đi trước</div>
-    <div class="btn" id="sideO">O · đi sau</div>
-  </div>
-  <div class="row" id="subRow">
-    <div class="btn" id="diffEasy">Dễ</div>
-    <div class="btn active" id="diffMed">Vừa</div>
-    <div class="btn" id="diffHard">Khó</div>
-    <div class="btn hell" id="diffHell">🔥 Địa ngục</div>
-  </div>
-  <div class="row" id="actionRow"><div class="btn small" id="undoBtn">↩️ Hoàn tác</div><div class="btn small" id="resetBtn">🔄 Ván mới</div><div class="btn small" id="hintBtn">💡 Gợi ý</div></div>
-  <div class="scores">
-    <div class="score"><div class="lbl" style="color:var(--x)">X</div><div class="val" id="scX">0</div></div>
-    <div class="score"><div class="lbl">Hòa</div><div class="val" id="scD">0</div></div>
-    <div class="score"><div class="lbl" style="color:var(--o)">O</div><div class="val" id="scO">0</div></div>
-  </div>
-  <div id="status">Lượt của X</div>
-  <div id="warnBar" class="hidden"></div>
-  <div id="hellMem" class="hidden"></div>
-  <div id="boardWrap"><canvas id="cv"></canvas></div>
-  <div class="row" id="botRow" style="padding-top:6px;">
-    <div class="btn" id="zoomOut">Thu nhỏ −</div>
-    <div class="btn hidden" id="undoAi">↶ Đi lại</div>
-    <div class="btn" id="hintBtn">💡 Gợi ý</div>
-    <div class="btn" id="newGame">Ván mới</div>
-    <div class="btn" id="zoomIn">Phóng to +</div>
-  </div>
+
 </div>
 
 <div id="chatFab">💬<span class="badge" id="chatBadge">0</span></div>
@@ -1914,5 +2010,81 @@ window.addEventListener('resize', resize);
 })();
 </script>
 
+<script>
+// DOCK vertical logic
+(function(){
+  const dock=document.getElementById('sideDock');
+  const toggle=document.getElementById('dockToggle');
+  if(!dock||!toggle) return;
+  let expanded=false;
+  function setExp(v){ expanded=v; dock.classList.toggle('expanded',v); dock.classList.toggle('collapsed',!v); toggle.textContent=v?'✕':'☰'; }
+  toggle.onclick=()=>{ setExp(!expanded); };
+  // auto collapse after click on item (mobile)
+  dock.querySelectorAll('.dockItem').forEach(it=>{
+    it.addEventListener('click', ()=>{
+      if(window.innerWidth<700 && expanded){ setTimeout(()=>setExp(false), 400); }
+    });
+  });
+  // long press on mobile to expand? click toggle already
+})();
+</script>
+<script>
+// Map new control buttons to existing logic
+document.getElementById('ctrlNewGame')?.addEventListener('click', ()=>{
+  document.getElementById('newGame')?.click();
+  const rb=document.getElementById('resetBtn'); if(rb) rb.click();
+});
+document.getElementById('ctrlUndo')?.addEventListener('click', ()=>{
+  const ua=document.getElementById('undoAi'); if(ua) ua.click();
+  const ub=document.getElementById('undoBtn'); if(ub) ub.click();
+  if(typeof undo==='function') try{undo();}catch(e){}
+});
+document.getElementById('ctrlSwitch')?.addEventListener('click', ()=>{
+  const sx=document.getElementById('sideX'), so=document.getElementById('sideO');
+  if(sx && so){
+    if(sx.classList.contains('active')) so.click(); else sx.click();
+  }
+  // update statusYou
+  const you=document.getElementById('statusYou');
+  const isX=document.getElementById('sideX')?.classList.contains('active');
+  if(you) you.textContent = isX ? 'X (đi trước)' : 'O (đi sau)';
+  const cs=document.getElementById('ctrlSwitch');
+  if(cs) cs.textContent = isX ? 'Đổi bên X→O' : 'Đổi bên O→X';
+});
+document.getElementById('ctrlHint')?.addEventListener('click', ()=>{
+  document.getElementById('hintBtn')?.click();
+  const h2=document.getElementById('hintBtn2'); if(h2) h2.click();
+});
+
+// Update trạng thái counters
+function updateCustomStatus(){
+  const total = (typeof board!=='undefined') ? board.filter(v=>v!==0).length : 0;
+  const totEl=document.getElementById('statusTotal'); if(totEl) totEl.textContent=total;
+  const tot2=document.getElementById('totalMoves'); if(tot2) tot2.textContent=total+' nước';
+  const turnEl=document.getElementById('statusTurn');
+  const stEl=document.getElementById('status');
+  if(turnEl && stEl){
+    const txt=stEl.textContent||'';
+    if(txt.includes('X')) turnEl.textContent = txt.includes('Bạn')? 'Bạn' : 'X';
+    else if(txt.includes('O')) turnEl.textContent = txt.includes('Bạn')? 'Bạn' : 'O';
+  }
+  // history 5 nước cuối
+  if(typeof moveHist!=='undefined' && Array.isArray(moveHist)){
+    const mh=document.getElementById('moveHistory');
+    if(mh){
+      if(moveHist.length===0) mh.textContent='Chưa có nước đi';
+      else {
+        const last5=moveHist.slice(-5).map((m,i)=>{
+          const r=Math.floor(m/15)+1, c=(m%15)+1;
+          const col=String.fromCharCode(64+c);
+          return `${moveHist.length-5+i+1}. ${col}${r}`;
+        }).join(' • ');
+        mh.textContent=last5;
+      }
+    }
+  }
+}
+setInterval(updateCustomStatus, 600);
+</script>
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
