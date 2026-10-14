@@ -173,6 +173,7 @@ canvas{display:block; touch-action:none;}
     <div class="ftab active" id="adminTabMatches">Trận đấu</div>
     <div class="ftab" id="adminTabUsers">Tài khoản</div>
     <div class="ftab" id="adminTabFeatures">Tính năng</div>
+    <div class="ftab" id="adminTabBot">Đấu bot</div>
   </div>
   <div id="adminList"></div>
 </div>
@@ -701,6 +702,8 @@ function startFeatureListener(){
     const d = snap.exists ? snap.data() : {};
     featureFlags = {...FEATURE_DEFAULTS, ...d};
     applyFeatureUI();
+    const ft=document.getElementById('adminTabFeatures');
+    if(ft&&ft.classList.contains('active')) loadAdminFeatures();
   }, e=>{
     featureFlags = {...FEATURE_DEFAULTS};
     applyFeatureUI();
@@ -771,6 +774,7 @@ document.getElementById('adminClose').onclick=()=>{document.getElementById('admi
 document.getElementById('adminTabMatches').onclick=()=>showAdminTab('matches');
 document.getElementById('adminTabUsers').onclick=()=>showAdminTab('users');
 document.getElementById('adminTabFeatures').onclick=()=>showAdminTab('features');
+document.getElementById('adminTabBot').onclick=()=>showAdminTab('bot');
 
 let adminTab='matches';
 function showAdminTab(t){
@@ -778,8 +782,10 @@ function showAdminTab(t){
   document.getElementById('adminTabMatches').classList.toggle('active', t==='matches');
   document.getElementById('adminTabUsers').classList.toggle('active', t==='users');
   document.getElementById('adminTabFeatures').classList.toggle('active', t==='features');
+  document.getElementById('adminTabBot').classList.toggle('active', t==='bot');
   if(t==='matches') loadAdminMatches();
   else if(t==='users') loadAdminUsers();
+  else if(t==='bot') loadAdminBot();
   else loadAdminFeatures();
 }
 function loadAdminFeatures(){
@@ -793,11 +799,15 @@ function loadAdminFeatures(){
     row.innerHTML=`<span><b>${escapeHtml(f.label)}</b><br><span style="color:var(--sub); font-size:.75rem;">${on?'Đang mở':'Đang bảo trì'}</span></span>
       <div class="smallbtn ${on?'decline':'accept'}" style="min-width:88px; text-align:center;">${on?'Đóng':'Mở lại'}</div>`;
     row.querySelector('.smallbtn').onclick=async()=>{
+      const prev = {...featureFlags};
+      featureFlags = {...featureFlags, [f.key]: !on};
+      applyFeatureUI(); loadAdminFeatures();   // cập nhật nút ngay, không cần chuyển tab
       try{
-        const next = {...featureFlags, [f.key]: !on};
-        await db.collection('config').doc('features').set(next, {merge:true});
-        // snapshot will refresh UI
-      }catch(e){ alert('Không lưu được (kiểm tra Firestore rules cho config/features).'); }
+        await db.collection('config').doc('features').set({[f.key]: !on}, {merge:true});
+      }catch(e){
+        featureFlags = prev; applyFeatureUI(); loadAdminFeatures();
+        alert('Không lưu được (kiểm tra Firestore rules cho config/features).');
+      }
     };
     list.appendChild(row);
   });
@@ -838,6 +848,38 @@ async function loadAdminUsers(){
   }catch(e){ list.innerHTML='Lỗi tải dữ liệu (kiểm tra Firestore rules).'; }
 }
 
+const DIFF_LABEL={easy:'Dễ',medium:'Vừa',hard:'Khó',hell:'Địa ngục'};
+// Ghi ván đấu với bot (không cộng vào thống kê thắng/thua online)
+async function recordBotMatch(result){
+  if(!currentUser) return;
+  try{
+    await db.collection('matches').add({
+      uid: currentUser.uid, username: currentUsername, mode:'Bot',
+      opponent:'Bot · '+(DIFF_LABEL[difficulty]||difficulty), level:difficulty,
+      side: mySide===1?'X':'O', moves: moveHistory.length, result,
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }catch(e){}
+}
+async function loadAdminBot(){
+  const list=document.getElementById('adminList');
+  list.innerHTML='Đang tải...';
+  try{
+    const q=await db.collection('matches').where('mode','==','Bot').limit(1000).get();
+    const rows=q.docs.map(d=>d.data());
+    if(!rows.length){ list.innerHTML='Chưa có ván đấu với bot nào.'; return; }
+    rows.sort((a,b)=>((b.ts&&b.ts.seconds)||Infinity)-((a.ts&&a.ts.seconds)||Infinity));
+    const w=rows.filter(r=>r.result==='Thắng').length, l=rows.filter(r=>r.result==='Thua').length, d=rows.length-w-l;
+    list.innerHTML=`<div class="hsum"><div><b>${w}</b>Người thắng</div><div><b>${d}</b>Hòa</div><div><b>${l}</b>Bot thắng</div></div>`;
+    rows.forEach(r=>{
+      const t=r.ts&&r.ts.toDate?r.ts.toDate().toLocaleString('vi-VN'):'';
+      const cls=r.result==='Thắng'?'res-win':r.result==='Thua'?'res-lose':'res-draw';
+      const row=document.createElement('div'); row.className='mrow';
+      row.innerHTML=`<span><b>${escapeHtml(r.username||'?')}</b> vs ${escapeHtml(r.opponent||'Bot')}<br><span style="color:var(--sub); font-size:.78rem;">${escapeHtml(r.side||'')} · ${r.moves||0} nước · ${t}</span></span><span class="${cls}">${escapeHtml(r.result)}</span>`;
+      list.appendChild(row);
+    });
+  }catch(e){ list.innerHTML='Lỗi tải dữ liệu (kiểm tra Firestore rules).'; }
+}
 async function recordMatch(result, mode, opponent){
   if(!currentUser) return;
   try{
@@ -1300,6 +1342,7 @@ function endGame(winner, cells){
   if(winner===1){scores.X++; statusEl.textContent='X thắng!';}
   else if(winner===2){scores.O++; statusEl.textContent='O thắng!';}
   else {scores.D++; statusEl.textContent='Hòa!';}
+  if(mode==='ai') recordBotMatch(winner===0?'Hòa':winner===mySide?'Thắng':'Thua');
   // Địa ngục v4: không học từ ván — luôn chơi mức mạnh nhất
   
   document.getElementById('scX').textContent=scores.X;
