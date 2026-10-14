@@ -202,7 +202,7 @@ canvas{display:block; touch-action:none;}
 
 <script type="text/plain" id="hellSrc">
 // ---------- ĐỊA NGỤC v4: phòng thủ cứng (không bỏ sót tứ) + không dùng memory penalty ----------
-const HELL_TIME=5500;
+const HELL_TIME=6000;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const W=[0,1,12,100,1500,100000];
@@ -259,12 +259,12 @@ const Hell=(()=>{
   function scanCritical(p){
     const win=[], four=[], open3=[];
     const seenW={}, seenF={}, seen3={};
-    for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
-      const i=idx(r,c);
-      if(hb[i]!==0) continue;
+    // 64x64: chỉ quét ô gần quân đã có (near>0) — nhanh gấp nhiều lần
+    for(let i=0;i<N;i++){
+      if(hb[i]!==0||near[i]===0) continue;
+      const r=i/SIZE|0, c=i%SIZE;
       for(let d=0;d<4;d++){
         const dr=DR[d], dc=DC[d];
-        // đếm liên tiếp 2 phía
         let a=0,b=0;
         for(let k=1;k<5;k++){
           const nr=r+dr*k, nc=c+dc*k;
@@ -278,16 +278,7 @@ const Hell=(()=>{
         }
         const total=a+b;
         if(total>=4){ if(!seenW[i]){ seenW[i]=1; win.push(i);} continue; }
-        if(total===3){
-          // kiểm tra 2 đầu có trống không (open four nếu 1 đầu trống phía ngoài chuỗi)
-          const f1r=r+dr*(a+1), f1c=c+dc*(a+1);
-          const f2r=r-dr*(b+1), f2c=c-dc*(b+1);
-          const o1=inb(f1r,f1c)&&hb[idx(f1r,f1c)]===0;
-          const o2=inb(f2r,f2c)&&hb[idx(f2r,f2c)]===0;
-          // tứ: 3+ô trống hiện tại = 4 quân liên tiếp khi đánh
-          if(!seenF[i]){ seenF[i]=1; four.push(i); }
-          continue;
-        }
+        if(total===3){ if(!seenF[i]){ seenF[i]=1; four.push(i); } continue; }
         if(total===2){
           const f1r=r+dr*(a+1), f1c=c+dc*(a+1);
           const f2r=r-dr*(b+1), f2c=c-dc*(b+1);
@@ -296,11 +287,9 @@ const Hell=(()=>{
           if(o1&&o2&&!seen3[i]){ seen3[i]=1; open3.push(i); }
         }
       }
-      // pattern XX_X / X_XX trong cửa sổ 5
       for(let d=0;d<4;d++){
         const dr=DR[d], dc=DC[d];
         for(let off=-4;off<=0;off++){
-          const cells=[];
           let ok=true, cnt=0, emptyAt=-1;
           for(let k=0;k<5;k++){
             const nr=r+dr*(off+k), nc=c+dc*(off+k);
@@ -860,7 +849,7 @@ async function declineInvite(inviteId){
 // =====================================================================
 // GAME LOGIC
 // =====================================================================
-const SIZE=32;
+const SIZE=64;
 const idx=(r,c)=>r*SIZE+c;
 const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;
 let board=new Uint8Array(SIZE*SIZE);
@@ -870,7 +859,7 @@ let lastMove=null, lastMoveT=0, animRaf=0, lastAnimDraw=0;
 let scores={X:0,O:0,D:0};
 let mode='ai', difficulty='medium';
 let mySide=1;   // 1 = X (đi trước), 2 = O (đi sau)
-let cellSize=44, offX=0, offY=0;
+let cellSize=22, offX=0, offY=0;
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 const wrap=document.getElementById('boardWrap');
 const statusEl=document.getElementById('status');
@@ -978,7 +967,7 @@ function setLastMove(r,c){
   draw();
 }
 let dragging=false,startX=0,startY=0,moved=false,startOffX=0,startOffY=0;
-const MIN_CELL=12, MAX_CELL=90;
+const MIN_CELL=8, MAX_CELL=64;
 const ptrs=new Map();
 let pinchDist0=0, pinchSize0=0, pinchWorld={x:0,y:0}, wasPinch=false;
 function ptrPair(){ const [a,b]=[...ptrs.values()]; return {a,b,dist:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2,my:(a.y+b.y)/2}; }
