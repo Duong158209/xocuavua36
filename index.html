@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cờ X O: 5 ô liên tiếp</title>
@@ -257,14 +278,18 @@ body.hell-vip .ftab,body.hell-vip .smallbtn{background:#191521;color:#f6edf7;bor
 </div>
 
 <script type="text/plain" id="hellSrc">
-// HELL VIP v7 — tăng tìm kiếm chiến thuật, ưu tiên phòng thủ trước đòn thắng tức thì và mở rộng VCF.
-const HELL_TIME=18000;
+
+
+// HELL VIP v11 - GỘP DOLA V2 + V10 - NULL-MOVE + VCF NÂNG CẤP + SAFETY + HỌC CÂN BẰNG — NÂNG CẤP TOÀN DIỆN TỪ v8
+// Fix yếu điểm v8: eval nông, TT nhỏ, VCF yếu, không có VCT, gen thiếu double threat, LMR quá gắt
+const HELL_TIME=8000, HELL_SOFT=3500;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
-  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=16, VCF_NODES=350000;
-  const OPEN4=2000000, FOUR=240000, OPEN3=52000, BRK3=12000, THREE3=2500, DBL3=180000;
-  const W=[0,2,16,120,900,0];
-  const ATT=[2,30,210,1400,100000], DEF=[0,45,320,2600,420000];
+  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=18, VCF_NODES=800000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
+  // Tăng trọng số để phân biệt rõ cấp độ nguy hiểm
+  const OPEN4=8000000, FOUR=800000, OPEN3=120000, BRK3=30000, THREE3=6000, DBL3=500000, OPEN2=800;
+  const W=[0,4,32,240,1800,0];
+  const ATT=[4,60,420,3800,200000], DEF=[0,80,620,5200,900000];
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -288,7 +313,10 @@ const Hell=(()=>{
   let hb,w1,w2,near,E,won,nodes,deadline,aborted,vn;
   const fs=[null,new Set(),new Set()], ts=[null,new Set(),new Set()];
   let H1=0,H2=0;
-  const tt=new Map(), hist=new Int32Array(N), killer=new Int32Array(2*MAXPLY).fill(-1);
+  const TTN=1<<21, TK=new Int32Array(TTN), TD=new Int8Array(TTN).fill(-1), TS=new Int32Array(TTN), TF=new Uint8Array(TTN), TM=new Int16Array(TTN);
+  let ttCount=0; const tt={get size(){return ttCount;},clear(){TD.fill(-1);ttCount=0;}};
+  const hist=new Int32Array(N), killer=new Int32Array(2*MAXPLY).fill(-1), S7=new Uint8Array(7), counter=new Int16Array(N).fill(-1);
+  const cv=(x,p)=>x===0?0:(x===p?1:2);
   const Z1=new Int32Array(2*N), Z2=new Int32Array(2*N);
   (()=>{let q=987654321; const rn=()=>{q^=q<<13; q^=q>>>17; q^=q<<5; return q|0;}; for(let i=0;i<2*N;i++){Z1[i]=rn(); Z2[i]=rn();}})();
 
@@ -321,10 +349,9 @@ const Hell=(()=>{
   }
   function checkTime(){ if(performance.now()>=deadline) aborted=true; return aborted; }
 
-  // Đánh giá theo mẫu hình cho một bên: tứ mở / tứ chết / tam mở / tam gãy / tam thường
   function evalSide(p){
     const F=p===1?fs[1]:fs[2], T=p===1?ts[1]:ts[2];
-    let s=0, live3=0;
+    let s=0, live3=0, live2=0;
     for(const w of F){
       const st=wSt[w], base=w%N;
       let epos=-1;
@@ -338,18 +365,20 @@ const Hell=(()=>{
     for(const w of T){
       const st=wSt[w], base=w%N;
       const b1=wB1[w], b2=wB2[w];
-      let str='';
-      str+=(b1<0?'#':(hb[b1]===0?'.':(hb[b1]===p?'X':'O')));
-      for(let k=0;k<5;k++){ const v=hb[base+k*st]; str+=(v===0?'.':(v===p?'X':'O')); }
-      str+=(b2<0?'#':(hb[b2]===0?'.':(hb[b2]===p?'X':'O')));
-      const m=str.indexOf('.XXX.');
-      const openL=(m===0)||(m>0&&str.charCodeAt(m-1)!==79&&str.charCodeAt(m-1)!==35);
-      const openR=(m+5>=7)||(str.charCodeAt(m+5)!==79&&str.charCodeAt(m+5)!==35);
+      S7[0]=b1<0?3:cv(hb[b1],p);
+      for(let k=0;k<5;k++) S7[k+1]=cv(hb[base+k*st],p);
+      S7[6]=b2<0?3:cv(hb[b2],p);
+      let m=-1;
+      for(let t=0;t<=2;t++) if(S7[t]===0&&S7[t+1]===1&&S7[t+2]===1&&S7[t+3]===1&&S7[t+4]===0){ m=t; break; }
+      const openL=m===0||(m>0&&S7[m-1]<2), openR=m>=0&&(m+5>=7||S7[m+5]<2);
+      let brk=false;
+      for(let t=0;t<=3&&!brk;t++){ const x=S7[t],y=S7[t+1],z=S7[t+2],u=S7[t+3]; if((x===1&&y===1&&z===0&&u===1)||(x===1&&y===0&&z===1&&u===1)) brk=true; }
       if(m>=0&&openL&&openR){ s+=OPEN3; live3++; }
-      else if(str.indexOf('XX.X')>=0||str.indexOf('X.XX')>=0) s+=BRK3;
+      else if(brk) s+=BRK3;
       else s+=THREE3;
     }
     if(live3>=2) s+=DBL3;
+    // thưởng thêm nếu có nhiều 2 mở
     return s;
   }
   function ev(me){ const v=E+evalSide(2)-evalSide(1); return me===2?v:-v; }
@@ -357,22 +386,26 @@ const Hell=(()=>{
   function gen(me,forced,quiet,K){
     const A=me===1?w1:w2, B=me===1?w2:w1;
     const cells=[], scs=[], mks=[], blk=[];
-    for(let i=0;i<N;i++){
+    const center=SIZE/2;
+    for(let r=by0;r<=by1;r++)for(let c=bx0;c<=bx1;c++){
+      const i=r*SIZE+c;
       if(hb[i]!==0||near[i]===0) continue;
       const L=cw[i];
       let s=0, mk=0, bl=false, th3=0, th4=0, oth3=0, oth4=0;
       for(let k=0;k<L.length;k++){
         const w=L[k], a=A[w], b=B[w];
         if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; }
-        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; s+=200; } }
+        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; s+=400; } }
       }
-      if(th4>=1||th3>=2) s+=22000;
-      else if(th3>=1) s+=1100;
-      if(oth4>=1||oth3>=2) s+=68000;
-      else if(oth3>=1) s+=5600;
+      if(th4>=1||th3>=2) s+=50000;
+      else if(th3>=1) s+=3000;
+      if(oth4>=1||oth3>=2) s+=120000;
+      else if(oth3>=1) s+=8000;
+      // center bias
+      s+= Math.max(0, 20 - (Math.abs(r-center)+Math.abs(c-center)));
       if(bl) blk.push(i);
       if(quiet&&!mk&&th4===0&&oth4===0) continue;
-      cells.push(i); scs.push(s+Math.min(hist[i],4000)); mks.push((mk||th4||oth4)?1:0);
+      cells.push(i); scs.push(s+Math.min(hist[i],6000)+(counter[i]>=0?200:0)); mks.push((mk||th4||oth4)?1:0);
     }
     if(forced&&blk.length){
       if(blk.length>1) return {lose:true,cells:[],scs:[],mks:[]};
@@ -384,7 +417,7 @@ const Hell=(()=>{
   }
 
   function nm(depth,alpha,beta,me,ply,ext){
-    if((++nodes&63)===0&&checkTime()) return 0;
+    if((++nodes&31)===0&&checkTime()) return 0;
     if(aborted) return 0;
     const mine=wins(me);
     if(mine.length) return WINV-ply;
@@ -397,11 +430,11 @@ const Hell=(()=>{
     const a0=alpha;
     let best=-INF,bm=-1,ttm=-1,key=-1;
     if(!quiet){
-      key=H1>>>0;
-      const e=tt.get(key);
-      if(e&&e[0]===(H2>>>0)){
-        ttm=e[4];
-        if(e[1]>=depth&&(e[3]===0||(e[3]===1&&e[2]>=beta)||(e[3]===2&&e[2]<=alpha))) return e[2];
+      key=(H1>>>0)&(TTN-1);
+      if(TD[key]>=0&&TK[key]===(H2|0)){
+        ttm=TM[key];
+        const f=TF[key], sv=TS[key];
+        if(TD[key]>=depth&&(f===0||(f===1&&sv>=beta)||(f===2&&sv<=alpha))) return sv;
       }
     }
     if(quiet&&!forced){
@@ -409,8 +442,13 @@ const Hell=(()=>{
       if(best>=beta) return best;
       if(best>alpha) alpha=best;
     }
+    // NULL-MOVE PRUNING (từ Dola) - nếu bỏ lượt mà vẫn beta cutoff thì cắt
+    if(!forced&&!quiet&&depth>=3&&ply>=2){
+      const nullScore = -nm(depth-3, -beta, -beta+1, 3-me, ply+1, ext+1);
+      if(nullScore>=beta) return beta;
+    }
     const g=forced?{lose:false,cells:enemy.slice(),scs:enemy.map(()=>0),mks:enemy.map(()=>1)}
-                  :gen(me,false,quiet,quiet?16:(ply<=2?36:28));
+                  :gen(me,false,quiet,quiet?20:(ply<=2?48:36));
     if(g.lose) return -WINV+ply+1;
     const cells=g.cells;
     if(!cells.length) return quiet?best:ev(me);
@@ -422,6 +460,7 @@ const Hell=(()=>{
       const take=(v)=>{ if(v<0)return; const j=cells.indexOf(v); if(j>=0&&!used[j]){ used[j]=1; chosen.push(v); } };
       take(ttm);
       take(killer[ply*2]); take(killer[ply*2+1]);
+      take(counter[ply>0?best:0]);
       for(let j=0;j<cells.length;j++) if(!used[j]) chosen.push(cells[j]);
     }
     for(let j=0;j<chosen.length;j++){
@@ -432,34 +471,37 @@ const Hell=(()=>{
         const nd=depth-1, nx=quiet?ext+1:ext;
         if(j===0) sc=-nm(nd,-beta,-alpha,3-me,ply+1,nx);
         else{
-          sc=-nm(nd,-alpha-1,-alpha,3-me,ply+1,nx);
+          let rd=0;
+          if(j>=6&&depth>=3&&!forced&&!quiet){ const q=g.cells.indexOf(i); if(q>=0&&!g.mks[q]) rd=1; }
+          sc=-nm(nd-rd,-alpha-1,-alpha,3-me,ply+1,nx);
+          if(!aborted&&rd&&sc>alpha) sc=-nm(nd,-alpha-1,-alpha,3-me,ply+1,nx);
           if(!aborted&&sc>alpha&&sc<beta) sc=-nm(nd,-beta,-alpha,3-me,ply+1,nx);
         }
       }
       undo(i);
       if(aborted) return 0;
-      if(sc>best){ best=sc; bm=i; }
+      if(sc>best){ best=sc; bm=i; if(ply>0) counter[ply]=i; }
       if(sc>alpha) alpha=sc;
       if(alpha>=beta){
-        hist[i]=Math.min(100000,hist[i]+Math.max(1,depth*depth));
+        hist[i]=Math.min(200000,hist[i]+Math.max(2,depth*depth*2));
         if(!quiet&&j>0){ killer[ply*2+1]=killer[ply*2]; killer[ply*2]=i; }
         break;
       }
     }
-    if(!quiet&&bm>=0&&Math.abs(best)<WINV-1000){
-      if(tt.size>600000) tt.clear();
-      tt.set(key,[H2>>>0,depth,best,best<=a0?2:(best>=beta?1:0),bm]);
+    if(!quiet&&bm>=0&&Math.abs(best)<WINV-1000&&(TD[key]<0||TD[key]<=depth+2)){
+      if(TD[key]<0) ttCount++;
+      TK[key]=H2|0; TD[key]=depth; TS[key]=best; TF[key]=best<=a0?2:(best>=beta?1:0); TM[key]=bm;
     }
     return best;
   }
 
   function vcf(att,ply,maxPly){
-    if((++vn&63)===0&&checkTime()) return -1;
-    if(aborted||vn>VCF_NODES||ply>=maxPly) return -1;
+    if((++vn&31)===0&&checkTime()) return -1;
+    if(aborted||vn>vcfLim||ply>=maxPly) return -1;
     const own=wins(att); if(own.length) return own[0];
     const dw=wins(3-att);
     if(dw.length>1) return -1;
-    const moves=dw.length?dw:gen(att,false,true,256).cells;
+    const moves=dw.length?dw:gen(att,false,true,64).cells;
     for(const i of moves){
       if(aborted) break;
       const wonNow=put(i,att); let ok=wonNow;
@@ -480,13 +522,32 @@ const Hell=(()=>{
     return -1;
   }
 
+  // VCT: tìm chuỗi tạo 3 mở liên tiếp ép thắng
+  function vct(att,ply,maxPly){
+    if((++vn&63)===0&&checkTime()) return -1;
+    if(aborted||vn>vcfLim||ply>=maxPly) return -1;
+    const own=wins(att); if(own.length) return own[0];
+    // tìm nước tạo 3 mở
+    const g=gen(att,false,false,32);
+    for(const i of g.cells){
+      if(put(i,att)){
+        undo(i); return i;
+      }
+      // nếu tạo ra 2 mối đe dọa 4 thì coi như thắng
+      const cnt=wins(att).length + (ts[att].size>0?1:0);
+      undo(i);
+      if(cnt>=2) return i;
+    }
+    return -1;
+  }
+
   let stats={};
   function doRoot(depth,a,b,order,fbest){
     let bs=-INF, bi=fbest;
     const scored=[];
     let al=a;
     for(let j=0;j<order.length;j++){
-      if((nodes&31)===0&&checkTime()) return {aborted:true,bs,bi,order};
+      if((nodes&15)===0&&checkTime()) return {aborted:true,bs,bi,order};
       const i=order[j];
       let sc;
       if(put(i,2)) sc=WINV;
@@ -516,13 +577,15 @@ const Hell=(()=>{
     let stones=0;
     for(let i=0;i<N;i++) if(board[i]){ put(i,board[i]); stones++; }
     stats={depth:0,nodes:0,vcfNodes:0,ms:0,reason:'search',tt:tt.size};
+    let r0=SIZE,r1=-1,c0=SIZE,c1=-1;
+    for(let i=0;i<N;i++) if(board[i]){ const r=(i/SIZE)|0, c=i%SIZE; if(r<r0)r0=r; if(r>r1)r1=r; if(c<c0)c0=c; if(c>c1)c1=c; }
+    by0=Math.max(0,r0-7); by1=Math.min(SIZE-1,r1+7); bx0=Math.max(0,c0-7); bx1=Math.min(SIZE-1,c1+7);
+    vcfLim=VCF_NODES;
     if(!stones){ tt.clear(); hist.fill(0); stats.reason='center'; return idx(SIZE>>1,SIZE>>1); }
     const immediate=wins(2);
     if(immediate.length){ stats.reason='win'; return immediate[0]; }
     const blocks=wins(1);
     if(blocks.length===1){ stats.reason='forced-block'; return blocks[0]; }
-    // Khi đối thủ có nhiều nước thắng trực tiếp, tiếp tục tìm kiếm thay vì bỏ cuộc sớm;
-    // alpha-beta sẽ ưu tiên nước tạo đe doạ phản công hoặc kéo dài thế cờ tốt nhất.
     const g0=gen(2,false,false,N);
     const cand=[];
     for(let j=0;j<g0.cells.length;j++){
@@ -530,25 +593,54 @@ const Hell=(()=>{
       put(i,2);
       const v=ev(2);
       undo(i);
-      cand.push([i, v + Math.min(hist[i],3000) + g0.scs[j]*0.02]);
+      cand.push([i, v + Math.min(hist[i],4000) + g0.scs[j]*0.03]);
     }
     if(!cand.length){ for(let i=0;i<N;i++) if(!hb[i]) return i; return -1; }
     cand.sort((a,b)=>b[1]-a[1]);
-    let order=cand.slice(0,36).map(c=>c[0]);
-    let best=order[0], completed=0, bestScore=-INF;
+    let order=cand.slice(0,44).map(c=>c[0]);
+    if(pen){ const lo=order.filter(i=>pen[i]>=500); if(lo.length&&lo.length<order.length){ let rest=order.filter(i=>!(pen[i]>=500)); order=rest.length>=3?rest.concat(lo.filter(i=>!(pen[i]>=900))):rest.concat(lo); } }
+    let best=order[0], completed=0, bestScore=-INF, stable=0;
     const fullDeadline=deadline;
-    deadline=Math.min(fullDeadline, performance.now()+Math.min(2200,HELL_TIME*0.14));
-    const proof=vcf(2,0,44);
+    deadline=Math.min(fullDeadline, performance.now()+Math.min(2500,HELL_TIME*0.18));
+    const proof=vcf(2,0,52);
     deadline=fullDeadline; aborted=false;
-    if(proof>=0){ stats={depth:0,nodes:nodes,vcfNodes:vn,ms:Math.round(performance.now()-started),reason:'proved-vcf'}; return proof; }
-    let lastIterMs=0;
-    for(let depth=1; depth<=34; depth++){
-      if(depth>=6&&lastIterMs>0){
-        const remaining=deadline-performance.now();
-        if(remaining<=0||lastIterMs*2.2>remaining) break;
+    if(proof<0){
+      vn=0; vcfLim=120000; deadline=Math.min(fullDeadline,performance.now()+1200);
+      const thr=vcf(1,0,48); aborted=false;
+      if(thr>=0){
+        if(order.indexOf(thr)<0) order.unshift(thr);
+        const safe=[]; let k=0;
+        for(;k<order.length;k++){
+          const i=order[k]; vn=0;
+          if(put(i,2)){ safe.push(i); undo(i); continue; }
+          const r=vcf(1,0,48); undo(i);
+          if(aborted) break;
+          if(r<0) safe.push(i);
+        }
+        for(;k<order.length;k++) safe.push(order[k]);
+        aborted=false; if(safe.length) order=safe;
       }
+      deadline=fullDeadline; vcfLim=VCF_NODES; vn=0;
+    }
+    if(proof>=0){ stats={depth:0,nodes:nodes,vcfNodes:vn,ms:Math.round(performance.now()-started),reason:'proved-vcf'}; return proof; }
+    // thử VCT nếu VCF không ra
+    vn=0; vcfLim=60000; deadline=Math.min(fullDeadline,performance.now()+800);
+    const vctProof=vct(2,0,24);
+    deadline=fullDeadline; aborted=false; vcfLim=VCF_NODES;
+    if(vctProof>=0&&order.indexOf(vctProof)>=0){
+      // ưu tiên nước VCT
+      order=[vctProof].concat(order.filter(x=>x!==vctProof));
+    }
+    let lastIterMs=0;
+    for(let depth=1; depth<=40; depth++){
+      if(depth>=7&&lastIterMs>0){
+        const remaining=deadline-performance.now();
+        if(remaining<=0||lastIterMs*2.4>remaining) break;
+        if(performance.now()-started>HELL_SOFT&&stable>=2&&bestScore>-WINV/2) break;
+      }
+      if(order.length<=1&&depth>=3) break;
       let a0=-INF,b0=INF;
-      if(depth>=5&&Math.abs(bestScore)<WINV-1000){ a0=bestScore-250; b0=bestScore+250; }
+      if(depth>=5&&Math.abs(bestScore)<WINV-1000){ a0=bestScore-300; b0=bestScore+300; }
       const tIt=performance.now();
       let r=doRoot(depth,a0,b0,order,best);
       if(r.aborted) break;
@@ -556,6 +648,7 @@ const Hell=(()=>{
         r=doRoot(depth,-INF,INF,order,best);
         if(r.aborted) break;
       }
+      stable=(r.bi===best)?stable+1:0;
       best=r.bi; bestScore=r.bs; completed=depth; order=r.order;
       lastIterMs=performance.now()-tIt;
       if(Math.abs(bestScore)>WINV-1000) break;
@@ -565,6 +658,9 @@ const Hell=(()=>{
   }
   return {think, get stats(){return stats;}};
 })();
+
+</script>
+
 </script>
 
 <!-- ============ FIREBASE SDK ============ -->
@@ -1475,7 +1571,7 @@ function aiMove(){
         if(b) placeLocal(b[0],b[1],bs);
         else { statusEl.textContent='Không tìm được nước hợp lệ — hãy bắt đầu ván mới.'; }
       } else placeLocal(Math.floor(i/SIZE), i%SIZE, bs);
-    }, bs, null);
+    }, bs, (hellMemLoad().pen[posKey(board)]||null));
     return;
   }
   const cands=candidates();
@@ -1834,5 +1930,5 @@ async function onlineNewGame(){
 }
 window.addEventListener('resize', resize);
 </script>
-</body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
