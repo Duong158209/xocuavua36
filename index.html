@@ -60,6 +60,23 @@
 }
 @keyframes hellTextPop{0%{opacity:0; transform:scale(.5);}15%{opacity:1; transform:scale(1.15);}70%{opacity:1; transform:scale(1);}100%{opacity:0; transform:scale(1.1);}}
 
+
+/* Bot đang suy nghĩ - chấm đỏ nhấp nháy */
+.bot-thinking-wrap{display:inline-flex; align-items:center; gap:8px; justify-content:center;}
+.bot-thinking-dot{
+  width:10px; height:10px; background:#ff2f2f; border-radius:50%; display:inline-block;
+  box-shadow:0 0 0 2px #ff2f2f30, 0 0 10px #ff2f2f, 0 0 20px #ff2f2f60;
+  animation:blinkRedDot .7s ease-in-out infinite;
+  flex:none;
+}
+@keyframes blinkRedDot{
+  0%,100%{opacity:1; transform:scale(1); box-shadow:0 0 0 2px #ff2f2f30, 0 0 10px #ff2f2f, 0 0 20px #ff2f2f60;}
+  50%{opacity:.25; transform:scale(.7); box-shadow:0 0 0 1px #ff2f2f10, 0 0 4px #ff2f2f60;}
+}
+.bot-thinking-text{color:#ff9a9a; font-weight:800; letter-spacing:.08em; animation:thinkingPulse 1.2s ease-in-out infinite;}
+@keyframes thinkingPulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+#status.bot-thinking{background:rgba(255,47,47,.12); border:1px solid #ff2f2f40; border-radius:12px; padding:6px 12px !important; margin:4px 12px;}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -221,6 +238,23 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 }
 @keyframes hellTextPop{0%{opacity:0; transform:scale(.5);}15%{opacity:1; transform:scale(1.15);}70%{opacity:1; transform:scale(1);}100%{opacity:0; transform:scale(1.1);}}
 
+
+/* Bot đang suy nghĩ - chấm đỏ nhấp nháy */
+.bot-thinking-wrap{display:inline-flex; align-items:center; gap:8px; justify-content:center;}
+.bot-thinking-dot{
+  width:10px; height:10px; background:#ff2f2f; border-radius:50%; display:inline-block;
+  box-shadow:0 0 0 2px #ff2f2f30, 0 0 10px #ff2f2f, 0 0 20px #ff2f2f60;
+  animation:blinkRedDot .7s ease-in-out infinite;
+  flex:none;
+}
+@keyframes blinkRedDot{
+  0%,100%{opacity:1; transform:scale(1); box-shadow:0 0 0 2px #ff2f2f30, 0 0 10px #ff2f2f, 0 0 20px #ff2f2f60;}
+  50%{opacity:.25; transform:scale(.7); box-shadow:0 0 0 1px #ff2f2f10, 0 0 4px #ff2f2f60;}
+}
+.bot-thinking-text{color:#ff9a9a; font-weight:800; letter-spacing:.08em; animation:thinkingPulse 1.2s ease-in-out infinite;}
+@keyframes thinkingPulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+#status.bot-thinking{background:rgba(255,47,47,.12); border:1px solid #ff2f2f40; border-radius:12px; padding:6px 12px !important; margin:4px 12px;}
+
 </style>
 </head>
 <body>
@@ -269,16 +303,16 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
     <!-- VS SCORES like image -->
     <div style="background:linear-gradient(145deg,#14111e,#0e0c15); border:1px solid #3a2a4a; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
       <div style="display:flex; align-items:center; gap:12px;">
-        <div id="scorePillX" style="flex:1; display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:28px; background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #4a355e; box-shadow:inset 0 1px #ffffff08;">
-          <span style="width:32px; height:32px; border-radius:50%; background:#1a1526; border:1.5px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.9rem;">X</span>
-          <span id="labelX" style="font-weight:800; font-size:.9rem; letter-spacing:.02em;">X</span>
-          <span class="val" id="scX" style="margin-left:auto; font-weight:900; font-size:.95rem;">0 thắng</span>
+        <div id="scorePillX" style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:20px; background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #4a355e; box-shadow:inset 0 1px #ffffff08; min-width:0;">
+          <span style="flex:none; width:32px; height:32px; min-width:32px; min-height:32px; border-radius:50%; background:#1a1526; border:1.5px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.9rem; flex-shrink:0;">X</span>
+          <span id="labelX" style="font-weight:800; font-size:.82rem; letter-spacing:.02em; line-height:1.1; flex:1; min-width:0; white-space:normal;">BẠN<br>(X)</span>
+          <span class="val" id="scX" style="margin-left:auto; font-weight:900; font-size:.85rem; display:flex; flex-direction:column; align-items:center; line-height:1.05; flex-shrink:0;"><span>0</span><span style="font-size:.72em; opacity:.85; font-weight:700;">thắng</span></span>
         </div>
         <div id="vsBadge" style="font-weight:900; font-size:1.05rem; letter-spacing:.1em; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60; padding:0 2px;">VS</div>
-        <div id="scorePillO" style="flex:1; display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:28px; background:linear-gradient(145deg,#17131f,#14111e); border:1.5px solid #4a355e; box-shadow:inset 0 1px #ffffff08;">
-          <span style="width:32px; height:32px; border-radius:50%; background:#1a1526; border:1.5px solid #6a5a8a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.9rem;">O</span>
-          <span id="labelO" style="font-weight:800; font-size:.9rem; letter-spacing:.02em;">O</span>
-          <span class="val" id="scO" style="margin-left:auto; font-weight:900; font-size:.95rem;">0 thắng</span>
+        <div id="scorePillO" style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:20px; background:linear-gradient(145deg,#17131f,#14111e); border:1.5px solid #4a355e; box-shadow:inset 0 1px #ffffff08; min-width:0;">
+          <span style="flex:none; width:32px; height:32px; min-width:32px; min-height:32px; border-radius:50%; background:#1a1526; border:1.5px solid #6a5a8a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.9rem; flex-shrink:0;">O</span>
+          <span id="labelO" style="font-weight:800; font-size:.82rem; letter-spacing:.02em; line-height:1.1; flex:1; min-width:0; white-space:normal;">HELL<br>(O)</span>
+          <span class="val" id="scO" style="margin-left:auto; font-weight:900; font-size:.85rem; display:flex; flex-direction:column; align-items:center; line-height:1.05; flex-shrink:0;"><span>0</span><span style="font-size:.72em; opacity:.85; font-weight:700;">thắng</span></span>
         </div>
       </div>
       <div style="display:flex; justify-content:space-between; font-size:.82rem; opacity:.6; padding:0 6px;"><span id="scD">0 hòa</span><span id="totalMoves">0 nước</span></div>
@@ -316,7 +350,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
         <div class="btn" id="diffEasy">Dễ</div>
         <div class="btn active" id="diffMed">Vừa</div>
         <div class="btn" id="diffHard">Khó</div>
-        <div class="btn hell" id="diffHell">🔥 Ngục</div>
+        <div class="btn hell" id="diffHell" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">🔥</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">Địa ngục</span></div>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
         <div class="btn active" id="sideX">X • đi trước</div>
@@ -1766,7 +1800,7 @@ function aiMove(){
   const bs=3-mySide;
   if(gameOver||turn!==bs||mode!=='ai') return;
   if(difficulty==='hell'){
-    statusEl.textContent='🔥 Máy đang suy nghĩ...';
+    statusEl.innerHTML='<span class="bot-thinking-wrap"><span class="bot-thinking-dot"></span><span class="bot-thinking-text">BOT ĐANG SUY NGHĨ...</span></span>'; statusEl.classList.add('bot-thinking');
     hellThink(i=>{
       if(gameOver||turn!==bs||mode!=='ai') return;
       if(i<0||board[i]!==0){
@@ -1900,7 +1934,7 @@ function setMode(m){
   document.getElementById(m==='ai'?'modeAi':m==='local'?'modeLocal':'modeOnline').classList.add('active');
   subRow.innerHTML='';
   if(m==='ai'){
-    subRow.innerHTML=`<div class="btn" id="diffEasy">Dễ</div><div class="btn active" id="diffMed">Vừa</div><div class="btn" id="diffHard">Khó</div><div class="btn hell" id="diffHell">🔥 Địa ngục</div>`;
+    subRow.innerHTML=`<div class="btn" id="diffEasy">Dễ</div><div class="btn active" id="diffMed">Vừa</div><div class="btn" id="diffHard">Khó</div><div class="btn hell" id="diffHell" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:8px 4px; min-height:64px;"><span style="font-size:1.3rem; line-height:1;">🔥</span><span style="font-size:.82rem; font-weight:800; margin-top:3px; white-space:nowrap;">Địa ngục</span></div>`;
     difficulty='medium';
     document.body.classList.remove('hell-vip');
     document.getElementById('diffEasy').onclick=()=>setDiff('easy');
@@ -2386,6 +2420,58 @@ setInterval(updateCustomStatus, 600);
     if(!btn) return;
     setTimeout(triggerHellFire, 100);
   });
+})();
+</script>
+
+
+<script>
+(function(){
+  const origSetStatus = window.setStatus;
+  if(typeof setStatus==='function'){
+    const newSetStatus = function(){
+      const el=document.getElementById('status');
+      if(el){ el.classList.remove('bot-thinking'); }
+      if(origSetStatus) return origSetStatus.apply(this, arguments);
+    };
+    // Override global
+    window.setStatus = newSetStatus;
+    // Also keep local reference if exists
+    try{ setStatus = newSetStatus; }catch(e){}
+  }
+  // When placing, remove thinking
+  document.addEventListener('click', ()=>{
+    setTimeout(()=>{
+      const el=document.getElementById('status');
+      if(el && !el.innerHTML.includes('SUY NGHĨ')){
+        el.classList.remove('bot-thinking');
+      }
+    }, 100);
+  });
+  // Ensure score update keeps 2-line format
+  const origUpdateScores = window.updateScores || null;
+  function fixScoreDisplay(){
+    ['scX','scO'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el) return;
+      const txt=el.textContent || el.innerText;
+      const m=txt.match(/(\d+)/);
+      if(m){
+        const num=m[1];
+        if(!el.innerHTML.includes('flex-direction:column')){
+          el.innerHTML='<span>'+num+'</span><span style="font-size:.72em; opacity:.85; font-weight:700;">thắng</span>';
+          el.style.display='flex';
+          el.style.flexDirection='column';
+          el.style.alignItems='center';
+          el.style.lineHeight='1.05';
+        } else {
+          const first=el.querySelector('span');
+          if(first) first.textContent=num;
+        }
+      }
+    });
+  }
+  setInterval(fixScoreDisplay, 500);
+  window.fixScoreDisplay=fixScoreDisplay;
 })();
 </script>
 
