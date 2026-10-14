@@ -21,6 +21,7 @@ h1{font-size:1.05rem; text-align:center; margin:10px 0 8px;}
 .btn{flex:1; padding:10px 4px; border-radius:10px; border:1.5px solid var(--border);
   background:var(--panel); color:var(--text); font-size:.92rem; text-align:center; cursor:pointer; user-select:none;}
 .btn.active{border-color:var(--accent); font-weight:700;}
+.btn.hell.active{border-color:var(--danger); color:var(--danger);}
 .btn:disabled{opacity:.45;}
 .btn.small{flex:none; padding:8px 12px; font-size:.82rem;}
 input.field{width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border); background:var(--panel); color:var(--text); font-size:.95rem; outline:none;}
@@ -113,6 +114,7 @@ canvas{display:block; touch-action:none;}
     <div class="btn" id="diffEasy">Dễ</div>
     <div class="btn active" id="diffMed">Vừa</div>
     <div class="btn" id="diffHard">Khó</div>
+    <div class="btn hell" id="diffHell">🔥 Địa ngục</div>
   </div>
   <div class="scores">
     <div class="score"><div class="lbl" style="color:var(--x)">X</div><div class="val" id="scX">0</div></div>
@@ -742,7 +744,20 @@ function candidates(){
   return [...set].map(v=>[Math.floor(v/SIZE),v%SIZE]);
 }
 function aiMove(){
-  if(gameOver) return;
+  if(gameOver||turn!==2||mode!=='ai') return;
+  if(difficulty==='hell'){
+    statusEl.textContent='🔥 Máy đang suy nghĩ...';
+    setTimeout(()=>{
+      if(gameOver||turn!==2||mode!=='ai') return;
+      let i=-1;
+      try{ i=Hell.think(); }catch(e){ i=-1; }
+      if(i<0||board[i]!==0){
+        const b=candidates().map(([r,c])=>[r,c,scoreCell(r,c,2)]).sort((x,y)=>y[2]-x[2])[0];
+        placeLocal(b[0],b[1],2);
+      } else placeLocal(Math.floor(i/SIZE), i%SIZE, 2);
+    },40);
+    return;
+  }
   const cands=candidates();
   let scored=cands.map(([r,c])=>[r,c,scoreCell(r,c,2)]);
   scored.sort((a,b)=>b[2]-a[2]);
@@ -757,6 +772,194 @@ function aiMove(){
   placeLocal(pick[0],pick[1],2);
 }
 
+// ---------- ĐỊA NGỤC: alpha-beta + dò đòn ép (VCF) + mở rộng nước tứ ----------
+const HELL_TIME=2200;   // ms suy nghĩ tối đa mỗi nước
+const Hell=(()=>{
+  const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
+  const W=[0,1,8,64,1000,100000];                 // điểm cửa sổ 5 ô theo số quân
+  const ATT=[1,6,40,300,100000], DEF=[0,5,35,260,50000]; // xếp thứ tự nước đi
+  const WINV=10000000, INF=1e9, MAXPLY=40, EXTMAX=12, VCF_NODES=40000;
+  const cw=new Array(N), nbr=new Array(N);
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const i=idx(r,c), L=[];
+    for(let d=0;d<4;d++)for(let k=0;k<5;k++){
+      const sr=r-k*DR[d], sc=c-k*DC[d], er=sr+4*DR[d], ec=sc+4*DC[d];
+      if(inb(sr,sc)&&inb(er,ec)) L.push(d*N+idx(sr,sc));
+    }
+    cw[i]=Int32Array.from(L);
+    const nb=[];
+    for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
+      if((dr||dc)&&inb(r+dr,c+dc)) nb.push(idx(r+dr,c+dc));
+    }
+    nbr[i]=Int16Array.from(nb);
+  }
+  let hb,w1,w2,near,E,four1,four2,won,nodes,deadline,aborted,vn;
+
+  function upd(i,p,d){
+    const L=cw[i];
+    for(let k=0;k<L.length;k++){
+      const w=L[k], a=w1[w], b=w2[w];
+      E-=(a===0?W[b]:0)-(b===0?W[a]:0);
+      if(a===4&&b===0) four1--;
+      if(b===4&&a===0) four2--;
+      const a2=p===1?a+d:a, b2=p===2?b+d:b;
+      w1[w]=a2; w2[w]=b2;
+      E+=(a2===0?W[b2]:0)-(b2===0?W[a2]:0);
+      if(a2===4&&b2===0) four1++;
+      if(b2===4&&a2===0) four2++;
+      if(d>0&&(p===1?a2===5:b2===5)) won=true;
+    }
+  }
+  function put(i,p){
+    hb[i]=p; won=false; upd(i,p,1);
+    const nb=nbr[i]; for(let k=0;k<nb.length;k++) near[nb[k]]++;
+    return won;
+  }
+  function undo(i){
+    const p=hb[i]; hb[i]=0; upd(i,p,-1);
+    const nb=nbr[i]; for(let k=0;k<nb.length;k++) near[nb[k]]--;
+  }
+  const ev=me=>me===2?E:-E;
+  function emptyOf(w){
+    const d=(w/N)|0, s=w%N, st=DR[d]*SIZE+DC[d];
+    for(let k=0;k<5;k++){ const c=s+k*st; if(hb[c]===0) return c; }
+    return -1;
+  }
+  // ô cho phép thắng ngay (tạo đủ 5) của người p
+  function findFour(p){
+    const A=p===1?w1:w2, B=p===1?w2:w1;
+    for(let i=0;i<N;i++){
+      if(hb[i]!==0||near[i]===0) continue;
+      const L=cw[i];
+      for(let k=0;k<L.length;k++){ const w=L[k]; if(A[w]===4&&B[w]===0) return i; }
+    }
+    return -1;
+  }
+  // sinh nước đi: trả về {lose,cells,mks} đã sắp xếp
+  function gen(me,forced,quiet,K){
+    const A=me===1?w1:w2, B=me===1?w2:w1;
+    const cells=[], scs=[], mks=[], blk=[];
+    for(let i=0;i<N;i++){
+      if(hb[i]!==0||near[i]===0) continue;
+      const L=cw[i]; let s=0, mk=0, bl=false;
+      for(let k=0;k<L.length;k++){
+        const w=L[k], a=A[w], b=B[w];
+        if(b===0){ s+=ATT[a]; if(a===3) mk=1; }
+        if(a===0){ s+=DEF[b]; if(b===4) bl=true; }
+      }
+      if(bl) blk.push(i);
+      if(quiet&&!mk) continue;
+      cells.push(i); scs.push(s); mks.push(mk);
+    }
+    if(forced&&blk.length){
+      if(blk.length>1) return {lose:true,cells:[],mks:[]};
+      const j=cells.indexOf(blk[0]);
+      return {lose:false,cells:[blk[0]],mks:[j>=0?mks[j]:0]};
+    }
+    const ord=cells.map((_,j)=>j).sort((x,y)=>scs[y]-scs[x]).slice(0,K);
+    return {lose:false,cells:ord.map(j=>cells[j]),mks:ord.map(j=>mks[j])};
+  }
+  function nm(depth,alpha,beta,me,ply,ext){
+    if((++nodes&255)===0&&performance.now()>deadline) aborted=true;
+    if(aborted) return 0;
+    const my4=me===2?four2:four1, op4=me===2?four1:four2;
+    if(my4>0) return WINV-ply;
+    if(ply>=MAXPLY) return ev(me);
+    const forced=op4>0, quiet=depth<=0&&!forced;
+    if(quiet&&ext>=EXTMAX) return ev(me);
+    let best=-INF;
+    if(quiet){ best=ev(me); if(best>=beta) return best; if(best>alpha) alpha=best; }
+    const g=gen(me,forced,quiet,quiet?5:Math.min(12,4+depth));
+    if(g.lose) return -(WINV-ply-1);
+    const cells=g.cells, mks=g.mks;
+    if(!cells.length) return quiet?best:ev(me);
+    for(let j=0;j<cells.length;j++){
+      const i=cells[j];
+      let sc;
+      if(put(i,me)) sc=WINV-ply;
+      else {
+        let nd=depth-1, ne=ext;
+        if((forced||mks[j])&&ext<EXTMAX){ nd=depth; ne=ext+1; }
+        sc=-nm(nd,-beta,-alpha,3-me,ply+1,ne);
+      }
+      undo(i);
+      if(aborted) return 0;
+      if(sc>best) best=sc;
+      if(best>alpha) alpha=best;
+      if(alpha>=beta) break;
+    }
+    return best;
+  }
+  // VCF: chuỗi toàn nước tứ ép đối thủ phải chặn, kết thúc bằng thắng
+  function vcf(att,ply,maxPly){
+    if(ply>=maxPly||++vn>VCF_NODES) return -1;
+    const A=att===1?w1:w2, B=att===1?w2:w1, def=3-att;
+    const mv=[];
+    for(let i=0;i<N;i++){
+      if(hb[i]!==0||near[i]===0) continue;
+      const L=cw[i];
+      for(let k=0;k<L.length;k++){ const w=L[k]; if(A[w]===3&&B[w]===0){ mv.push(i); break; } }
+    }
+    for(let m=0;m<mv.length;m++){
+      const i=mv[m];
+      put(i,att);
+      const blocks=[], L=cw[i];
+      for(let k=0;k<L.length;k++){
+        const w=L[k];
+        if(A[w]===4&&B[w]===0){ const e=emptyOf(w); if(e>=0&&blocks.indexOf(e)<0) blocks.push(e); }
+      }
+      let ok=false;
+      if(blocks.length>=2) ok=true;
+      else if(blocks.length===1){
+        const b=blocks[0];
+        if(!put(b,def)){
+          const dFour=def===1?four1:four2;
+          if(dFour===0) ok=vcf(att,ply+1,maxPly)>=0;
+        }
+        undo(b);
+      }
+      undo(i);
+      if(ok) return i;
+    }
+    return -1;
+  }
+  function think(){
+    hb=new Uint8Array(N); w1=new Uint8Array(4*N); w2=new Uint8Array(4*N); near=new Uint8Array(N);
+    E=0; four1=0; four2=0; won=false;
+    let stones=0;
+    for(let i=0;i<N;i++) if(board[i]){ put(i,board[i]); stones++; }
+    if(!stones) return idx(SIZE>>1,SIZE>>1);
+    deadline=performance.now()+HELL_TIME; aborted=false; nodes=0; vn=0;
+    let m;
+    if(four2>0&&(m=findFour(2))>=0) return m;      // thắng ngay
+    if(four1>0&&(m=findFour(1))>=0) return m;      // chặn đối thủ sắp đủ 5
+    if((m=vcf(2,0,16))>=0) return m;               // có đòn ép thắng
+    const g=gen(2,false,false,18);
+    if(!g.cells.length) return idx(SIZE>>1,SIZE>>1);
+    let order=g.cells.slice(), best=order[0];
+    if(order.length===1) return best;
+    for(let depth=2;depth<=14;depth+=2){
+      let alpha=-INF, bi=-1, bs=-INF, done=true;
+      for(let j=0;j<order.length;j++){
+        const i=order[j];
+        const w=put(i,2);
+        const sc=w?WINV:-nm(depth-1,-INF,-alpha,1,1,0);
+        undo(i);
+        if(aborted){ done=false; break; }
+        if(sc>bs){ bs=sc; bi=i; }
+        if(bs>alpha) alpha=bs;
+        if(w) break;
+      }
+      if(!done) break;
+      best=bi;
+      order=[bi].concat(order.filter(x=>x!==bi));
+      if(bs>=WINV-100||bs<=-WINV+100) break;
+    }
+    return best;
+  }
+  return {think};
+})();
+
 const subRow=document.getElementById('subRow');
 function resetBoardState(){board=new Uint8Array(SIZE*SIZE); turn=1; gameOver=false; winCells=[]; moveHistory=[]; setStatus(); draw();}
 function setMode(m){
@@ -765,11 +968,12 @@ function setMode(m){
   document.getElementById(m==='ai'?'modeAi':m==='local'?'modeLocal':'modeOnline').classList.add('active');
   subRow.innerHTML='';
   if(m==='ai'){
-    subRow.innerHTML=`<div class="btn" id="diffEasy">Dễ</div><div class="btn active" id="diffMed">Vừa</div><div class="btn" id="diffHard">Khó</div>`;
+    subRow.innerHTML=`<div class="btn" id="diffEasy">Dễ</div><div class="btn active" id="diffMed">Vừa</div><div class="btn" id="diffHard">Khó</div><div class="btn hell" id="diffHell">🔥 Địa ngục</div>`;
     difficulty='medium';
     document.getElementById('diffEasy').onclick=()=>setDiff('easy');
     document.getElementById('diffMed').onclick=()=>setDiff('medium');
     document.getElementById('diffHard').onclick=()=>setDiff('hard');
+    document.getElementById('diffHell').onclick=()=>setDiff('hell');
   } else if(m==='online'){
     subRow.innerHTML=`<div class="btn" id="btnCreate">Tạo phòng</div><input class="btn" id="roomCode" placeholder="MÃ PHÒNG" maxlength="4"><div class="btn" id="btnJoin">Vào phòng</div>`;
     document.getElementById('btnCreate').onclick=createRoom;
@@ -785,8 +989,8 @@ function setMode(m){
 }
 function setDiff(d){
   difficulty=d;
-  ['diffEasy','diffMed','diffHard'].forEach(id=>document.getElementById(id).classList.remove('active'));
-  document.getElementById(d==='easy'?'diffEasy':d==='medium'?'diffMed':'diffHard').classList.add('active');
+  ['diffEasy','diffMed','diffHard','diffHell'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById(d==='easy'?'diffEasy':d==='medium'?'diffMed':d==='hard'?'diffHard':'diffHell').classList.add('active');
 }
 document.getElementById('modeAi').onclick=()=>setMode('ai');
 document.getElementById('modeLocal').onclick=()=>setMode('local');
@@ -794,6 +998,7 @@ document.getElementById('modeOnline').onclick=()=>setMode('online');
 document.getElementById('diffEasy').onclick=()=>setDiff('easy');
 document.getElementById('diffMed').onclick=()=>setDiff('medium');
 document.getElementById('diffHard').onclick=()=>setDiff('hard');
+document.getElementById('diffHell').onclick=()=>setDiff('hell');
 document.getElementById('newGame').onclick=()=>{ mode==='online' ? onlineNewGame() : resetBoardState(); };
 
 // ---------- ONLINE ROOMS (Firestore) ----------
