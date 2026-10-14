@@ -22,6 +22,8 @@ h1{font-size:1.05rem; text-align:center; margin:10px 0 8px;}
   background:var(--panel); color:var(--text); font-size:.92rem; text-align:center; cursor:pointer; user-select:none;}
 .btn.active{border-color:var(--accent); font-weight:700;}
 .btn.hell.active{border-color:var(--danger); color:var(--danger);}
+.sideLbl{flex:none; align-self:center; font-size:.82rem; color:var(--sub); padding:0 2px 0 4px;}
+#sideX{color:var(--x);} #sideO{color:var(--o);}
 .btn:disabled{opacity:.45;}
 .btn.small{flex:none; padding:8px 12px; font-size:.82rem;}
 input.field{width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border); background:var(--panel); color:var(--text); font-size:.95rem; outline:none;}
@@ -109,6 +111,11 @@ canvas{display:block; touch-action:none;}
     <div class="btn active" id="modeAi">Chơi với máy</div>
     <div class="btn" id="modeLocal">2 người</div>
     <div class="btn" id="modeOnline">Online</div>
+  </div>
+  <div class="row" id="sideRow">
+    <div class="sideLbl" id="sideLbl">Bạn chơi:</div>
+    <div class="btn active" id="sideX">X · đi trước</div>
+    <div class="btn" id="sideO">O · đi sau</div>
   </div>
   <div class="row" id="subRow">
     <div class="btn" id="diffEasy">Dễ</div>
@@ -729,6 +736,7 @@ let moveHistory=[];
 let lastMove=null, lastMoveT=0, animRaf=0, lastAnimDraw=0;
 let scores={X:0,O:0,D:0};
 let mode='ai', difficulty='medium';
+let mySide=1;   // 1 = X (đi trước), 2 = O (đi sau)
 let cellSize=44, offX=0, offY=0;
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 const wrap=document.getElementById('boardWrap');
@@ -915,7 +923,7 @@ function checkWinOnArr(bd,r,c,p){
 }
 function checkWin(r,c,p){ return checkWinOnArr(board,r,c,p); }
 function isFull(){return board.every(v=>v!==0);}
-function setStatus(){ if(!gameOver) statusEl.textContent='Lượt của '+(turn===1?'X':'O'); }
+function setStatus(){ if(!gameOver) statusEl.textContent='Lượt của '+(turn===1?'X':'O')+(mode==='ai'?(turn===mySide?' (bạn)':' (máy)'):''); }
 function endGame(winner, cells){
   gameOver=true; winCells=cells||[];
   if(winner===1){scores.X++; statusEl.textContent='X thắng!';}
@@ -958,8 +966,8 @@ function undoLocal(){
 }
 function cellTapped(r,c){
   if(mode==='ai'){
-    if(turn!==1||gameOver) return;
-    if(!placeLocal(r,c,1)) return;
+    if(turn!==mySide||gameOver) return;
+    if(!placeLocal(r,c,mySide)) return;
     if(!gameOver) setTimeout(aiMove,300);
   } else if(mode==='local'){
     placeLocal(r,c,turn);
@@ -998,20 +1006,21 @@ function candidates(){
   return [...set].map(v=>[Math.floor(v/SIZE),v%SIZE]);
 }
 function aiMove(){
-  if(gameOver||turn!==2||mode!=='ai') return;
+  const bs=3-mySide;
+  if(gameOver||turn!==bs||mode!=='ai') return;
   if(difficulty==='hell'){
     statusEl.textContent='🔥 Máy đang suy nghĩ...';
     hellThink(i=>{
-      if(gameOver||turn!==2||mode!=='ai') return;
+      if(gameOver||turn!==bs||mode!=='ai') return;
       if(i<0||board[i]!==0){
-        const b=candidates().map(([r,c])=>[r,c,scoreCell(r,c,2)]).sort((x,y)=>y[2]-x[2])[0];
-        placeLocal(b[0],b[1],2);
-      } else placeLocal(Math.floor(i/SIZE), i%SIZE, 2);
-    });
+        const b=candidates().map(([r,c])=>[r,c,scoreCell(r,c,bs)]).sort((x,y)=>y[2]-x[2])[0];
+        placeLocal(b[0],b[1],bs);
+      } else placeLocal(Math.floor(i/SIZE), i%SIZE, bs);
+    }, bs);
     return;
   }
   const cands=candidates();
-  let scored=cands.map(([r,c])=>[r,c,scoreCell(r,c,2)]);
+  let scored=cands.map(([r,c])=>[r,c,scoreCell(r,c,bs)]);
   scored.sort((a,b)=>b[2]-a[2]);
   let pick;
   if(difficulty==='easy'){
@@ -1021,7 +1030,11 @@ function aiMove(){
   } else {
     pick = scored[0];
   }
-  placeLocal(pick[0],pick[1],2);
+  placeLocal(pick[0],pick[1],bs);
+}
+// nếu mình chọn O thì máy (X) phải đi trước
+function startAiIfNeeded(){
+  if(mode==='ai'&&mySide===2&&!gameOver&&turn===1&&!moveHistory.length) setTimeout(aiMove,300);
 }
 
 // ---------- ĐỊA NGỤC chạy trong Web Worker để giao diện không bị đứng ----------
@@ -1030,7 +1043,7 @@ function hellCancel(){
   hellJob++;
   if(hellWorker){ try{hellWorker.terminate();}catch(e){} hellWorker=null; }
 }
-function hellThink(cb){
+function hellThink(cb,bot){
   const id=++hellJob;
   try{
     if(!hellWorker){
@@ -1041,7 +1054,7 @@ function hellThink(cb){
       hellWorker.onerror=()=>{ hellWorker=null; if(id===hellJob) cb(-1); };
     }
     hellWorker.onmessage=e=>{ if(e.data.id===hellJob) cb(e.data.m); };
-    const snap=board.slice();
+    const snap=bot===1?board.map(v=>v?3-v:0):board.slice();
     hellWorker.postMessage({id,b:snap.buffer},[snap.buffer]);
   }catch(err){ cb(-1); }
 }
@@ -1072,6 +1085,15 @@ function setMode(m){
   resetBoardState();
   scores={X:0,O:0,D:0};
   document.getElementById('scX').textContent=0;document.getElementById('scO').textContent=0;document.getElementById('scD').textContent=0;
+  document.getElementById('sideRow').classList.toggle('hidden', m==='local');
+  document.getElementById('sideLbl').textContent = m==='online' ? 'Tạo phòng:' : 'Bạn chơi:';
+  startAiIfNeeded();
+}
+function setSide(sd){
+  mySide=sd;
+  document.getElementById('sideX').classList.toggle('active', sd===1);
+  document.getElementById('sideO').classList.toggle('active', sd===2);
+  if(mode==='ai'){ resetBoardState(); startAiIfNeeded(); }
 }
 function setDiff(d){
   difficulty=d;
@@ -1085,7 +1107,9 @@ document.getElementById('diffEasy').onclick=()=>setDiff('easy');
 document.getElementById('diffMed').onclick=()=>setDiff('medium');
 document.getElementById('diffHard').onclick=()=>setDiff('hard');
 document.getElementById('diffHell').onclick=()=>setDiff('hell');
-document.getElementById('newGame').onclick=()=>{ mode==='online' ? onlineNewGame() : resetBoardState(); };
+document.getElementById('newGame').onclick=()=>{ if(mode==='online') onlineNewGame(); else { resetBoardState(); startAiIfNeeded(); } };
+document.getElementById('sideX').onclick=()=>setSide(1);
+document.getElementById('sideO').onclick=()=>setSide(2);
 
 // ---------- ONLINE ROOMS (Firestore) ----------
 let roomRef=null, unsub=null, mySeat=null, roomCode=null, opponentName='';
@@ -1110,9 +1134,9 @@ async function createRoom(){
   try{
     await ref.set({
       board:Array.from(new Uint8Array(SIZE*SIZE)), turn:1, status:'waiting',
-      seats:{X:{uid:currentUser.uid,name:currentUsername}}, winner:0, winCells:[]
+      seats:{[mySide===1?'X':'O']:{uid:currentUser.uid,name:currentUsername}}, winner:0, winCells:[]
     });
-    roomRef=ref; roomCode=code; mySeat='X';
+    roomRef=ref; roomCode=code; mySeat=mySide===1?'X':'O';
     document.getElementById('roomCode').value=code;
     subscribeRoom();
   }catch(e){ statusEl.textContent='Lỗi tạo phòng.'; }
@@ -1126,9 +1150,16 @@ async function joinRoom(){
     const snap=await ref.get();
     if(!snap.exists){ statusEl.textContent='Không tìm thấy phòng.'; return; }
     const data=snap.data();
-    if(data.seats.O && data.seats.O.uid!==currentUser.uid){ statusEl.textContent='Phòng đã đầy.'; return; }
-    if(!data.seats.O) await ref.update({'seats.O':{uid:currentUser.uid,name:currentUsername}, status:'playing'});
-    roomRef=ref; roomCode=code; mySeat = data.seats.X.uid===currentUser.uid?'X':'O';
+    const seats=data.seats||{};
+    const had = seats.X&&seats.X.uid===currentUser.uid ? 'X' : seats.O&&seats.O.uid===currentUser.uid ? 'O' : null;
+    if(had) mySeat=had;
+    else {
+      if(seats.X&&seats.O){ statusEl.textContent='Phòng đã đầy.'; return; }
+      const free = seats.X ? 'O' : 'X';
+      await ref.update({['seats.'+free]:{uid:currentUser.uid,name:currentUsername}, status:'playing'});
+      mySeat=free;
+    }
+    roomRef=ref; roomCode=code;
     subscribeRoom();
   }catch(e){ statusEl.textContent='Lỗi vào phòng.'; }
 }
@@ -1151,7 +1182,7 @@ function subscribeRoom(){
     document.getElementById('chatFab').style.display = 'flex';
     subscribeChat();
     if(d.status==='waiting'){
-      gameOver=false; statusEl.textContent='Mã phòng '+roomCode+' — đang chờ đối thủ...';
+      gameOver=false; statusEl.textContent='Mã phòng '+roomCode+' — bạn là '+mySeat+', đang chờ đối thủ...';
     } else if(d.status==='win'||d.status==='draw'){
       if(!gameOver){
         gameOver=true;
