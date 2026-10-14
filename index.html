@@ -202,11 +202,11 @@ canvas{display:block; touch-action:none;}
 
 <script type="text/plain" id="hellSrc">
 // ---------- ĐỊA NGỤC v4: phòng thủ cứng (không bỏ sót tứ) + không dùng memory penalty ----------
-const HELL_TIME=7000;
+const HELL_TIME=6500;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const W=[0,1,12,100,1500,100000];
-  const ATT=[1,14,100,700,100000], DEF=[0,24,200,1400,280000];
+  const ATT=[1,16,120,800,100000], DEF=[0,26,210,1500,300000];
   const WINV=10000000, INF=1e9, MAXPLY=64, EXTMAX=24, VCF_NODES=80000;
   const cw=new Array(N), nbr=new Array(N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -467,10 +467,15 @@ const Hell=(()=>{
       return bestBlock(must);
     }
 
-    // 3) Chặn VCF đối thủ TRƯỚC (đi sau: sống sót quan trọng hơn tấn công sớm)
-    if((m=vcf(1,0,20))>=0){ if(hb[m]===0) return m; }
+    // 3) Tạo/đi tứ của mình ngay nếu có (ép đối thủ)
+    if(myCrit.four.length){
+      return bestBlock(myCrit.four); // dual-purpose scoring
+    }
 
-    // 4) VCF mình (phản công)
+    // 4) Chặn VCF đối thủ
+    if((m=vcf(1,0,18))>=0){ if(hb[m]===0) return m; }
+
+    // 5) VCF mình (phản công — quan trọng khi đi sau)
     if((m=vcf(2,0,22))>=0) return m;
 
     // 5) Open-three đôi của đối thủ → chặn bắt buộc
