@@ -226,79 +226,16 @@
 
 
 
-/* 2 cây đuốc lửa - TO HƠN, LỰC HƠN */
-#hellTorches{
-  position:fixed; inset:0; pointer-events:none; z-index:35; display:none;
-}
-#hellTorches.show{display:block;}
-.torch{
-  position:fixed; width:80px; height:180px; display:flex; flex-direction:column; align-items:center;
-  filter:drop-shadow(0 0 18px #ff6a00) drop-shadow(0 0 35px #ff0000) drop-shadow(0 0 50px #ff8a00);
-  animation:torchFlicker .12s ease-in-out infinite alternate;
-}
-.torch.left{left:4px; top:50%; transform:translateY(-50%);}
-.torch.right{right:4px; top:50%; transform:translateY(-50%);}
-.torch .flame{
-  font-size:56px; line-height:1; animation:flameDance .18s ease-in-out infinite alternate;
-  text-shadow:0 0 12px #ffec00, 0 0 20px #ff6a00, 0 0 35px #ff0000, 0 0 50px #ff3b00, 0 0 70px #ff0000;
-  filter:brightness(1.2) saturate(1.3);
-}
-.torch .flame::before{
-  content:'🔥'; position:absolute; font-size:42px; opacity:.7; animation:flameInner .15s infinite alternate; margin-top:8px;
-}
-.torch .stick{
-  width:10px; height:80px; 
-  background:linear-gradient(180deg, #a0522d 0%, #8B4513 20%, #654321 50%, #4a2511 100%);
-  border-radius:5px; margin-top:4px; 
-  box-shadow:inset 2px 0 3px #c4703a, inset -1px 0 2px #3d1f0f, 0 2px 8px #000a;
-  position:relative;
-}
-.torch .stick::after{
-  content:''; position:absolute; left:-3px; top:-2px; right:-3px; height:14px;
-  background:radial-gradient(50% 100% at 50% 0%, rgba(255,200,0,.5) 0%, rgba(255,100,0,.3) 40%, transparent 80%);
-  border-radius:50%;
-}
-.torch .glow{
-  position:absolute; top:5px; width:100px; height:100px; 
-  background:radial-gradient(50% 50% at 50% 30%, rgba(255,180,0,.6) 0%, rgba(255,100,0,.4) 25%, rgba(255,40,0,.25) 50%, transparent 75%);
-  animation:torchGlow 1s ease-in-out infinite alternate;
-  filter:blur(2px);
-}
-.torch .sparks{
-  position:absolute; top:0; width:2px; height:2px; background:#ffec00; border-radius:50%;
-  box-shadow:0 0 6px #ffec00, 0 0 12px #ff6a00;
-  animation:sparkFly 1.2s ease-out infinite;
-}
-.torch .sparks:nth-child(2){ left:10px; animation-delay:.2s; }
-.torch .sparks:nth-child(3){ right:12px; animation-delay:.5s; }
-.torch .sparks:nth-child(4){ left:20px; animation-delay:.8s; }
 
-@keyframes torchFlicker{
-  0%{transform:translateY(-50%) rotate(-1.5deg) scale(1) translateX(0);}
-  100%{transform:translateY(-50%) rotate(1.5deg) scale(1.08) translateX(1px);}
-}
-@keyframes flameDance{
-  0%{transform:scale(1) translateY(0) rotate(-3deg) skewX(-1deg);}
-  100%{transform:scale(1.15) translateY(-4px) rotate(3deg) skewX(1deg);}
-}
-@keyframes flameInner{
-  0%{transform:scale(.8) translateY(2px); opacity:.6;}
-  100%{transform:scale(1.1) translateY(-2px); opacity:.9;}
-}
-@keyframes torchGlow{
-  0%{opacity:.7; transform:scale(1) translateY(0);}
-  100%{opacity:1; transform:scale(1.3) translateY(-3px);}
-}
-@keyframes sparkFly{
-  0%{transform:translateY(0) translateX(0) scale(1); opacity:1;}
-  100%{transform:translateY(-40px) translateX(var(--sx, 10px)) scale(0); opacity:0;}
-}
+
+
+
 
 @media(max-width:600px){
-  .torch{width:60px; height:140px;}
-  .torch .flame{font-size:42px;}
-  .torch .stick{height:60px; width:7px;}
-  .torch .glow{width:75px; height:75px;}
+  
+  
+  
+  
 }
 
 
@@ -629,79 +566,16 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 
 
 
-/* 2 cây đuốc lửa - TO HƠN, LỰC HƠN */
-#hellTorches{
-  position:fixed; inset:0; pointer-events:none; z-index:35; display:none;
-}
-#hellTorches.show{display:block;}
-.torch{
-  position:fixed; width:80px; height:180px; display:flex; flex-direction:column; align-items:center;
-  filter:drop-shadow(0 0 18px #ff6a00) drop-shadow(0 0 35px #ff0000) drop-shadow(0 0 50px #ff8a00);
-  animation:torchFlicker .12s ease-in-out infinite alternate;
-}
-.torch.left{left:4px; top:50%; transform:translateY(-50%);}
-.torch.right{right:4px; top:50%; transform:translateY(-50%);}
-.torch .flame{
-  font-size:56px; line-height:1; animation:flameDance .18s ease-in-out infinite alternate;
-  text-shadow:0 0 12px #ffec00, 0 0 20px #ff6a00, 0 0 35px #ff0000, 0 0 50px #ff3b00, 0 0 70px #ff0000;
-  filter:brightness(1.2) saturate(1.3);
-}
-.torch .flame::before{
-  content:'🔥'; position:absolute; font-size:42px; opacity:.7; animation:flameInner .15s infinite alternate; margin-top:8px;
-}
-.torch .stick{
-  width:10px; height:80px; 
-  background:linear-gradient(180deg, #a0522d 0%, #8B4513 20%, #654321 50%, #4a2511 100%);
-  border-radius:5px; margin-top:4px; 
-  box-shadow:inset 2px 0 3px #c4703a, inset -1px 0 2px #3d1f0f, 0 2px 8px #000a;
-  position:relative;
-}
-.torch .stick::after{
-  content:''; position:absolute; left:-3px; top:-2px; right:-3px; height:14px;
-  background:radial-gradient(50% 100% at 50% 0%, rgba(255,200,0,.5) 0%, rgba(255,100,0,.3) 40%, transparent 80%);
-  border-radius:50%;
-}
-.torch .glow{
-  position:absolute; top:5px; width:100px; height:100px; 
-  background:radial-gradient(50% 50% at 50% 30%, rgba(255,180,0,.6) 0%, rgba(255,100,0,.4) 25%, rgba(255,40,0,.25) 50%, transparent 75%);
-  animation:torchGlow 1s ease-in-out infinite alternate;
-  filter:blur(2px);
-}
-.torch .sparks{
-  position:absolute; top:0; width:2px; height:2px; background:#ffec00; border-radius:50%;
-  box-shadow:0 0 6px #ffec00, 0 0 12px #ff6a00;
-  animation:sparkFly 1.2s ease-out infinite;
-}
-.torch .sparks:nth-child(2){ left:10px; animation-delay:.2s; }
-.torch .sparks:nth-child(3){ right:12px; animation-delay:.5s; }
-.torch .sparks:nth-child(4){ left:20px; animation-delay:.8s; }
 
-@keyframes torchFlicker{
-  0%{transform:translateY(-50%) rotate(-1.5deg) scale(1) translateX(0);}
-  100%{transform:translateY(-50%) rotate(1.5deg) scale(1.08) translateX(1px);}
-}
-@keyframes flameDance{
-  0%{transform:scale(1) translateY(0) rotate(-3deg) skewX(-1deg);}
-  100%{transform:scale(1.15) translateY(-4px) rotate(3deg) skewX(1deg);}
-}
-@keyframes flameInner{
-  0%{transform:scale(.8) translateY(2px); opacity:.6;}
-  100%{transform:scale(1.1) translateY(-2px); opacity:.9;}
-}
-@keyframes torchGlow{
-  0%{opacity:.7; transform:scale(1) translateY(0);}
-  100%{opacity:1; transform:scale(1.3) translateY(-3px);}
-}
-@keyframes sparkFly{
-  0%{transform:translateY(0) translateX(0) scale(1); opacity:1;}
-  100%{transform:translateY(-40px) translateX(var(--sx, 10px)) scale(0); opacity:0;}
-}
+
+
+
 
 @media(max-width:600px){
-  .torch{width:60px; height:140px;}
-  .torch .flame{font-size:42px;}
-  .torch .stick{height:60px; width:7px;}
-  .torch .glow{width:75px; height:75px;}
+  
+  
+  
+  
 }
 
 
@@ -2825,10 +2699,9 @@ setInterval(updateCustomStatus, 600);
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script>
 <script>
 (function(){
-  function triggerHellFire(){ const torches=document.getElementById('hellTorches'); if(torches){ torches.classList.add('show'); setTimeout(()=>{ if(!document.getElementById('diffHell')?.classList.contains('active')) torches.classList.remove('show'); }, 3500); }
+  function triggerHellFire(){
     const boardWrap=document.getElementById('boardWrap');
     try{
-      // Xóa hết tất cả nước hiện tại trên bàn cờ
       if(typeof board!=='undefined'){
         board = new Uint8Array(SIZE*SIZE);
         if(typeof moveHistory!=='undefined') moveHistory = [];
@@ -2841,25 +2714,18 @@ setInterval(updateCustomStatus, 600);
         if(typeof dangerCells!=='undefined') dangerCells = [];
         if(typeof draw==='function') draw();
         if(typeof setStatus==='function') setStatus();
-        // Cập nhật UI tổng nước
         const st=document.getElementById('statusTotal'); if(st) st.textContent='0';
-        const tm=document.getElementById('totalMoves'); if(tm) tm.textContent='';
+        const tm=document.getElementById('totalMoves'); if(tm) tm.textContent='0';
         const mh=document.getElementById('moveHistory'); if(mh) mh.textContent='Chưa có nước đi';
         const sc=document.getElementById('status'); if(sc) sc.textContent='LƯỢT CỦA BẠN - CHẠM ĐỂ ĐÁNH';
       }
-      if(typeof resetBoardState==='function'){
-        // Gọi thêm để đảm bảo Firebase và các state khác cũng reset
-        resetBoardState();
-      }
-    }catch(e){ console.log('clear board error', e); }
+      if(typeof resetBoardState==='function'){ resetBoardState(); }
+    }catch(e){}
     if(!boardWrap) return;
-    // Hiệu ứng rực lửa 2 giây
     boardWrap.classList.remove('hell-fire'); 
-    void boardWrap.offsetWidth; // reflow để restart animation
+    void boardWrap.offsetWidth;
     boardWrap.classList.add('hell-fire');
-    // Rung + flash màn hình
     if(navigator.vibrate) navigator.vibrate([100,50,100,50,200]);
-    // Thêm hiệu ứng toàn màn hình nếu có
     let overlay = document.getElementById('hellFullFx');
     if(!overlay){
       overlay = document.createElement('div');
@@ -2868,13 +2734,13 @@ setInterval(updateCustomStatus, 600);
       document.body.appendChild(overlay);
     }
     overlay.style.display='block';
-    overlay.style.animation='hellFullFlash 2s ease-out';
+    overlay.style.animation='hellFullFlash 3.5s ease-out';
     setTimeout(()=>{
       boardWrap.classList.remove('hell-fire');
       overlay.style.display='none';
     }, 3500);
   }
-  document.addEventListener('click', (e)=>{
+document.addEventListener('click', (e)=>{
     const btn=e.target.closest('#diffHell');
     if(!btn) return;
     setTimeout(triggerHellFire, 100);
@@ -2935,121 +2801,16 @@ setInterval(updateCustomStatus, 600);
 </script>
 
 
-<script>
-// Thanh chức năng hàng dọc kéo lên xuống tùy thích
-(function(){
-  const dock=document.getElementById('sideDock');
-  if(!dock) return;
-  
-  // Thêm handle
-  let handle=document.getElementById('dockHandle');
-  if(!handle){
-    handle=document.createElement('div');
-    handle.id='dockHandle';
-    handle.textContent='⋯';
-    handle.title='Kéo để di chuyển thanh';
-    dock.insertBefore(handle, dock.firstChild);
-  }
-
-  let isDragging=false, startY=0, startTop=0, hasMoved=false;
-  let currentTop = parseFloat(localStorage.getItem('sideDockTop')||'50');
-  
-  function applyTop(percent){
-    percent=Math.max(10, Math.min(90, percent));
-    dock.style.top=percent+'%';
-    dock.style.transform='translateY(-50%)';
-    localStorage.setItem('sideDockTop', percent);
-  }
-  
-  // Khôi phục vị trí cũ
-  applyTop(currentTop);
-  
-  function getClientY(e){
-    return e.touches ? e.touches[0].clientY : e.clientY;
-  }
-  
-  function startDrag(e){
-    // Không drag khi bấm vào nút bên trong
-    if(e.target.closest('.dockItem') || e.target.closest('#dockToggle')) return;
-    isDragging=true; hasMoved=false;
-    startY=getClientY(e);
-    const rect=dock.getBoundingClientRect();
-    startTop=(rect.top + rect.height/2) / window.innerHeight * 100;
-    dock.classList.add('dragging');
-    dock.style.transition='none';
-    e.preventDefault();
-  }
-  
-  function onMove(e){
-    if(!isDragging) return;
-    const y=getClientY(e);
-    const deltaY=y-startY;
-    const deltaPercent=(deltaY / window.innerHeight)*100;
-    let newTop=startTop+deltaPercent;
-    applyTop(newTop);
-    if(Math.abs(deltaY)>3) hasMoved=true;
-  }
-  
-  function endDrag(){
-    if(!isDragging) return;
-    isDragging=false;
-    dock.classList.remove('dragging');
-    dock.style.transition='';
-    if(hasMoved){
-      // Ngăn click khi vừa kéo
-      setTimeout(()=>{ hasMoved=false; }, 50);
-    }
-  }
-  
-  // Mouse events
-  dock.addEventListener('mousedown', startDrag);
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('mouseup', endDrag);
-  
-  // Touch events
-  dock.addEventListener('touchstart', startDrag, {passive:false});
-  window.addEventListener('touchmove', (e)=>{ if(isDragging) e.preventDefault(); onMove(e); }, {passive:false});
-  window.addEventListener('touchend', endDrag);
-  
-  // Double click để reset về giữa
-  handle.addEventListener('dblclick', ()=>{
-    applyTop(50);
-    dock.style.transition='top .3s ease';
-    setTimeout(()=>{ dock.style.transition=''; }, 300);
-  });
-  
-  // Ngăn click khi đang kéo
-  dock.addEventListener('click', (e)=>{
-    if(hasMoved){
-      e.stopPropagation();
-      e.preventDefault();
-    }
-  }, true);
-})();
-</script>
 
 
-<div id="hellTorches">
-  <style>:root{--sx:10px}</style>
-  <div class="torch left">
-    <div class="glow"></div>
-    <span class="sparks"></span><span class="sparks"></span><span class="sparks"></span><span class="sparks"></span>
-    <div class="flame">🔥</div>
-    <div class="stick"></div>
-  </div>
-  <div class="torch right">
-    <div class="glow"></div>
-    <span class="sparks"></span><span class="sparks"></span><span class="sparks"></span><span class="sparks"></span>
-    <div class="flame">🔥</div>
-    <div class="stick"></div>
-  </div>
-</div>
+
+
 
 
 <script>
 (function(){
   function showTorches(duration){
-    const torches=document.getElementById('hellTorches');
+    const torches=document.getElementById('removedTorches');
     if(!torches) return;
     torches.classList.add('show');
     if(duration){
@@ -3065,7 +2826,7 @@ setInterval(updateCustomStatus, 600);
   // When hell is active, keep torches visible
   function updateTorchVisibility(){
     const isHell=document.getElementById('diffHell')?.classList.contains('active');
-    const torches=document.getElementById('hellTorches');
+    const torches=document.getElementById('removedTorches');
     if(!torches) return;
     if(isHell){
       // Keep visible after initial 3.5s
@@ -3158,6 +2919,168 @@ setInterval(updateCustomStatus, 600);
     };
   }
   window.updateLabelsBySide=updateLabelsBySide;
+})();
+</script>
+
+
+<script>
+// Thanh chức năng kéo tự do trái/phải/trên/dưới nhưng không ở trong màn hình (luôn bám rìa)
+(function(){
+  const dock=document.getElementById('sideDock');
+  if(!dock) return;
+  
+  let handle=document.getElementById('dockHandle');
+  if(!handle){
+    handle=document.createElement('div');
+    handle.id='dockHandle';
+    handle.textContent='⋯';
+    handle.title='Kéo để di chuyển - bám rìa màn hình';
+    dock.insertBefore(handle, dock.firstChild);
+  }
+
+  let isDragging=false, startX=0, startY=0, startLeft=0, startTop=0, hasMoved=false;
+  
+  // Khôi phục vị trí
+  let savedPos = JSON.parse(localStorage.getItem('sideDockPos')||'{"side":"left","percent":50}');
+  
+  function applyPosition(pos){
+    // pos.side: left, right, top, bottom
+    // pos.percent: 0-100 vị trí dọc theo cạnh
+    dock.style.transition='none';
+    dock.style.transform='';
+    dock.style.top='';
+    dock.style.left='';
+    dock.style.right='';
+    dock.style.bottom='';
+    
+    const margin=8;
+    if(pos.side==='left'){
+      dock.style.left=margin+'px';
+      dock.style.top=pos.percent+'%';
+      dock.style.transform='translateY(-50%)';
+      dock.style.right='auto';
+      dock.style.bottom='auto';
+    } else if(pos.side==='right'){
+      dock.style.right=margin+'px';
+      dock.style.top=pos.percent+'%';
+      dock.style.transform='translateY(-50%)';
+      dock.style.left='auto';
+      dock.style.bottom='auto';
+    } else if(pos.side==='top'){
+      dock.style.top=margin+'px';
+      dock.style.left=pos.percent+'%';
+      dock.style.transform='translateX(-50%)';
+      dock.style.flexDirection='row';
+      dock.style.right='auto';
+      dock.style.bottom='auto';
+    } else if(pos.side==='bottom'){
+      dock.style.bottom=margin+'px';
+      dock.style.left=pos.percent+'%';
+      dock.style.transform='translateX(-50%)';
+      dock.style.flexDirection='row';
+      dock.style.top='auto';
+      dock.style.right='auto';
+    }
+    localStorage.setItem('sideDockPos', JSON.stringify(pos));
+  }
+  
+  // Apply saved
+  applyPosition(savedPos);
+  
+  function getClient(e){
+    return {x: e.touches ? e.touches[0].clientX : e.clientX, y: e.touches ? e.touches[0].clientY : e.clientY};
+  }
+  
+  function startDrag(e){
+    if(e.target.closest('.dockItem') || e.target.closest('#dockToggle')) return;
+    isDragging=true; hasMoved=false;
+    const c=getClient(e);
+    startX=c.x; startY=c.y;
+    const rect=dock.getBoundingClientRect();
+    startLeft=rect.left + rect.width/2;
+    startTop=rect.top + rect.height/2;
+    dock.classList.add('dragging');
+    dock.style.transition='none';
+    e.preventDefault();
+  }
+  
+  function onMove(e){
+    if(!isDragging) return;
+    const c=getClient(e);
+    const dx=c.x-startX;
+    const dy=c.y-startY;
+    if(Math.abs(dx)<3 && Math.abs(dy)<3) return;
+    hasMoved=true;
+    
+    // Tính vị trí mới
+    let newX=startLeft+dx;
+    let newY=startTop+dy;
+    
+    // Xác định bám rìa nào gần nhất
+    const vw=window.innerWidth;
+    const vh=window.innerHeight;
+    const distLeft=newX;
+    const distRight=vw-newX;
+    const distTop=newY;
+    const distBottom=vh-newY;
+    const minDist=Math.min(distLeft, distRight, distTop, distBottom);
+    
+    let newPos={side:'left', percent:50};
+    if(minDist===distLeft){
+      newPos.side='left';
+      newPos.percent=Math.max(10, Math.min(90, (newY/vh)*100));
+    } else if(minDist===distRight){
+      newPos.side='right';
+      newPos.percent=Math.max(10, Math.min(90, (newY/vh)*100));
+    } else if(minDist===distTop){
+      newPos.side='top';
+      newPos.percent=Math.max(10, Math.min(90, (newX/vw)*100));
+    } else {
+      newPos.side='bottom';
+      newPos.percent=Math.max(10, Math.min(90, (newX/vw)*100));
+    }
+    
+    applyPosition(newPos);
+  }
+  
+  function endDrag(){
+    if(!isDragging) return;
+    isDragging=false;
+    dock.classList.remove('dragging');
+    dock.style.transition='';
+    setTimeout(()=>{ hasMoved=false; }, 100);
+  }
+  
+  dock.addEventListener('mousedown', startDrag);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', endDrag);
+  dock.addEventListener('touchstart', startDrag, {passive:false});
+  window.addEventListener('touchmove', (e)=>{ if(isDragging) e.preventDefault(); onMove(e); }, {passive:false});
+  window.addEventListener('touchend', endDrag);
+  
+  handle.addEventListener('dblclick', ()=>{
+    const centerPos={side:'left', percent:50};
+    dock.style.transition='all .3s ease';
+    applyPosition(centerPos);
+    setTimeout(()=>{ dock.style.transition=''; }, 300);
+  });
+  
+  dock.addEventListener('click', (e)=>{
+    if(hasMoved){ e.stopPropagation(); e.preventDefault(); }
+  }, true);
+  
+  // Đảm bảo không bao giờ ở trong màn hình (luôn bám rìa)
+  function ensureEdge(){
+    const rect=dock.getBoundingClientRect();
+    const vw=window.innerWidth;
+    const vh=window.innerHeight;
+    // Nếu đang ở giữa màn hình (cách rìa > 100px), đẩy về left
+    if(rect.left>100 && rect.right < vw-100 && rect.top>100 && rect.bottom < vh-100){
+      applyPosition({side:'left', percent:50});
+    }
+  }
+  window.addEventListener('resize', ensureEdge);
+  setTimeout(ensureEdge, 1000);
 })();
 </script>
 
