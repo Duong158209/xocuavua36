@@ -206,8 +206,8 @@ const HELL_TIME=7000;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const W=[0,1,12,100,1500,100000];
-  const ATT=[1,10,80,550,100000], DEF=[0,28,220,1600,300000];
-  const WINV=10000000, INF=1e9, MAXPLY=64, EXTMAX=24, VCF_NODES=160000;
+  const ATT=[1,14,100,700,100000], DEF=[0,24,200,1400,280000];
+  const WINV=10000000, INF=1e9, MAXPLY=64, EXTMAX=24, VCF_NODES=80000;
   const cw=new Array(N), nbr=new Array(N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
     const i=idx(r,c), L=[];
@@ -468,21 +468,18 @@ const Hell=(()=>{
     }
 
     // 3) Chặn VCF đối thủ TRƯỚC (đi sau: sống sót quan trọng hơn tấn công sớm)
-    if((m=vcf(1,0,28))>=0){ if(hb[m]===0) return m; }
+    if((m=vcf(1,0,20))>=0){ if(hb[m]===0) return m; }
 
     // 4) VCF mình (phản công)
-    if((m=vcf(2,0,26))>=0) return m;
+    if((m=vcf(2,0,22))>=0) return m;
 
     // 5) Open-three đôi của đối thủ → chặn bắt buộc
     if(opCrit.open3.length>=2){
       return bestBlock(opCrit.open3);
     }
-    // 5b) Nhiều open3 lẻ: chặn ô nguy hiểm nhất (đi sau dễ bị ép)
-    if(opCrit.open3.length>=1 && stones>=6){
-      // nếu đối thủ có open3 và mình chưa có đe dọa tương đương → chặn
-      if(myCrit.open3.length < opCrit.open3.length){
-        return bestBlock(opCrit.open3);
-      }
+    // 5b) open3: chỉ ép chặn khi đối thủ nhiều open3 hơn rõ (tránh bị động quá)
+    if(opCrit.open3.length>=3 && myCrit.open3.length<=1){
+      return bestBlock(opCrit.open3);
     }
 
     // 6) Alpha-beta — branching rộng hơn khi đi sau (stones lẻ = vừa bị đánh)
@@ -504,10 +501,13 @@ const Hell=(()=>{
         if(w) break;
       }
       if(!done) break;
-      best=bi;
-      order=[bi].concat(order.filter(x=>x!==bi));
+      if(bi>=0){
+        best=bi;
+        order=[bi].concat(order.filter(x=>x!==bi));
+      }
       if(bs>=WINV-100||bs<=-WINV+100) break;
     }
+    if(best<0||hb[best]!==0) best=order[0];
     return best;
   }
   return {think};
@@ -1243,10 +1243,8 @@ function hellUnlearn(){
 }
 function updateHellMemUI(){
   const el=document.getElementById('hellMem');
-  const show=mode==='ai'&&difficulty==='hell';
-  el.classList.toggle('hidden',!show);
-  if(!show) return;
-  el.innerHTML='🔥 Địa ngục — luôn mức mạnh nhất (không học lệch nước)';
+  el.classList.add('hidden');
+  el.innerHTML='';
 }
 // HELLMEM>>
 // nếu mình chọn O thì máy (X) phải đi trước
