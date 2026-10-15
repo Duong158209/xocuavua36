@@ -709,92 +709,6 @@ self.addEventListener('fetch', e=>{
 })();
 </script>
 
-
-<style>
-/* FIX FINAL: Chế độ chơi bị che và trượt + khung hình không di chuyển */
-/* 1. Đảm bảo app layout chuẩn, không có panel nào position:absolute đè lên nhau */
-#app {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-  padding-left: 64px !important;
-  padding-right: 8px !important;
-  box-sizing: border-box !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-
-/* 2. Tất cả các panel chính phải ở normal flow, không fixed */
-#app > div {
-  position: relative !important;
-  z-index: 1 !important;
-  flex-shrink: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-/* 3. SideDock không được che và không chặn touch */
-#sideDock {
-  position: fixed !important;
-  left: 4px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  z-index: 35 !important;
-  width: 48px !important;
-  max-height: 70vh !important;
-  touch-action: none !important;
-}
-
-/* 4. BoardWrap phải di chuyển được - cho phép touch pan */
-#boardWrap, #board, canvas {
-  touch-action: none !important;
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  position: relative !important;
-  z-index: 2 !important;
-}
-
-/* 5. OnlinePanel cân đối, không lệch */
-#onlinePanel {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-#onlinePanel > div {
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-#roomCode {
-  min-width: 0 !important;
-  flex: 1 1 0 !important;
-}
-#createRoomBtn, #joinRoomBtn {
-  flex: 0 0 auto !important;
-  white-space: nowrap !important;
-}
-
-/* 6. Fix trượt lên trượt xuống do overflow */
-body, html {
-  overflow: auto !important;
-  overscroll-behavior: contain !important;
-}
-
-@media (max-width: 600px) {
-  #app {
-    padding-left: 52px !important;
-    padding-right: 4px !important;
-  }
-  #sideDock {
-    left: 2px !important;
-    width: 44px !important;
-  }
-}
-</style>
-
 </head>
 <body>
 
@@ -4266,7 +4180,7 @@ document.getElementById('authSubmit').onclick=async()=>{
       console.log('Signing in...');
       errEl.textContent='Đang đăng nhập...';
       await auth.signInWithEmailAndPassword(email,pass);
-      errEl.textContent='Đăng nhập thành công! Đang vào...'; setTimeout(()=>{ try{ const a=document.getElementById('authScreen'); const app=document.getElementById('app'); if(a && !a.classList.contains('hidden')){ a.classList.add('hidden'); a.style.display='none'; if(app){ app.classList.remove('hidden'); app.style.display='flex'; } } }catch(e){} }, 500);
+      errEl.textContent='Đăng nhập thành công! Đang vào...';
       errEl.style.color='#22c55e';
     }
   }catch(e){ 
@@ -4327,14 +4241,11 @@ auth.onAuthStateChanged(async user=>{
   if(user){
     currentUser=user;
     try{
-      const snap=await db.collection('users').doc(user.uid).get().catch(e=>{ console.warn('users get failed', e); return {exists:false, data:()=>({})}; });
+      const snap=await db.collection('users').doc(user.uid).get().catch(()=>({exists:false, data:()=>({})}));
       const udata = snap && snap.exists ? snap.data() : {};
-      currentUsername = udata.username || (user.email ? user.email.split('@')[0] : 'Người chơi') || 'Người chơi';
+      currentUsername = udata.username || (user.email ? user.email.split('@')[0] : 'Người chơi');
       myFriendCode = udata.code || user.uid.slice(-6).toUpperCase();
-    }catch(e){
-      currentUsername = (user.email ? user.email.split('@')[0] : 'Người chơi') || 'Người chơi';
-      myFriendCode = user.uid.slice(-6).toUpperCase();
-    }
+    }catch(e){ currentUsername = (user.email ? user.email.split('@')[0] : 'Người chơi'); myFriendCode = user.uid.slice(-6).toUpperCase(); }
     try{
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('authScreen').style.display='none';
@@ -4342,7 +4253,7 @@ auth.onAuthStateChanged(async user=>{
       document.getElementById('app').style.display='flex';
       const who=document.getElementById('whoName'); if(who) who.textContent=currentUsername;
       setTimeout(()=>{ try{ resize(); centerBoard(); draw(); }catch(e){} }, 50);
-    }catch(e){ console.error('show app error', e); }
+    }catch(e){}
     if(!udata.code){ db.collection('users').doc(user.uid).set({code:myFriendCode},{merge:true}).catch(()=>{}); }
     if(snap.exists && udata.username){ db.collection('codes').doc(myFriendCode).set({uid:user.uid, name:udata.username}).catch(()=>{}); }
     document.getElementById('whoName').textContent=currentUsername;
@@ -5394,7 +5305,6 @@ function placeLocal(r,c,p){
   draw();
   const full = !win && isFull();
   moveHistory.push({r,c,p,endedWin:win?p:0,endedDraw:full});
-  if(moveHistory.length===1){ try{ startGameTimer(); }catch(e){} }
   if(win){endGame(p,win); return true;}
   if(full){endGame(0); return true;}
   turn = p===1?2:1;
@@ -5768,8 +5678,6 @@ function randCode(){
 async function createRoom(){
   if(!currentUser){ statusEl.textContent='Bạn chưa đăng nhập.'; return; }
   statusEl.textContent='Đang tạo phòng...';
-  const btnCreate = document.getElementById('createRoomBtn');
-  if(btnCreate) btnCreate.textContent='⏳ Đang tạo...';
   let code=null, ref=null, tries=0;
   while(tries<10){
     const c=randCode();
@@ -5777,45 +5685,36 @@ async function createRoom(){
     try{ const snap=await r.get(); if(!snap.exists){ code=c; ref=r; break; } }catch(e){ code=c; ref=r; break; }
     tries++;
   }
-  if(!code){ statusEl.textContent='Lỗi tạo mã phòng, thử lại.'; if(btnCreate) btnCreate.textContent='Tạo phòng'; return; }
+  if(!code){ statusEl.textContent='Lỗi tạo mã phòng.'; return; }
   try{
     const side = (typeof mySide!=='undefined' && mySide===2)?'O':'X';
-    await ref.set({ board:Array.from(new Uint8Array(SIZE*SIZE)), turn:1, status:'waiting', seats:{[side]:{uid:currentUser.uid,name:currentUsername}}, winner:0, winCells:[], createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUser.uid });
+    await ref.set({ board:Array.from(new Uint8Array(SIZE*SIZE)), turn:1, status:'waiting', seats:{[side]:{uid:currentUser.uid,name:currentUsername}}, winner:0, winCells:[], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     roomRef=ref; roomCode=code; mySeat=side;
-    const input=document.getElementById('roomCode'); if(input) input.value=code;
-    statusEl.textContent='Đã tạo phòng '+code+' - Đang chờ đối thủ...';
-    if(btnCreate) btnCreate.textContent='✅ Đã tạo '+code;
-    setTimeout(()=>{ if(btnCreate) btnCreate.textContent='Tạo phòng'; }, 3000);
+    document.getElementById('roomCode').value=code;
+    statusEl.textContent='Đã tạo phòng '+code;
     subscribeRoom();
-  }catch(e){ console.error('createRoom error', e); statusEl.textContent='Lỗi tạo phòng: '+(e.message||e.code); if(btnCreate) btnCreate.textContent='Tạo phòng'; }
+  }catch(e){ statusEl.textContent='Lỗi tạo phòng: '+(e.message||e.code); }
 }
 async function joinRoom(){
   if(!currentUser){ statusEl.textContent='Bạn chưa đăng nhập.'; return; }
-  const input=document.getElementById('roomCode');
-  let code=(input?.value||'').toUpperCase().trim().replace(/[^A-Z0-9]/g,'');
-  if(input) input.value=code;
-  if(code.length!==4){ statusEl.textContent='Nhập mã phòng 4 ký tự (VD: AB12).'; if(input){ input.style.borderColor='#ff3b5a'; setTimeout(()=>{ input.style.borderColor='#4a355e'; }, 2000); } return; }
-  const btnJoin = document.getElementById('joinRoomBtn');
-  if(btnJoin) btnJoin.textContent='⏳ Đang vào...';
-  statusEl.textContent='Đang vào phòng '+code+'...';
+  let code=(document.getElementById('roomCode').value||'').toUpperCase().trim().replace(/[^A-Z0-9]/g,'');
+  if(code.length!==4){ statusEl.textContent='Nhập mã phòng 4 ký tự.'; return; }
   const ref=db.collection('rooms').doc(code);
   try{
     const snap=await ref.get();
-    if(!snap.exists){ statusEl.textContent='Không tìm thấy phòng '+code+'.'; if(btnJoin) btnJoin.textContent='Vào'; return; }
+    if(!snap.exists){ statusEl.textContent='Không tìm thấy phòng.'; return; }
     const data=snap.data(); const seats=data.seats||{};
     const had = seats.X&&seats.X.uid===currentUser.uid ? 'X' : seats.O&&seats.O.uid===currentUser.uid ? 'O' : null;
-    if(had){ mySeat=had; statusEl.textContent='Bạn đã ở trong phòng '+code+' ('+mySeat+')'; }
+    if(had) mySeat=had;
     else {
-      if(seats.X&&seats.O){ statusEl.textContent='Phòng '+code+' đã đầy.'; if(btnJoin) btnJoin.textContent='Vào'; return; }
+      if(seats.X&&seats.O){ statusEl.textContent='Phòng đã đầy.'; return; }
       const free = seats.X ? 'O' : 'X';
-      await ref.update({['seats.'+free]:{uid:currentUser.uid,name:currentUsername}, status:'playing', joinedAt: firebase.firestore.FieldValue.serverTimestamp()});
-      mySeat=free; statusEl.textContent='Đã vào phòng '+code+' - Bạn là '+mySeat+'!';
+      await ref.update({['seats.'+free]:{uid:currentUser.uid,name:currentUsername}, status:'playing'});
+      mySeat=free;
     }
     roomRef=ref; roomCode=code;
-    if(btnJoin) btnJoin.textContent='✅ Đã vào';
-    setTimeout(()=>{ if(btnJoin) btnJoin.textContent='Vào'; }, 2000);
     subscribeRoom();
-  }catch(e){ console.error('joinRoom error', e); statusEl.textContent='Lỗi vào phòng: '+(e.message||e.code||'thử lại'); if(btnJoin) btnJoin.textContent='Vào'; }
+  }catch(e){ statusEl.textContent='Lỗi vào phòng: '+(e.message||e.code); }
 }
 function subscribeRoom(){
   if(unsub) unsub();
