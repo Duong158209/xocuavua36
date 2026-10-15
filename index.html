@@ -825,7 +825,8 @@ self.addEventListener('fetch', e=>{
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
               <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
-              <option value="v1.8" selected>v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s</option>
+              <option value="v2.0" selected>v2.0 - C++ WASM (nhanh hơn nhiều) - 8s</option>
+              <option value="v1.8">v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botXScore" style="font-weight:800; color:#6ad4ff;">0</span></div>
           </div>
@@ -839,6 +840,7 @@ self.addEventListener('fetch', e=>{
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
               <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
+              <option value="v2.0">v2.0 - C++ WASM (nhanh hơn nhiều) - 8s</option>
               <option value="v1.8">v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botOScore" style="font-weight:800; color:#ff9a9a;">0</span></div>
@@ -5339,9 +5341,37 @@ function hellCancel(){
   hellJob++;
   if(hellWorker){ try{hellWorker.terminate();}catch(e){} try{if(hellWorker.__workerUrl)URL.revokeObjectURL(hellWorker.__workerUrl);}catch(e){} hellWorker=null; }
 }
-function hellThink(cb,bot,pen,timeLimit,version){
+// ---------- ĐỊA NGỤC v2.0: engine C++ (WebAssembly) chạy trong hell-worker.js ----------
+// Nếu hell.js chưa được build / nạp lỗi thì tự động dùng lại engine JS v1.8.
+function hellThinkWasm(cb,bot,pen,timeLimit,verRaw){
   const id=++hellJob;
-  const verRaw = version || 'v1.8';
+  const fallback=()=>{ if(id!==hellJob) return; window.hellWasmBroken=true; hellThink(cb,bot,pen,timeLimit,'v1.8'); };
+  try{
+    if(!window.hellWorkers) window.hellWorkers={};
+    let rec=window.hellWorkers[verRaw];
+    if(!rec){
+      const w=new Worker('hell-worker.js');
+      rec={worker:w,cur:null};
+      w.onerror=()=>{ try{w.terminate();}catch(_){} if(window.hellWorkers[verRaw]===rec) delete window.hellWorkers[verRaw]; if(rec.cur) rec.cur.fb(); };
+      w.onmessage=e=>{
+        const d=e.data, cur=rec.cur;
+        if(d.fatal){ if(cur) cur.fb(); return; }
+        if(!cur||d.id!==cur.id||d.id!==hellJob) return;
+        if(d.error||d.m==null){ cur.fb(); return; }
+        window.hellLastSearch=d.stats; cb(d.m);
+      };
+      window.hellWorkers[verRaw]=rec;
+    }
+    rec.cur={id,fb:fallback};
+    hellWorker=rec.worker;
+    const snap=bot===1?board.map(v=>v?3-v:0):board.slice();
+    rec.worker.postMessage({id,b:snap.buffer,size:SIZE,pen:pen||null,t:timeLimit||8000},[snap.buffer]);
+  }catch(err){ console.error('hellThinkWasm error',err); fallback(); }
+}
+function hellThink(cb,bot,pen,timeLimit,version){
+  const verRaw = version || (window.hellWasmBroken ? 'v1.8' : 'v2.0');
+  if(verRaw.split('_')[0].indexOf('v2')===0) return hellThinkWasm(cb,bot,pen,timeLimit,verRaw);
+  const id=++hellJob;
   const ver = verRaw.split('_')[0];
   const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v1.8'||ver==='v1_8'||ver==='v1.8o') ? 'hellSrcV1_8' : 'hellSrcV1_8';
   const workerKey = verRaw;
@@ -6424,7 +6454,8 @@ document.addEventListener('click', (e)=>{
     v11: { t: 8000, name: 'v11 - Kết hợp thông minh - 8s', info: 'Engine kết hợp v9+v10, ATT 20,600,6k,50k,1.5M DEF 600,6k,50k,1.5M TT 2M', isHell: true },
     v12: { t: 8500, name: 'v12 - Out trình - 8.5s - Mạnh nhất', info: 'Engine out trình, ATT 150,8k,80k,800k,20M DEF 8k,80k,800k,40M TT 8M VCF 8M K=96', isHell: true },
     v13: { t: 8500, name: 'v13 - Phòng thủ x5.5 - 8.5s', info: 'v12 + ba sống thật + DEF x5.5', isHell: true },
-    'v1.8': { t: 12000, name: 'v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s', info: 'MUST-BLOCK open-3, không hăng công quên chặn, search sâu hơn, DEF ×7.5', isHell: true }
+    'v1.8': { t: 12000, name: 'v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s', info: 'MUST-BLOCK open-3, không hăng công quên chặn, search sâu hơn, DEF ×7.5', isHell: true },
+    'v2.0': { t: 8000, name: 'v2.0 - C++ WASM - 8s', info: 'Engine C++ biên dịch WebAssembly: alpha-beta + VCF + TT, nhanh hơn JS nhiều lần', isHell: true }
   };
   
   window.botVsBotRunning = false; localStorage.setItem('botVsBotRunning','0'); try{ navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage('STOP'); }catch(e){} 
@@ -6620,6 +6651,7 @@ document.addEventListener('click', (e)=>{
       if(curTurn===2 && otherSel && otherSel.value==='v11') hellVer = 'v11o';
       if(curTurn===2 && ver==='v13' && otherSel && otherSel.value==='v13') hellVer = 'v13o';
       if(curTurn===2 && (ver==='v1.8'||ver==='v1_8') && otherSel && (otherSel.value==='v1.8'||otherSel.value==='v1_8')) hellVer = 'v1.8o';
+      if(curTurn===2 && ver==='v2.0' && otherSel && otherSel.value==='v2.0') hellVer = 'v2.0o';
       try{ hellPen = (hellMemLoad().pen[posKey(board)] || null); }catch(e){ hellPen = null; }
     }
     
