@@ -750,7 +750,7 @@ self.addEventListener('fetch', e=>{
     <!-- HELL HEADER like image -->
     <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:linear-gradient(145deg,#1e162c,#14111e); border:1px solid #4a355e; border-radius:16px;">
       <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(145deg,#231b2f,#15111e); border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">H</div>
-      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v1.8</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
+      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v2.0</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
     </div>
 
         <!-- CHẾ ĐỘ CHƠI - restored -->
@@ -881,7 +881,7 @@ self.addEventListener('fetch', e=>{
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,.3); border-radius:8px; padding:8px 10px;">
           <div style="display:flex; align-items:center; gap:6px; font-size:.78rem;"><span style="opacity:.7;">Tốc độ:</span><select id="botVsBotSpeed" style="padding:5px 8px; border-radius:6px; border:1px solid #4a355e; background:#0e0c15; color:#fff;"><option value="1500">Chậm 1.5s</option><option value="800" selected>Vừa 0.8s</option><option value="300">Nhanh 0.3s</option><option value="50">Siêu tốc</option></select></div>
-          <div id="botVsBotMoveCount" style="font-size:.8rem; font-weight:700; opacity:.7;">0 nước</div>
+          <div id="bvbGameTime" style="font-size:.8rem; font-weight:700; color:#ffd4a3; background:rgba(255,107,74,.15); border:1px solid #ff6b4a40; border-radius:8px; padding:4px 10px;">0:00</div><div id="botVsBotMoveCount" style="font-size:.8rem; font-weight:700; opacity:.7;">0 nước</div>
         </div>
       </div>
 
@@ -4553,6 +4553,31 @@ document.getElementById('historyClose').onclick=()=>{document.getElementById('hi
 async function loadHistory(){
   const body=document.getElementById('historyBody');
   body.innerHTML='<div class="empty">Đang tải...</div>';
+  // Hiển thị lịch sử tất cả chế độ (localStorage) trước
+  let localHist = [];
+  try{ localHist = JSON.parse(localStorage.getItem('xo5_all_history')||'[]'); }catch(e){}
+  let html = '';
+  if(localHist.length>0){
+    html += `<div style="font-size:.8rem; font-weight:800; color:#ff8a6a; margin:8px 0 6px; letter-spacing:.08em;">📱 LỊCH SỬ TẤT CẢ CHẾ ĐỘ (${localHist.length})</div>`;
+    localHist.slice(0,50).forEach(entry=>{
+      const winColor = entry.winner===1?'#ff6b6a':entry.winner===2?'#4ecdc4':'#aaa';
+      const winText = entry.winner===1?'X thắng':entry.winner===2?'O thắng':'Hòa';
+      html += `<div style="display:flex; flex-direction:column; gap:4px; background:rgba(255,255,255,.06); border:1px solid #4a355e; border-radius:10px; padding:10px; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:.8rem; font-weight:700; color:#ffe4b5;">${entry.modeLabel||entry.mode} • ${winText}</span>
+          <span style="font-size:.7rem; color:#ffd4a3; background:rgba(255,107,74,.15); padding:2px 8px; border-radius:6px;">⏱ ${entry.durationLabel||formatDuration(entry.duration||0)}</span>
+        </div>
+        <div style="font-size:.72rem; opacity:.7; display:flex; gap:8px; flex-wrap:wrap;">
+          <span>📅 ${entry.dateLabel||new Date(entry.timestamp).toLocaleString('vi-VN')}</span>
+          <span>🎯 ${entry.moves||0} nước</span>
+          ${entry.botX?`<span>🤖 ${entry.botX.toUpperCase()} vs ${entry.botO?entry.botO.toUpperCase():''}</span>`:''}
+        </div>
+      </div>`;
+    });
+  } else {
+    html += `<div style="opacity:.6; font-size:.8rem; text-align:center; padding:12px;">Chưa có lịch sử đấu</div>`;
+  }
+  html += `<div style="font-size:.8rem; font-weight:800; color:#a78bfa; margin:16px 0 6px; letter-spacing:.08em;">🌐 LỊCH SỬ ONLINE (Firestore)</div>`;
   try{
     const q=await db.collection('matches').where('uid','==',currentUser.uid).limit(300).get();
     const rows=q.docs.map(d=>d.data()).filter(d=>d.mode==='Online');
@@ -4773,10 +4798,95 @@ const SIZE=64; // YÊU CẦU: 64x64 cho tất cả
 const idx=(r,c)=>r*SIZE+c;
 const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;
 let board=new Uint8Array(SIZE*SIZE);
+// Timer will be started in setMode/newGame
 let turn=1, gameOver=false, winCells=[];
 let moveHistory=[];
 let lastMove=null, lastMoveT=0, animRaf=0, lastAnimDraw=0;
 let scores={X:0,O:0,D:0};
+
+// ---------- GAME TIME TRACKING - Tính thời gian ván đấu tất cả chế độ ----------
+let gameStartTime = null;
+let gameTimerInterval = null;
+let currentGameDuration = 0;
+
+function startGameTimer(){
+  gameStartTime = Date.now();
+  currentGameDuration = 0;
+  if(gameTimerInterval) clearInterval(gameTimerInterval);
+  gameTimerInterval = setInterval(updateGameTimeUI, 1000);
+  updateGameTimeUI();
+}
+
+function updateGameTimeUI(){
+  if(!gameStartTime) return;
+  currentGameDuration = Math.floor((Date.now() - gameStartTime)/1000);
+  const el = document.getElementById('gameTimeDisplay');
+  if(el){
+    const m = Math.floor(currentGameDuration/60);
+    const s = currentGameDuration%60;
+    el.textContent = `⏱ ${m}:${String(s).padStart(2,'0')}`;
+  }
+  // Also update bot vs bot timer
+  const bvbTime = document.getElementById('bvbGameTime');
+  if(bvbTime){
+    const m = Math.floor(currentGameDuration/60);
+    const s = currentGameDuration%60;
+    bvbTime.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  }
+}
+
+function stopGameTimer(){
+  if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
+  if(gameStartTime){
+    currentGameDuration = Math.floor((Date.now() - gameStartTime)/1000);
+  }
+  return currentGameDuration;
+}
+
+function formatDuration(sec){
+  if(sec<60) return `${sec}s`;
+  const m=Math.floor(sec/60), s=sec%60;
+  return `${m}m ${s}s`;
+}
+
+// Save game history to localStorage for all modes
+function saveAllModesHistory(resultData){
+  try{
+    const duration = stopGameTimer();
+    const entry = {
+      id: Date.now(),
+      mode: resultData.mode || window.mode || 'ai',
+      modeLabel: resultData.modeLabel || getModeLabel(resultData.mode || window.mode),
+      winner: resultData.winner, // 1=X,2=O,0=hoa
+      winnerLabel: resultData.winner===1?'X':resultData.winner===2?'O':'Hòa',
+      moves: resultData.moves || (typeof moveHistory!=='undefined'?moveHistory.length:0) || (typeof moves!=='undefined'?moves:0),
+      duration: duration,
+      durationLabel: formatDuration(duration),
+      timestamp: Date.now(),
+      dateLabel: new Date().toLocaleString('vi-VN'),
+      botX: resultData.botX || '',
+      botO: resultData.botO || '',
+      playerX: resultData.playerX || '',
+      playerO: resultData.playerO || ''
+    };
+    let hist = JSON.parse(localStorage.getItem('xo5_all_history')||'[]');
+    hist.unshift(entry);
+    if(hist.length>200) hist=hist.slice(0,200);
+    localStorage.setItem('xo5_all_history', JSON.stringify(hist));
+    return entry;
+  }catch(e){ console.error('save history error',e); }
+}
+
+function getModeLabel(mode){
+  if(mode==='ai') return 'Máy';
+  if(mode==='local') return '2 người';
+  if(mode==='online') return 'Online';
+  if(mode==='botVsBot' || mode==='botvsbot') return 'Bot vs Bot';
+  return mode;
+}
+
+// Hook vào các hàm reset để bắt đầu tính giờ
+
 try{ const hs=JSON.parse(localStorage.getItem('xo5_human_scores')||'null'); if(hs&&typeof hs==='object') scores={X:hs.X|0,O:hs.O|0,D:hs.D|0}; }catch(e){}
 function resetHumanScores(){
   scores={X:0,O:0,D:0};
@@ -5159,6 +5269,19 @@ function endGame(winner, cells){
     if(winner===1) statusEl.textContent='Bot X thắng!';
     else if(winner===2) statusEl.textContent='Bot O thắng!';
     else statusEl.textContent='Hòa!';
+    // Lưu lịch sử + thời gian cho tất cả chế độ (trừ online đã lưu riêng)
+    try{
+      const dur = stopGameTimer();
+      if(mode!=='online'){
+        saveAllModesHistory({
+          mode: mode,
+          winner: winner,
+          moves: typeof moveHistory!=='undefined'?moveHistory.length:0,
+          playerX: mode==='ai'?(mySide===1?currentUsername||'Bạn':'Máy'):'X',
+          playerO: mode==='ai'?(mySide===2?currentUsername||'Bạn':'Máy'):'O'
+        });
+      }
+    }catch(e){}
   }
   draw();
 }
@@ -5373,8 +5496,7 @@ function hellThinkWasm(cb,bot,pen,timeLimit,verRaw){
     const workerKey = isBvb ? (verRaw + '_' + (bot===1?'X':'O') + '_' + (window.botVsBotGameId||0) + '_' + Math.random().toString(36).slice(2,5)) : verRaw;
     let rec=window.hellWorkers[workerKey];
     if(!rec){
-      let w;
-      try{ w=new Worker('hell-worker.js'); }catch(_){ w=new Worker('hell-worker.js'); }
+      let w; try{ w=new Worker('hell-worker.js'); }catch(_){ w=new Worker('hell-worker.js'); }
       rec={worker:w,cur:null,temp:isBvb};
       w.onerror=()=>{ try{w.terminate();}catch(_){} if(window.hellWorkers[workerKey]===rec) delete window.hellWorkers[workerKey]; if(rec.cur) rec.cur.fb(); };
       w.onmessage=e=>{
@@ -5385,9 +5507,7 @@ function hellThinkWasm(cb,bot,pen,timeLimit,verRaw){
         window.hellLastSearch=d.stats; cb(d.m);
       };
       window.hellWorkers[workerKey]=rec;
-      if(isBvb){
-        setTimeout(()=>{ try{ if(window.hellWorkers[workerKey]===rec){ rec.worker.terminate(); delete window.hellWorkers[workerKey]; } }catch(_){} }, 30000);
-      }
+      if(isBvb){ setTimeout(()=>{ try{ if(window.hellWorkers[workerKey]===rec){ rec.worker.terminate(); delete window.hellWorkers[workerKey]; } }catch(_){} }, 30000); }
     }
     rec.cur={id,fb:fallback};
     hellWorker=rec.worker;
@@ -5448,6 +5568,9 @@ function hellCancel(){
 const subRow=document.getElementById('subRow');
 function resetBoardState(){hellCancel(); board=new Uint8Array(SIZE*SIZE); lastMove=null; turn=1; gameOver=false; winCells=[]; moveHistory=[]; setStatus(); draw();}
 function setMode(m){
+  // Bắt đầu tính thời gian ván mới khi đổi chế độ
+  setTimeout(()=>{ startGameTimer(); }, 100);
+
   if(m==='ai' && !isFeatureOn('mode_ai')){ statusEl.textContent='Chơi với máy đang bảo trì.'; return; }
   if(m==='local' && !isFeatureOn('mode_local')){ statusEl.textContent='Chế độ 2 người đang bảo trì.'; return; }
   if(m==='online' && !isFeatureOn('mode_online')){ statusEl.textContent='Online đang bảo trì.'; return; }
@@ -6521,6 +6644,8 @@ document.addEventListener('click', (e)=>{
   
   function resetBoardBotVsBot(){
     window.botVsBotGameId = (window.botVsBotGameId||0)+1;
+    startGameTimer();
+    window._lastCountedGameId = -1;
     try{ Object.keys(window.hellWorkers||{}).forEach(k=>{ if(k.includes('_X_')||k.includes('_O_')){ try{window.hellWorkers[k].worker.terminate();}catch(_){} delete window.hellWorkers[k]; } }); }catch(_){}
 
     try{
@@ -6568,17 +6693,44 @@ document.addEventListener('click', (e)=>{
   }
   
   function onGameOver(winner){
+    // Lưu lịch sử Bot vs Bot với thời gian
+    try{ const dur = stopGameTimer(); }catch(e){}
+
+    // FIX: Chặn cộng 2 điểm - chỉ tính 1 lần mỗi ván
+    if(window._lastCountedGameId === window.botVsBotGameId) return;
+    window._lastCountedGameId = window.botVsBotGameId;
     if(!winner && lastWinner!==0) winner = lastWinner;
     console.log('BotVsBot GameOver winner:', winner, 'auto:', window.botVsBotAuto, 'running:', window.botVsBotRunning);
     
     const statusEl = document.getElementById('botVsBotStatus');
     if(winner===1){
       botXWins++;
+      // Lưu lịch sử Bot vs Bot
+      try{
+        saveAllModesHistory({
+          mode: 'botVsBot',
+          modeLabel: 'Bot vs Bot',
+          winner: 1,
+          botX: document.getElementById('botXVersion')?.value||'v12',
+          botO: document.getElementById('botOVersion')?.value||'v9',
+          moves: typeof moves!=='undefined'?moves:0
+        });
+      }catch(e){}
       const xv = document.getElementById('botXVersion')?.value || 'v12';
       if(statusEl) statusEl.textContent = `BOT X ${xv.toUpperCase()} THẮNG! ${moves} nước`;
       lastWinner = 1;
     } else if(winner===2){
       botOWins++;
+      try{
+        saveAllModesHistory({
+          mode: 'botVsBot',
+          modeLabel: 'Bot vs Bot',
+          winner: 2,
+          botX: document.getElementById('botXVersion')?.value||'v12',
+          botO: document.getElementById('botOVersion')?.value||'v9',
+          moves: typeof moves!=='undefined'?moves:0
+        });
+      }catch(e){}
       const ov = document.getElementById('botOVersion')?.value || 'v9';
       if(statusEl) statusEl.textContent = `BOT O ${ov.toUpperCase()} THẮNG! ${moves} nước`;
       lastWinner = 2;
@@ -6729,14 +6881,9 @@ document.addEventListener('click', (e)=>{
     if(isBotMode()){
       lastWinner = winner;
       console.log('endGame override bot vs bot winner:', winner);
-      // Gọi onGameOver sau khi origEndGame để đảm bảo điểm được cộng và auto reset
-      setTimeout(()=>{
-        if(isBotMode() && typeof gameOver !== 'undefined' && gameOver){
-          if(typeof onGameOver === 'function'){
-            onGameOver(winner);
-          }
-        }
-      }, 100);
+      // FIX: Không gọi onGameOver ở đây nữa vì doBotMove đã gọi, tránh cộng 2 điểm
+      // Chỉ giữ lại lastWinner để doBotMove dùng
+      
     }
     if(origEndGame) return origEndGame.apply(this, arguments);
     gameOver=true; winCells=cells||[];
