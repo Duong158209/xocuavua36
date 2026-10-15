@@ -709,11 +709,11 @@ self.addEventListener('fetch', e=>{
 
 <!-- APP -->
 <div id="app" class="hidden" style="height:100%; display:flex; flex-direction:column;">
-  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V1.7</h1>
+  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V1.8</h1>
 
   <div class="topbar" style="padding-left:8px;">
     <span class="who">Xin chào, <b id="whoName"></b></span>
-    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V1.7 • 15×15</span>
+    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V1.8 • 15×15</span>
   </div>
   <!-- VERTICAL ICON DOCK -->
   <div id="sideDock" class="collapsed">
@@ -729,7 +729,7 @@ self.addEventListener('fetch', e=>{
     <!-- HELL HEADER like image -->
     <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:linear-gradient(145deg,#1e162c,#14111e); border:1px solid #4a355e; border-radius:16px;">
       <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(145deg,#231b2f,#15111e); border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">H</div>
-      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v1.7</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
+      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v1.8</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
     </div>
 
         <!-- CHẾ ĐỘ CHƠI - restored -->
@@ -825,7 +825,7 @@ self.addEventListener('fetch', e=>{
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
               <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
-              <option value="v1.7" selected>v1.7 - Hell mạnh hơn v13 (công+thủ) - 12s</option>
+              <option value="v1.8" selected>v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botXScore" style="font-weight:800; color:#6ad4ff;">0</span></div>
           </div>
@@ -839,7 +839,7 @@ self.addEventListener('fetch', e=>{
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
               <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
-              <option value="v1.7">v1.7 - Hell mạnh hơn v13 (công+thủ) - 12s</option>
+              <option value="v1.8">v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botOScore" style="font-weight:800; color:#ff9a9a;">0</span></div>
           </div>
@@ -887,6 +887,7 @@ self.addEventListener('fetch', e=>{
           <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Bạn là</span><span id="statusYou" style="font-weight:800;">X (đi trước)</span></div>
           <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Lượt</span><span id="statusTurn" style="font-weight:800; color:#ff8a8a;">Bạn</span></div>
           <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Tổng nước</span><span id="statusTotal">0</span></div>
+          <div id="resetHumanScoreBtn" class="ctrlBtn" style="margin-top:6px; padding:10px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid #4a355e; text-align:center; font-weight:700; font-size:.82rem; cursor:pointer;">↻ Reset điểm</div>
         </div>
       </div>
 
@@ -2168,15 +2169,15 @@ const Hell=(()=>{
 
 </script>
 
-<script type="text/plain" id="hellSrcV1_7">// v1.7 - HELL STRONGER vs v13: defense + finishing power + deeper VCF
-// v1.7: giữ MUST-BLOCK, tăng ATT/double-threat, VCF mạnh hơn để không thua v13
+<script type="text/plain" id="hellSrcV1_8">// v1.8 - HELL STRONGER vs v13: defense + finishing power + deeper VCF
+// v1.8: giữ MUST-BLOCK, tăng ATT/double-threat, VCF mạnh hơn để không thua v13
 const HELL_TIME=12000, HELL_SOFT=7000;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=40, VCF_NODES=3500000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
   const OPEN4=50000000, FOUR=1600000, OPEN3=320000, BRK3=110000, THREE3=20000, DBL3=1800000, OPEN2=3500, DBL_OPEN2=18000;
   const W=[0,10,85,620,4200,0];
-  const DK=7.0; // v1.7: DEF mạnh nhưng không làm mù tấn công
+  const DK=7.0; // v1.8: DEF mạnh nhưng không làm mù tấn công
   // ATT tăng để thắng đua nước với v13; DEF vẫn cao để không bỏ chặn
   const ATT=[400,20000,200000,2000000,50000000], DEF=[0,240,2000,18000,2600000].map(v=>Math.round(v*DK));
   const cw=new Array(N), nbr=new Array(N);
@@ -2290,7 +2291,7 @@ const Hell=(()=>{
         if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; if(a===2) open2++; }
         if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; } }
       }
-      // v1.7: chặn bắt buộc + tấn công dứt điểm (không thua v13 vì hăng/quên)
+      // v1.8: chặn bắt buộc + tấn công dứt điểm (không thua v13 vì hăng/quên)
       let defMul = goingSecond ? 3.6*DK : 2.4*DK;
       if(isDefCon || oth3>=1 || oth4>=1) defMul = Math.max(defMul, 5.5*DK);
       // Chặn — vẫn ưu tiên cao
@@ -4753,6 +4754,25 @@ let turn=1, gameOver=false, winCells=[];
 let moveHistory=[];
 let lastMove=null, lastMoveT=0, animRaf=0, lastAnimDraw=0;
 let scores={X:0,O:0,D:0};
+try{ const hs=JSON.parse(localStorage.getItem('xo5_human_scores')||'null'); if(hs&&typeof hs==='object') scores={X:hs.X|0,O:hs.O|0,D:hs.D|0}; }catch(e){}
+function resetHumanScores(){
+  scores={X:0,O:0,D:0};
+  try{ localStorage.setItem('xo5_human_scores', JSON.stringify(scores)); }catch(e){}
+  const sx=document.getElementById('scX');
+  const so=document.getElementById('scO');
+  const sd=document.getElementById('scD');
+  if(sx) sx.innerHTML='<span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span>';
+  if(so) so.innerHTML='<span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span>';
+  if(sd) sd.textContent='0';
+  if(typeof statusEl!=='undefined' && statusEl) statusEl.textContent='Đã reset điểm người vs bot.';
+}
+function refreshHumanScoreUI(){
+  const sx=document.getElementById('scX');
+  const so=document.getElementById('scO');
+  if(sx) sx.innerHTML=`<span>${scores.X}</span><span style="font-size:.85em; opacity:.9;">thắng</span>`;
+  if(so) so.innerHTML=`<span>${scores.O}</span><span style="font-size:.85em; opacity:.9;">thắng</span>`;
+  const sd=document.getElementById('scD'); if(sd) sd.textContent=scores.D;
+}
 let hintCell=null, dangerCells=[], dangerLvl=0;
 let mode='ai', difficulty='medium';
 let mySide=1;   // 1 = X (đi trước), 2 = O (đi sau)
@@ -5100,16 +5120,23 @@ function drawMarks(cs){
 }
 function endGame(winner, cells){
   gameOver=true; winCells=cells||[];
-  if(winner===1){scores.X++; statusEl.textContent='X thắng!';}
-  else if(winner===2){scores.O++; statusEl.textContent='O thắng!';}
-  else {scores.D++; statusEl.textContent='Hòa!';}
-  if(mode==='ai'&&winner!==0&&winner!==mySide) showLoseFx();
-  if(mode==='ai') recordBotMatch(winner===0?'Hòa':winner===mySide?'Thắng':'Thua');
-  // Địa ngục v4: không học từ ván — luôn chơi mức mạnh nhất
-  
-  document.getElementById('scX').textContent=scores.X;
-  document.getElementById('scO').textContent=scores.O;
-  document.getElementById('scD').textContent=scores.D;
+  const isBvb = (typeof isBotVsBotMode==='function' && isBotVsBotMode()) || document.getElementById('modeBotVsBot')?.classList.contains('active');
+  if(!isBvb){
+    // Chỉ cộng điểm người vs máy / local / online — không lẫn với Bot vs Bot
+    if(winner===1){scores.X++; statusEl.textContent='X thắng!';}
+    else if(winner===2){scores.O++; statusEl.textContent='O thắng!';}
+    else {scores.D++; statusEl.textContent='Hòa!';}
+    if(mode==='ai'&&winner!==0&&winner!==mySide) showLoseFx();
+    if(mode==='ai') recordBotMatch(winner===0?'Hòa':winner===mySide?'Thắng':'Thua');
+    document.getElementById('scX').textContent=scores.X;
+    document.getElementById('scO').textContent=scores.O;
+    document.getElementById('scD').textContent=scores.D;
+    try{ localStorage.setItem('xo5_human_scores', JSON.stringify(scores)); }catch(e){}
+  } else {
+    if(winner===1) statusEl.textContent='Bot X thắng!';
+    else if(winner===2) statusEl.textContent='Bot O thắng!';
+    else statusEl.textContent='Hòa!';
+  }
   draw();
 }
 function placeLocal(r,c,p){
@@ -5314,9 +5341,9 @@ function hellCancel(){
 }
 function hellThink(cb,bot,pen,timeLimit,version){
   const id=++hellJob;
-  const verRaw = version || 'v1.7';
+  const verRaw = version || 'v1.8';
   const ver = verRaw.split('_')[0];
-  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v1.7'||ver==='v1_7'||ver==='v1.7o') ? 'hellSrcV1_7' : 'hellSrcV1_7';
+  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v1.8'||ver==='v1_8'||ver==='v1.8o') ? 'hellSrcV1_8' : 'hellSrcV1_8';
   const workerKey = verRaw;
   try{
     if(!window.hellWorkers) window.hellWorkers = {};
@@ -5825,6 +5852,7 @@ setInterval(updateCustomStatus, 600);
         }catch(e){}
       } else {
         pN.style.display='block'; pO.style.display='none'; pB.style.display='none';
+        try{ if(typeof refreshHumanScoreUI==='function') refreshHumanScoreUI(); }catch(e){}
       }
     }
     // Online: vô hiệu Lùi 1 nước nếu còn hiện
@@ -6396,7 +6424,7 @@ document.addEventListener('click', (e)=>{
     v11: { t: 8000, name: 'v11 - Kết hợp thông minh - 8s', info: 'Engine kết hợp v9+v10, ATT 20,600,6k,50k,1.5M DEF 600,6k,50k,1.5M TT 2M', isHell: true },
     v12: { t: 8500, name: 'v12 - Out trình - 8.5s - Mạnh nhất', info: 'Engine out trình, ATT 150,8k,80k,800k,20M DEF 8k,80k,800k,40M TT 8M VCF 8M K=96', isHell: true },
     v13: { t: 8500, name: 'v13 - Phòng thủ x5.5 - 8.5s', info: 'v12 + ba sống thật + DEF x5.5', isHell: true },
-    'v1.7': { t: 12000, name: 'v1.7 - Hell mạnh hơn v13 (công+thủ) - 12s', info: 'MUST-BLOCK open-3, không hăng công quên chặn, search sâu hơn, DEF ×7.5', isHell: true }
+    'v1.8': { t: 12000, name: 'v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s', info: 'MUST-BLOCK open-3, không hăng công quên chặn, search sâu hơn, DEF ×7.5', isHell: true }
   };
   
   window.botVsBotRunning = false; localStorage.setItem('botVsBotRunning','0'); try{ navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage('STOP'); }catch(e){} 
@@ -6462,14 +6490,11 @@ document.addEventListener('click', (e)=>{
   function updateScoreDisplay(){
     const bx = document.getElementById('botXScore');
     const bo = document.getElementById('botOScore');
-    const scX = document.getElementById('scX');
-    const scO = document.getElementById('scO');
-    
     if(bx) bx.textContent = botXWins;
     if(bo) bo.textContent = botOWins;
-    if(scX) scX.innerHTML = `<span>${botXWins}</span><span style="font-size:.85em; opacity:.9;"> thắng</span>`;
-    if(scO) scO.innerHTML = `<span>${botOWins}</span><span style="font-size:.85em; opacity:.9;"> thắng</span>`;
-    
+    // KHÔNG ghi vào scX/scO — điểm người vs bot tách riêng
+    const cx=document.getElementById('bvbCtrlXScore'); if(cx) cx.textContent=botXWins;
+    const co=document.getElementById('bvbCtrlOScore'); if(co) co.textContent=botOWins;
     try{ localStorage.setItem('botVsBotScore', JSON.stringify({x:botXWins, o:botOWins, d:botDraws})); }catch(e){}
   }
   
@@ -6587,14 +6612,14 @@ document.addEventListener('click', (e)=>{
     let hellPen = null, hellTime = cfg.t, hellVer = ver;
     if(isHellBot){
       hellTime = undefined;
-      if(ver==='v1.7' || ver==='v1_7') hellVer = 'v1.7';
+      if(ver==='v1.8' || ver==='v1_8') hellVer = 'v1.8';
       else if(ver==='v13') hellVer = 'v13';
       else if(ver==='v12') hellVer = 'v12';
       else hellVer = ver;
       const otherSel = curTurn===1 ? document.getElementById('botOVersion') : document.getElementById('botXVersion');
       if(curTurn===2 && otherSel && otherSel.value==='v11') hellVer = 'v11o';
       if(curTurn===2 && ver==='v13' && otherSel && otherSel.value==='v13') hellVer = 'v13o';
-      if(curTurn===2 && (ver==='v1.7'||ver==='v1_7') && otherSel && (otherSel.value==='v1.7'||otherSel.value==='v1_7')) hellVer = 'v1.7o';
+      if(curTurn===2 && (ver==='v1.8'||ver==='v1_8') && otherSel && (otherSel.value==='v1.8'||otherSel.value==='v1_8')) hellVer = 'v1.8o';
       try{ hellPen = (hellMemLoad().pen[posKey(board)] || null); }catch(e){ hellPen = null; }
     }
     
@@ -6938,6 +6963,27 @@ document.addEventListener('click', (e)=>{
     const z=document.getElementById('botVsBotZoomControls');
     if(z) z.style.display='none';
   }, 1000);
+})();
+</script>
+
+
+<script>
+(function(){
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('#resetHumanScoreBtn');
+    if(!btn) return;
+    if(!confirm('Reset điểm người vs bot về 0?')) return;
+    if(typeof resetHumanScores==='function') resetHumanScores();
+  });
+  // Khi thoát Bot vs Bot / vào chế độ khác → khôi phục điểm người
+  const obs = new MutationObserver(()=>{
+    const isBvb = document.getElementById('modeBotVsBot')?.classList.contains('active');
+    if(!isBvb && typeof refreshHumanScoreUI==='function') refreshHumanScoreUI();
+  });
+  const mb = document.getElementById('modeBotVsBot');
+  if(mb) obs.observe(mb, {attributes:true, attributeFilter:['class']});
+  // init display
+  setTimeout(()=>{ try{ refreshHumanScoreUI(); }catch(e){} }, 300);
 })();
 </script>
 
