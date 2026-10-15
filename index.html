@@ -933,7 +933,9 @@ self.addEventListener('fetch', e=>{
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
-<!--patched hellSrc--> <script type="text/plain" id="hellSrc">
+<!--patched hellSrc--> <script type="text/plain" id="hellSrc">// v12 OUT TRÌNH - MẠNH NHẤT - TÁCH NÃO RIÊNG - KHÔNG DÙNG CHUNG
+// v12 OUT TRÌNH - TÁCH NÃO RIÊNG
+
 
 
 
@@ -943,9 +945,9 @@ const HELL_TIME=8500, HELL_SOFT=4500;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=24, VCF_NODES=1500000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
-  const OPEN4=8000000, FOUR=900000, OPEN3=150000, BRK3=45000, THREE3=8000, DBL3=700000, OPEN2=1200, DBL_OPEN2=5000;
+  const OPEN4=30000000, FOUR=900000, OPEN3=150000, BRK3=45000, THREE3=8000, DBL3=700000, OPEN2=1200, DBL_OPEN2=5000;
   const W=[0,6,48,360,2400,0];
-  const ATT=[6,90,650,5200,300000], DEF=[0,120,900,7800,1200000];
+  const ATT=[150,8000,80000,800000,20000000], DEF=[0,120,900,7800,1200000];
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -969,7 +971,7 @@ const Hell=(()=>{
   let hb,w1,w2,near,E,won,nodes,deadline,aborted,vn;
   const fs=[null,new Set(),new Set()], ts=[null,new Set(),new Set()];
   let H1=0,H2=0;
-  const TTN=1<<22, TK=new Int32Array(TTN), TD=new Int8Array(TTN).fill(-1), TS=new Int32Array(TTN), TF=new Uint8Array(TTN), TM=new Int16Array(TTN);
+  const TTN=1<<23, TK=new Int32Array(TTN), TD=new Int8Array(TTN).fill(-1), TS=new Int32Array(TTN), TF=new Uint8Array(TTN), TM=new Int16Array(TTN);
   let ttCount=0; const tt={get size(){return ttCount;},clear(){TD.fill(-1);ttCount=0;}};
   const hist=new Int32Array(N), killer=new Int32Array(2*MAXPLY).fill(-1), S7=new Uint8Array(7), counter=new Int16Array(N).fill(-1);
   const cv=(x,p)=>x===0?0:(x===p?1:2);
@@ -1232,7 +1234,7 @@ const Hell=(()=>{
       stats.reason='double-block-try'; return bestB;
     }
     const goingSecond = true; // FIX: luôn phòng thủ mạnh dù đi trước hay sau để không thua v9
-    const g0=gen(2,false,false, 64, goingSecond);
+    const g0=gen(2,false,false, 96, goingSecond);
     const cand=[];
     for(let j=0;j<g0.cells.length;j++){
       const i=g0.cells[j];
@@ -1303,19 +1305,21 @@ const Hell=(()=>{
 
 
 </script>
-<!--patched hellSrcV12--> <script type="text/plain" id="hellSrcV12">
+<!--patched hellSrcV12--> <script type="text/plain" id="hellSrcV12">// v12 OUT TRÌNH - MẠNH NHẤT - TÁCH NÃO RIÊNG - KHÔNG DÙNG CHUNG
+// v12 OUT TRÌNH - TÁCH NÃO RIÊNG
+
 
 
 
 // HELL VIP v12 — ĐỊA NGỤC TÁI SINH - FIX TOÀN BỘ YẾU ĐIỂM v11
 // - Defense-first khi đi sau, double-threat detector, VCT chain, TT 4M
-const HELL_TIME=8000, HELL_SOFT=4000;
+const HELL_TIME=8500, HELL_SOFT=5000;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=24, VCF_NODES=1500000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
-  const OPEN4=8000000, FOUR=900000, OPEN3=150000, BRK3=45000, THREE3=8000, DBL3=700000, OPEN2=1200, DBL_OPEN2=5000;
+  const OPEN4=30000000, FOUR=900000, OPEN3=150000, BRK3=45000, THREE3=8000, DBL3=700000, OPEN2=1200, DBL_OPEN2=5000;
   const W=[0,6,48,360,2400,0];
-  const ATT=[6,90,650,5200,300000], DEF=[0,120,900,7800,1200000];
+  const ATT=[150,8000,80000,800000,20000000], DEF=[0,120,900,7800,1200000];
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -1339,7 +1343,7 @@ const Hell=(()=>{
   let hb,w1,w2,near,E,won,nodes,deadline,aborted,vn;
   const fs=[null,new Set(),new Set()], ts=[null,new Set(),new Set()];
   let H1=0,H2=0;
-  const TTN=1<<22, TK=new Int32Array(TTN), TD=new Int8Array(TTN).fill(-1), TS=new Int32Array(TTN), TF=new Uint8Array(TTN), TM=new Int16Array(TTN);
+  const TTN=1<<23, TK=new Int32Array(TTN), TD=new Int8Array(TTN).fill(-1), TS=new Int32Array(TTN), TF=new Uint8Array(TTN), TM=new Int16Array(TTN);
   let ttCount=0; const tt={get size(){return ttCount;},clear(){TD.fill(-1);ttCount=0;}};
   const hist=new Int32Array(N), killer=new Int32Array(2*MAXPLY).fill(-1), S7=new Uint8Array(7), counter=new Int16Array(N).fill(-1);
   const cv=(x,p)=>x===0?0:(x===p?1:2);
@@ -1602,7 +1606,7 @@ const Hell=(()=>{
       stats.reason='double-block-try'; return bestB;
     }
     const goingSecond = true; // FIX
-    const g0=gen(2,false,false, 64, goingSecond);
+    const g0=gen(2,false,false, 96, goingSecond);
     const cand=[];
     for(let j=0;j<g0.cells.length;j++){
       const i=g0.cells[j];
@@ -1613,7 +1617,7 @@ const Hell=(()=>{
     }
     if(!cand.length){ for(let i=0;i<N;i++) if(!hb[i]) return i; return -1; }
     cand.sort((a,b)=>b[1]-a[1]);
-    let order=cand.slice(0, goingSecond?52:44).map(c=>c[0]);
+    let order=cand.slice(0, 72).map(c=>c[0]);
     if(pen){ const lo=order.filter(i=>pen[i]>=500); if(lo.length&&lo.length<order.length){ let rest=order.filter(i=>!(pen[i]>=500)); order=rest.length>=3?rest.concat(lo.filter(i=>!(pen[i]>=900))):rest.concat(lo); } }
     let best=order[0], completed=0, bestScore=-INF, stable=0;
     const fullDeadline=deadline;
@@ -1673,7 +1677,9 @@ const Hell=(()=>{
 
 
 </script>
-<script type="text/plain" id="hellSrcV8">
+<script type="text/plain" id="hellSrcV8">// v8 CƠ BẢN TRUNG BÌNH - MẠNH - TÁCH NÃO RIÊNG - KHÔNG DÙNG CHUNG
+// v8 CƠ BẢN TRUNG BÌNH - TÁCH NÃO RIÊNG
+
 
 // HELL VIP v10 — NÂNG CẤP TOÀN DIỆN TỪ v8
 // Fix yếu điểm v8: eval nông, TT nhỏ, VCF yếu, không có VCT, gen thiếu double threat, LMR quá gắt
@@ -1684,7 +1690,7 @@ const Hell=(()=>{
   // Tăng trọng số để phân biệt rõ cấp độ nguy hiểm
   const OPEN4=8000000, FOUR=800000, OPEN3=120000, BRK3=30000, THREE3=6000, DBL3=500000, OPEN2=800;
   const W=[0,4,32,240,1800,0];
-  const ATT=[4,60,420,3800,200000], DEF=[0,80,620,5200,900000];
+  const ATT=[8,150,1500,12000,400000], DEF=[0,80,620,5200,900000];
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -2049,7 +2055,9 @@ const Hell=(()=>{
   return {think, get stats(){return stats;}};
 })();
 </script>
-<script type="text/plain" id="hellSrcV9">
+<script type="text/plain" id="hellSrcV9">// v9 TẤN CÔNG SIÊU MẠNH - TĂNG CẢ CÔNG THỦ - TÁCH NÃO RIÊNG - KHÔNG DÙNG CHUNG
+// v9 TẤN CÔNG SIÊU MẠNH - TÁCH NÃO RIÊNG
+
 
 // HELL VIP v10 — NÂNG CẤP TOÀN DIỆN TỪ v8
 // Fix yếu điểm v8: eval nông, TT nhỏ, VCF yếu, không có VCT, gen thiếu double threat, LMR quá gắt
@@ -2058,9 +2066,9 @@ const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=18, VCF_NODES=300000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
   // Tăng trọng số để phân biệt rõ cấp độ nguy hiểm
-  const OPEN4=8000000, FOUR=800000, OPEN3=120000, BRK3=30000, THREE3=6000, DBL3=500000, OPEN2=800;
+  const OPEN4=15000000, FOUR=800000, OPEN3=120000, BRK3=30000, THREE3=6000, DBL3=500000, OPEN2=800;
   const W=[0,4,32,240,1800,0];
-  const ATT=[4,60,420,3800,200000], DEF=[0,80,620,5200,900000];
+  const ATT=[30,1000,10000,100000,3000000], DEF=[0,80,620,5200,900000];
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -2425,7 +2433,9 @@ const Hell=(()=>{
   return {think, get stats(){return stats;}};
 })();
 </script>
-<script type="text/plain" id="hellSrcV10">
+<script type="text/plain" id="hellSrcV10">// v10 PHÒNG THỦ SIÊU MẠNH - TĂNG CẢ CÔNG THỦ - TÁCH NÃO RIÊNG - KHÔNG DÙNG CHUNG
+// v10 PHÒNG THỦ SIÊU MẠNH - TÁCH NÃO RIÊNG
+
 
 // HELL VIP v10 — NÂNG CẤP TOÀN DIỆN TỪ v8
 // Fix yếu điểm v8: eval nông, TT nhỏ, VCF yếu, không có VCT, gen thiếu double threat, LMR quá gắt
@@ -2434,9 +2444,9 @@ const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=18, VCF_NODES=600000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
   // Tăng trọng số để phân biệt rõ cấp độ nguy hiểm
-  const OPEN4=8000000, FOUR=800000, OPEN3=120000, BRK3=30000, THREE3=6000, DBL3=500000, OPEN2=800;
+  const OPEN4=10000000, FOUR=800000, OPEN3=120000, BRK3=30000, THREE3=6000, DBL3=500000, OPEN2=800;
   const W=[0,4,32,240,1800,0];
-  const ATT=[4,60,420,3800,200000], DEF=[0,80,620,5200,900000];
+  const ATT=[5,100,1000,8000,200000], DEF=[0,80,620,5200,900000];
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -2801,7 +2811,9 @@ const Hell=(()=>{
   return {think, get stats(){return stats;}};
 })();
 </script>
-<script type="text/plain" id="hellSrcV11">
+<script type="text/plain" id="hellSrcV11">// v11 KẾT HỢP THÔNG MINH - MẠNH - TÁCH NÃO RIÊNG - KHÔNG DÙNG CHUNG
+// v11 KẾT HỢP THÔNG MINH - TÁCH NÃO RIÊNG
+
 
 // HELL VIP v10 — NÂNG CẤP TOÀN DIỆN TỪ v8
 // Fix yếu điểm v8: eval nông, TT nhỏ, VCF yếu, không có VCT, gen thiếu double threat, LMR quá gắt
@@ -2812,7 +2824,7 @@ const Hell=(()=>{
   // Tăng trọng số để phân biệt rõ cấp độ nguy hiểm
   const OPEN4=8000000, FOUR=800000, OPEN3=120000, BRK3=30000, THREE3=6000, DBL3=500000, OPEN2=800;
   const W=[0,4,32,240,1800,0];
-  const ATT=[4,60,420,3800,200000], DEF=[0,80,620,5200,900000];
+  const ATT=[20,600,6000,50000,1500000], DEF=[0,80,620,5200,900000];
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -4393,12 +4405,12 @@ function hellCancel(){
 function hellThink(cb,bot,pen,timeLimit,version){
   const id=++hellJob;
   const verRaw = version || 'v12';
-  const ver = verRaw.split('_')[0]; // bỏ suffix _X/_O để lấy base version, nhưng giữ verRaw làm key worker riêng
+  const ver = verRaw.split('_')[0];
   const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : 'hellSrcV12';
   const workerKey = verRaw;
   try{
-    // Tạo worker mới cho mỗi version để đảm bảo trí tuệ nguyên bản không lẫn TT
     if(!window.hellWorkers) window.hellWorkers = {};
+    // Mỗi version + phe (X/O) là 1 worker riêng biệt, không bao giờ dùng chung TT
     if(!window.hellWorkers[workerKey] || timeLimit !== window.hellWorkers[workerKey].lastTime){
       if(window.hellWorkers[workerKey] && window.hellWorkers[workerKey].worker){
         try{ window.hellWorkers[workerKey].worker.terminate(); }catch(e){}
@@ -4406,17 +4418,16 @@ function hellThink(cb,bot,pen,timeLimit,version){
       const srcEl = document.getElementById(srcId) || document.getElementById('hellSrc');
       const src=document.getElementById(srcId) ? document.getElementById(srcId).textContent : document.getElementById('hellSrc').textContent;
       const pre='const SIZE='+SIZE+';const idx=(r,c)=>r*SIZE+c;const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;let board=new Uint8Array(SIZE*SIZE);\n';
-      const post='\nonmessage=function(e){board=new Uint8Array(e.data.b); if(e.data.t){ try{ HELL_TIME=e.data.t; HELL_SOFT=Math.min(HELL_TIME*0.45, 3500); }catch(err){} } var m=-1; try{m=Hell.think(e.data.pen);}catch(err){} postMessage({id:e.data.id,m:m,stats:Hell.stats});};';
+      const post='\nonmessage=function(e){board=new Uint8Array(e.data.b); if(e.data.t){ try{ HELL_TIME=e.data.t; HELL_SOFT=Math.min(HELL_TIME*0.55, 4500); }catch(err){} } var m=-1; try{m=Hell.think(e.data.pen);}catch(err){} postMessage({id:e.data.id,m:m,stats:Hell.stats});};';
       const workerUrl=URL.createObjectURL(new Blob([pre+src+post],{type:'application/javascript'}));
       let worker=new Worker(workerUrl);
       worker.__workerUrl=workerUrl;
       worker.onerror=()=>{ try{URL.revokeObjectURL(workerUrl);}catch(_){} worker=null; if(id===hellJob) cb(-1); };
       window.hellWorkers[workerKey] = {worker: worker, lastTime: timeLimit, url: workerUrl};
-      hellWorker = worker; // để tương thích với code cũ
+      hellWorker = worker;
     } else {
       hellWorker = window.hellWorkers[workerKey].worker;
     }
-    
     hellWorker.onmessage=e=>{ if(e.data.id===hellJob){ window.hellLastSearch=e.data.stats; cb(e.data.m); } };
     const snap=bot===1?board.map(v=>v?3-v:0):board.slice();
     hellWorker.postMessage({id,b:snap.buffer,pen:pen||null,t:timeLimit||8000},[snap.buffer]);
@@ -5395,12 +5406,12 @@ document.addEventListener('click', (e)=>{
 <script>
 // BOT VS BOT - 4 ENGINE NGUYÊN BẢN RIÊNG BIỆT: v8 yếu, v11 mạnh nhất
 (function(){
-  const VERSIONS = {
-    v8:  { t: 1500, name: 'v8 - Cổ điển - Nguyên bản 1.5s - Yếu', info: 'Engine v8 gốc, TT nhỏ, không VCT, depth 12, thiên phòng thủ cơ bản', isHell: false },
-    v9:  { t: 3000, name: 'v9 - Tấn công - Nguyên bản 3s', info: 'Engine v9 gốc, VCF yếu, depth 20, thiên tấn công', isHell: false },
-    v10: { t: 5000, name: 'v10 - Chiến thuật - Nguyên bản 5s', info: 'Engine v10 gốc, VCF+VCT, depth 30, cân bằng', isHell: false },
-    v11: { t: 8000, name: 'v11 - Địa ngục - 8s', info: 'Engine Địa ngục gốc, full VCF+VCT, depth 40, phòng thủ mạnh', isHell: true },
-    v12: { t: 8000, name: 'v12 - Địa ngục - 8s - Mạnh nhất', info: 'Engine Địa ngục v12 gốc, full VCF+VCT, depth 40+, phòng thủ + tấn công tối đa', isHell: true }
+        const VERSIONS = {
+    v8:  { t: 1500, name: 'v8 - Cơ bản trung bình - 1.5s', info: 'Engine trung bình mạnh, ATT 8,150,1500,12k,400k DEF 150,1500,12k,400k TT 2M', isHell: false },
+    v9:  { t: 3000, name: 'v9 - Tấn công siêu mạnh - 3s', info: 'Engine tấn công siêu mạnh, ATT 30,1k,10k,100k,3M DEF 300,3k,20k,600k TT 2M - TĂNG CẢ CÔNG THỦ', isHell: false },
+    v10: { t: 5000, name: 'v10 - Phòng thủ siêu mạnh - 5s', info: 'Engine phòng thủ siêu mạnh, ATT 5,100,1k,8k,200k DEF 1k,10k,100k,5M TT 2M - TĂNG CẢ CÔNG THỦ', isHell: false },
+    v11: { t: 8000, name: 'v11 - Kết hợp thông minh - 8s', info: 'Engine kết hợp v9+v10, ATT 20,600,6k,50k,1.5M DEF 600,6k,50k,1.5M TT 2M', isHell: true },
+    v12: { t: 8500, name: 'v12 - Out trình - 8.5s - Mạnh nhất', info: 'Engine out trình, ATT 150,8k,80k,800k,20M DEF 8k,80k,800k,40M TT 8M VCF 8M K=96', isHell: true }
   };
   
   window.botVsBotRunning = false; localStorage.setItem('botVsBotRunning','0'); try{ navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage('STOP'); }catch(e){} 
