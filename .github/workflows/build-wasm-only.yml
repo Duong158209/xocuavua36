@@ -1,0 +1,22 @@
+# Dùng khi web của mày ĐÃ CÓ SẴN (Pages kiểu "Deploy from a branch").
+# Bấm Actions -> "build-hell-js" -> Run workflow: nó build hell.js rồi tự commit vào repo cạnh index.html.
+# Đặt file này ở: .github/workflows/build-wasm-only.yml
+name: build-hell-js
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mymindstorm/setup-emsdk@v14
+      - run: bash build.sh
+      - name: Commit hell.js
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add hell.js
+          git commit -m "build hell.js" || echo "khong co thay doi"
+          git push
