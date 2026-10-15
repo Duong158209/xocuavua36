@@ -685,7 +685,7 @@ self.addEventListener('fetch', e=>{
 
   <div class="topbar" style="padding-left:8px;">
     <span class="who">Xin chào, <b id="whoName"></b></span>
-    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V12 • 15×15</span>
+    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V12 • 64×64</span>
   </div>
   <!-- VERTICAL ICON DOCK -->
   <div id="sideDock" class="collapsed">
@@ -837,7 +837,7 @@ self.addEventListener('fetch', e=>{
     <div id="hellMem" class="hidden"></div>
 
     <div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas></div>
-    <div style="font-size:.7rem; letter-spacing:.12em; opacity:.45; padding:0 4px; line-height:1.4;">HỆ: 15×15 • CHUẨN GOMOKU • 5 LIÊN TIẾP THẮNG<br>Touch-friendly</div>
+    <div style="font-size:.7rem; letter-spacing:.12em; opacity:.45; padding:0 4px; line-height:1.4;">HỆ: 64×64 • CHUẨN GOMOKU • 5 LIÊN TIẾP THẮNG<br>Touch-friendly</div>
 
     <!-- ĐIỀU KHIỂN card y hệt ảnh -->
     <div style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:12px;">
@@ -3828,7 +3828,7 @@ async function declineInvite(inviteId){
 // =====================================================================
 // GAME LOGIC
 // =====================================================================
-const SIZE=15; // FIX: 15x15 chuẩn, trước để 64 nên nước bị lệch khỏi khung nhìn
+const SIZE=64; // YÊU CẦU: 64x64 cho tất cả
 const idx=(r,c)=>r*SIZE+c;
 const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;
 let board=new Uint8Array(SIZE*SIZE);
@@ -3847,9 +3847,15 @@ const statusEl=document.getElementById('status');
 function fitBoard(){
   const W=wrap.clientWidth, H=wrap.clientHeight;
   if(W<10||H<10) return;
-  const target = Math.min(W,H)*0.96;
-  const ideal = Math.floor(target / SIZE);
-  cellSize = Math.max(18, Math.min(48, ideal));
+  if(SIZE>=64){
+    // 64x64 không thể nhét hết màn hình mà vẫn nhìn rõ, để ô 16-20px và cho kéo/pinch
+    const ideal = Math.floor(Math.min(W,H)*0.92 / 20); // hiển thị ~20 ô lúc đầu cho dễ nhìn
+    cellSize = Math.max(10, Math.min(22, ideal || 18));
+  } else {
+    const target = Math.min(W,H)*0.96;
+    const ideal = Math.floor(target / SIZE);
+    cellSize = Math.max(18, Math.min(48, ideal));
+  }
 }
 function resize(){
   cv.width=wrap.clientWidth*devicePixelRatio;
