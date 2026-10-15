@@ -881,29 +881,6 @@ input.field,#chatInput{
 }
 </style>
 
-
-<style>
-#boardWrap #focusCurrentBtn{
-  position:absolute; left:10px; bottom:10px; z-index:15;
-  background:linear-gradient(135deg,#1a1526,#231b2f);
-  border:1.5px solid #ffd4a340; border-radius:12px;
-  padding:8px 12px; font-size:.78rem; font-weight:800; color:#ffd4a3;
-  cursor:pointer; display:flex; align-items:center; gap:6px;
-  box-shadow:0 4px 16px #0006, 0 0 0 1px #ffd4a320;
-  transition:.18s; user-select:none;
-}
-#boardWrap #focusCurrentBtn:hover{ transform:scale(1.05); border-color:#ffd4a3; box-shadow:0 6px 20px #0008, 0 0 12px #ff8a3a40; }
-#boardWrap #focusCurrentBtn:active{ transform:scale(.96); }
-#boardWrap #boardZoomControls{ position:absolute; top:10px; right:10px; z-index:15; display:flex; flex-direction:column; gap:8px; }
-#boardZoomControls .zBtn{
-  width:38px; height:38px; border-radius:12px; background:rgba(20,14,28,.85); backdrop-filter:blur(8px);
-  border:1.5px solid #4a355e; color:#ffd4a3; font-weight:900; font-size:1.1rem;
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  box-shadow:0 4px 12px #0005; transition:.15s;
-}
-#boardZoomControls .zBtn:hover{ background:#2a1f3a; border-color:#ffd4a3; transform:scale(1.05); }
-</style>
-
 </head>
 <body>
 
@@ -1086,14 +1063,7 @@ input.field,#chatInput{
     <div id="warnBar" class="hidden"></div>
     <div id="hellMem" class="hidden"></div>
 
-    <div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas>
-    <div id="boardZoomControls">
-      <div class="zBtn" id="boardZoomIn" title="Phóng to">+</div>
-      <div class="zBtn" id="boardZoomOut" title="Thu nhỏ">−</div>
-      <div class="zBtn" id="boardZoomReset" title="1:1" style="font-size:.75rem;">1:1</div>
-    </div>
-    <div id="focusCurrentBtn" title="Dịch chuyển đến nước hiện tại">🎯 Nước hiện tại</div>
-</div>
+    <div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas></div>
     <div style="font-size:.7rem; letter-spacing:.12em; opacity:.45; padding:0 4px; line-height:1.4;">HỆ: 64×64 • CHUẨN GOMOKU • 5 LIÊN TIẾP THẮNG<br>Touch-friendly</div>
 
     <!-- ĐIỀU KHIỂN / panel theo chế độ -->
@@ -5007,18 +4977,47 @@ let moveHistory=[];
 let lastMove=null, lastMoveT=0, animRaf=0, lastAnimDraw=0;
 let scores={X:0,O:0,D:0};
 
-// ---------- GAME TIME TRACKING - Đã chỉnh: dừng khi thắng, tiếp tục đánh thì tính lại ----------
+// ---------- GAME TIME TRACKING - FIX: chỉ đếm khi có nước, dừng khi thắng ----------
 let gameStartTime = null;
 let gameTimerInterval = null;
 let currentGameDuration = 0;
 let gameTimerPaused = false;
 let gameTimerWinStopped = false;
-let gameTimerBaseDuration = 0; // để cộng dồn khi tiếp tục đánh sau thắng
+let gameTimerBaseDuration = 0;
+
+function hasAnyMoveOnBoard(){
+  try{
+    if(typeof moveHistory!=='undefined' && moveHistory.length>0) return true;
+    if(typeof board!=='undefined' && board.length){
+      for(let i=0;i<board.length;i++){ if(board[i]!==0) return true; }
+    }
+    if(typeof moves!=='undefined' && moves>0) return true;
+    if(typeof window.botVsBotGameMoves!=='undefined' && window.botVsBotGameMoves>0) return true;
+  }catch(e){}
+  return false;
+}
 
 function startGameTimer(){
+  // Nếu chưa có nước nào thì không đếm, chỉ hiển thị chờ
+  if(!hasAnyMoveOnBoard()){
+    gameStartTime = null;
+    gameTimerBaseDuration = 0;
+    currentGameDuration = 0;
+    gameTimerPaused = false;
+    gameTimerWinStopped = false;
+    if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
+    const big = document.getElementById('timeStorageCurrent');
+    if(big) big.textContent = '0:00';
+    const el = document.getElementById('gameTimeDisplay');
+    if(el) el.textContent = '⏱ 0:00';
+    const bvb = document.getElementById('bvbGameTime');
+    if(bvb) bvb.textContent = '0:00';
+    updateTimeStorageStatus();
+    if(typeof renderTimeStorageUI==='function') renderTimeStorageUI();
+    return;
+  }
   gameStartTime = Date.now();
-  gameTimerBaseDuration = 0;
-  currentGameDuration = 0;
+  gameTimerBaseDuration = currentGameDuration || 0;
   gameTimerPaused = false;
   gameTimerWinStopped = false;
   if(gameTimerInterval) clearInterval(gameTimerInterval);
@@ -5027,8 +5026,18 @@ function startGameTimer(){
   updateTimeStorageStatus();
 }
 
+function ensureTimerOnFirstMove(){
+  if(!hasAnyMoveOnBoard()) return;
+  if(gameStartTime) return;
+  if(gameTimerWinStopped || gameTimerPaused) return;
+  gameStartTime = Date.now();
+  if(gameTimerInterval) clearInterval(gameTimerInterval);
+  gameTimerInterval = setInterval(updateGameTimeUI, 1000);
+  updateGameTimeUI();
+  updateTimeStorageStatus();
+}
+
 function resumeGameTimerAfterWin(){
-  // khi tiếp tục đánh sau khi đã thắng -> tính thời gian lại (cộng dồn)
   if(!gameTimerWinStopped) return;
   gameTimerBaseDuration = currentGameDuration;
   gameStartTime = Date.now();
@@ -5041,11 +5050,26 @@ function resumeGameTimerAfterWin(){
 }
 
 function updateGameTimeUI(){
-  if(gameTimerPaused || gameTimerWinStopped){
-    renderTimeStorageUI();
+  if(gameTimerWinStopped || gameTimerPaused){
+    if(typeof renderTimeStorageUI==='function') renderTimeStorageUI();
     return;
   }
-  if(!gameStartTime) return;
+  if(!hasAnyMoveOnBoard()){
+    // vẫn chưa có nước nào -> giữ 0:00 và không đếm
+    gameStartTime = null;
+    currentGameDuration = 0;
+    gameTimerBaseDuration = 0;
+    if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
+    const big = document.getElementById('timeStorageCurrent');
+    if(big) big.textContent = '0:00';
+    updateTimeStorageStatus();
+    return;
+  }
+  if(!gameStartTime){
+    // có nước rồi nhưng chưa có startTime -> bắt đầu ngay
+    gameStartTime = Date.now();
+    gameTimerBaseDuration = currentGameDuration;
+  }
   const elapsed = Math.floor((Date.now() - gameStartTime)/1000);
   currentGameDuration = gameTimerBaseDuration + elapsed;
   const el = document.getElementById('gameTimeDisplay');
@@ -5060,14 +5084,13 @@ function updateGameTimeUI(){
     const s = currentGameDuration%60;
     bvbTime.textContent = `${m}:${String(s).padStart(2,'0')}`;
   }
-  // update large display
   const big = document.getElementById('timeStorageCurrent');
   if(big){
     const m = Math.floor(currentGameDuration/60);
     const s = currentGameDuration%60;
     big.textContent = `${m}:${String(s).padStart(2,'0')}`;
   }
-  renderTimeStorageUI();
+  if(typeof renderTimeStorageUI==='function') renderTimeStorageUI();
 }
 
 function stopGameTimer(){
@@ -5079,7 +5102,7 @@ function stopGameTimer(){
   gameTimerPaused = true;
   gameTimerWinStopped = true;
   updateTimeStorageStatus();
-  renderTimeStorageUI();
+  if(typeof renderTimeStorageUI==='function') renderTimeStorageUI();
   return currentGameDuration;
 }
 
@@ -5096,6 +5119,13 @@ function formatDuration(sec){
 function updateTimeStorageStatus(){
   const st = document.getElementById('timeStorageStatus');
   if(!st) return;
+  if(!hasAnyMoveOnBoard()){
+    st.textContent = '⏳ CHỜ NƯỚC ĐI';
+    st.style.color = '#ffd4a3';
+    st.style.background = 'rgba(255,212,163,.12)';
+    st.style.borderColor = '#ffd4a340';
+    return;
+  }
   if(gameTimerWinStopped){
     st.textContent = '⏸ ĐÃ DỪNG - CHỜ THẮNG';
     st.style.color = '#ff9a9a';
@@ -5113,7 +5143,7 @@ function updateTimeStorageStatus(){
 }
 
 
-// Save game history to localStorage for all modes
+
 function saveAllModesHistory(resultData){
   try{
     const duration = stopGameTimer();
@@ -5182,31 +5212,15 @@ function fitBoard(){
   const W=wrap.clientWidth, H=wrap.clientHeight;
   if(W<10||H<10) return;
   if(SIZE>=64){
-    const ideal = Math.floor(Math.min(W,H)*0.92 / 20);
+    // 64x64 không thể nhét hết màn hình mà vẫn nhìn rõ, để ô 16-20px và cho kéo/pinch
+    const ideal = Math.floor(Math.min(W,H)*0.92 / 20); // hiển thị ~20 ô lúc đầu cho dễ nhìn
     cellSize = Math.max(10, Math.min(22, ideal || 18));
   } else {
     const target = Math.min(W,H)*0.96;
     const ideal = Math.floor(target / SIZE);
     cellSize = Math.max(18, Math.min(48, ideal));
-    // Đảm bảo không có khoảng trống: cellSize tối thiểu phải lấp đầy khung
-    const minToFillW = Math.ceil(W / SIZE);
-    const minToFillH = Math.ceil(H / SIZE);
-    const minFill = Math.max(minToFillW, minToFillH);
-    if(SIZE===15 && cellSize < minFill){
-      cellSize = minFill;
-    }
   }
 }
-
-function getMinCellSizeToFill(){
-  const W=wrap.clientWidth, H=wrap.clientHeight;
-  const minW = Math.ceil(W / SIZE);
-  const minH = Math.ceil(H / SIZE);
-  // với 15x15 luôn phải lấp đầy, với 64x64 cho phép nhỏ hơn vì phải kéo
-  if(SIZE===15) return Math.max(minW, minH);
-  return 10;
-}
-
 function resize(){
   cv.width=wrap.clientWidth*devicePixelRatio;
   cv.height=wrap.clientHeight*devicePixelRatio;
@@ -5220,10 +5234,10 @@ function resize(){
 
 new ResizeObserver(resize).observe(wrap);
 function centerBoard(){
-  offX=Math.round((wrap.clientWidth - SIZE*cellSize)/2);
-  offY=Math.round((wrap.clientHeight - SIZE*cellSize)/2);
+  offX=(wrap.clientWidth - SIZE*cellSize)/2;
+  offY=(wrap.clientHeight - SIZE*cellSize)/2;
+  // đảm bảo không âm quá khi fit
 }
-
 function draw(){
   const dpr=devicePixelRatio;
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -5320,56 +5334,58 @@ let dragging=false,startX=0,startY=0,moved=false,startOffX=0,startOffY=0;
 function clampOffsets(){
   const W = wrap.clientWidth, H = wrap.clientHeight;
   const BW = SIZE * cellSize, BH = SIZE * cellSize;
-  // Không bao giờ để lộ khoảng trống quá ô cuối: giới hạn chặt chẽ
+  // X
+  let minX, maxX;
   if(BW <= W){
-    // Bàn nhỏ hơn khung -> luôn căn giữa chính xác, không cho kéo lộ trống
-    offX = Math.round((W - BW)/2);
+    // board smaller than viewport -> center with small padding, not allow empty beyond
+    minX = 0;
+    maxX = W - BW;
+    // if we want centered, set both to (W-BW)/2? but allow dragging within that range
+    // For small board, clamp to stay inside: if offX < min, offX=min; if >max, max
+    // If board much smaller, keep it centered by default
+    if(BW < W*0.85){
+      const centerX = (W - BW)/2;
+      // allow slight movement but not beyond 20px padding
+      const pad = 20;
+      minX = Math.min(centerX - pad, 0);
+      maxX = Math.max(centerX + pad, W - BW);
+      // Actually if board small, keep near center
+      if(offX < minX) offX = minX;
+      if(offX > maxX) offX = maxX;
+    } else {
+      if(offX < minX) offX = minX;
+      if(offX > maxX) offX = maxX;
+    }
   } else {
-    // Bàn lớn hơn khung -> chỉ cho kéo trong phạm vi 0..W-BW, không vượt qua ô cuối
-    const minX = W - BW;
-    const maxX = 0;
+    // board larger than viewport -> don't show empty beyond edges
+    minX = W - BW; // negative
+    maxX = 0;
     if(offX < minX) offX = minX;
     if(offX > maxX) offX = maxX;
   }
+  // Y
+  let minY, maxY;
   if(BH <= H){
-    offY = Math.round((H - BH)/2);
+    minY = 0;
+    maxY = H - BH;
+    if(BH < H*0.85){
+      const centerY = (H - BH)/2;
+      const pad = 20;
+      const low = Math.min(centerY - pad, 0);
+      const high = Math.max(centerY + pad, H - BH);
+      if(offY < low) offY = low;
+      if(offY > high) offY = high;
+    } else {
+      if(offY < minY) offY = minY;
+      if(offY > maxY) offY = maxY;
+    }
   } else {
-    const minY = H - BH;
-    const maxY = 0;
+    minY = H - BH;
+    maxY = 0;
     if(offY < minY) offY = minY;
     if(offY > maxY) offY = maxY;
   }
 }
-
-function focusOnCurrentMove(){
-  const W = wrap.clientWidth, H = wrap.clientHeight;
-  let targetR, targetC;
-  if(typeof lastMove!=='undefined' && lastMove && lastMove.r!=null){
-    targetR = lastMove.r; targetC = lastMove.c;
-  } else if(typeof moveHistory!=='undefined' && moveHistory.length){
-    const last = moveHistory[moveHistory.length-1];
-    targetR = last.r; targetC = last.c;
-  } else if(typeof moves!=='undefined' && moves>0){
-    // bot vs bot: try to get last from board scan? fallback center
-    targetR = Math.floor(SIZE/2); targetC = Math.floor(SIZE/2);
-  } else {
-    // chưa có nước nào -> về giữa bàn
-    targetR = Math.floor(SIZE/2); targetC = Math.floor(SIZE/2);
-  }
-  // Tính offset để đưa ô target vào giữa màn hình
-  const desiredOffX = Math.round(W/2 - (targetC * cellSize + cellSize/2));
-  const desiredOffY = Math.round(H/2 - (targetR * cellSize + cellSize/2));
-  offX = desiredOffX;
-  offY = desiredOffY;
-  clampOffsets();
-  draw();
-  // hiệu ứng nhấp nháy nhẹ để người dùng biết đã focus
-  try{
-    wrap.animate([{transform:'scale(0.98)'},{transform:'scale(1)'}],{duration:180, easing:'ease-out'});
-  }catch(e){}
-}
-window.focusOnCurrentMove = focusOnCurrentMove;
-
 
 const MIN_CELL=16, MAX_CELL=56;
 const ptrs=new Map();
@@ -5436,7 +5452,7 @@ cv.addEventListener('wheel', e=>{
   clampOffsets();
   draw();
 },{passive:false});
-document.getElementById('zoomOut').onclick=()=>{ const minF = (typeof getMinCellSizeToFill==='function'?getMinCellSizeToFill():16); cellSize=Math.max(minF,cellSize-6); clampOffsets(); draw();};
+document.getElementById('zoomOut').onclick=()=>{cellSize=Math.max(16,cellSize-6); clampOffsets(); draw();};
 document.getElementById('zoomIn').onclick=()=>{cellSize=Math.min(70,cellSize+6); clampOffsets(); draw();};
 
 function dirs(){return [[0,1],[1,0],[1,1],[1,-1]];}
@@ -7706,7 +7722,7 @@ setTimeout(()=>{
     window.setMode = function(m){
       const r = _origSetMode.apply(this, arguments);
       setTimeout(()=>{
-        try{ if(typeof startGameTimer==='function'){ startGameTimer(); renderTimeStorageUI(); } }catch(e){}
+        try{ if(typeof startGameTimer==='function' && hasAnyMoveOnBoard()){ startGameTimer(); } renderTimeStorageUI(); updateTimeStorageStatus(); }catch(e){}
       }, 150);
       return r;
     };
@@ -7727,77 +7743,89 @@ setTimeout(()=>{
 
 
 <script>
+// Patch first move trigger for all modes - ensure timer starts only after first move
 (function(){
-  function wireBoardZoomFix(){
-    const wrap = document.getElementById('boardWrap');
-    const btnIn = document.getElementById('boardZoomIn');
-    const btnOut = document.getElementById('boardZoomOut');
-    const btnReset = document.getElementById('boardZoomReset');
-    const btnFocus = document.getElementById('focusCurrentBtn');
-    if(!wrap) return;
-    // đồng bộ với hàm cũ zoomIn/zoomOut nếu có
-    if(btnIn){
-      btnIn.onclick = ()=>{
-        try{
-          cellSize = Math.min(70, cellSize+6);
-          if(typeof clampOffsets==='function') clampOffsets();
-          if(typeof draw==='function') draw();
-        }catch(e){}
-      };
-    }
-    if(btnOut){
-      btnOut.onclick = ()=>{
-        try{
-          const minF = (typeof getMinCellSizeToFill==='function'?getMinCellSizeToFill():16);
-          cellSize = Math.max(minF, cellSize-6);
-          if(typeof clampOffsets==='function') clampOffsets();
-          if(typeof draw==='function') draw();
-        }catch(e){}
-      };
-    }
-    if(btnReset){
-      btnReset.onclick = ()=>{
-        try{
-          if(typeof fitBoard==='function') fitBoard();
-          if(typeof centerBoard==='function') centerBoard();
-          if(typeof clampOffsets==='function') clampOffsets();
-          if(typeof draw==='function') draw();
-        }catch(e){}
-      };
-    }
-    if(btnFocus){
-      btnFocus.onclick = ()=>{
-        try{ if(typeof focusOnCurrentMove==='function') focusOnCurrentMove(); }catch(e){}
-      };
-    }
-    // ẩn nút zoom cũ botVsBotZoomControls đã bị tạo trước đó
-    const oldCtr = document.getElementById('botVsBotZoomControls');
-    if(oldCtr) oldCtr.style.display='none';
-  }
-  setTimeout(wireBoardZoomFix, 800);
-  setTimeout(wireBoardZoomFix, 2000);
-
-  // Sửa luôn hệ thống zoom bằng scale transform của bot vs bot: vô hiệu hoá transform để dùng chung cellSize/offX
-  // Patch apply() cũ
-  setTimeout(()=>{
+  function patchFirstMove(){
     try{
-      const wrap = document.getElementById('boardWrap');
-      const cv = document.getElementById('cv');
-      if(wrap && cv){
-        cv.style.transform='none';
-        cv.style.transformOrigin='center center';
+      if(typeof placeLocal==='function' && !placeLocal._patchedFirstMove2){
+        const orig = placeLocal;
+        window.placeLocal = function(r,c,p){
+          const wasEmpty = !hasAnyMoveOnBoard();
+          const res = orig.apply(this, arguments);
+          if(res){
+            if(wasEmpty){
+              // vừa có nước đầu tiên -> bắt đầu đếm
+              setTimeout(()=>{ try{ startGameTimer(); }catch(e){} }, 20);
+            } else {
+              setTimeout(()=>{ try{ ensureTimerOnFirstMove(); }catch(e){} }, 10);
+            }
+          }
+          return res;
+        };
+        try{ placeLocal = window.placeLocal; placeLocal._patchedFirstMove2=true; }catch(e){}
+      }
+      if(typeof onlineTap==='function' && !onlineTap._patchedFirstMove2){
+        const origO = onlineTap;
+        window.onlineTap = function(r,c){
+          const wasEmpty = !hasAnyMoveOnBoard();
+          const res = origO.apply(this, arguments);
+          if(wasEmpty){
+            setTimeout(()=>{ try{ startGameTimer(); }catch(e){} }, 20);
+          } else {
+            setTimeout(()=>{ try{ ensureTimerOnFirstMove(); }catch(e){} }, 10);
+          }
+          return res;
+        };
+        try{ onlineTap = window.onlineTap; onlineTap._patchedFirstMove2=true; }catch(e){}
       }
     }catch(e){}
-  }, 1000);
+  }
+  setTimeout(patchFirstMove, 800);
+  setTimeout(patchFirstMove, 2000);
+  
+  // Reset board should force waiting state
+  setTimeout(()=>{
+    if(typeof resetBoardState==='function' && !resetBoardState._patchedWait){
+      const origReset = resetBoardState;
+      window.resetBoardState = function(){
+        const r = origReset.apply(this, arguments);
+        try{
+          gameStartTime=null;
+          currentGameDuration=0;
+          gameTimerBaseDuration=0;
+          gameTimerWinStopped=false;
+          gameTimerPaused=false;
+          if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
+          const big=document.getElementById('timeStorageCurrent');
+          if(big) big.textContent='0:00';
+          updateTimeStorageStatus();
+          renderTimeStorageUI();
+        }catch(e){}
+        return r;
+      };
+      try{ resetBoardState=window.resetBoardState; resetBoardState._patchedWait=true; }catch(e){}
+    }
+  }, 900);
 
-  // Tự động focus vào nước mới đánh ở mọi chế độ
-  let lastFocusMoveCount = 0;
+  // Interval safety: if board empty but timer running, stop it
   setInterval(()=>{
     try{
-      if(typeof moveHistory!=='undefined' && moveHistory.length!==lastFocusMoveCount){
-        // nếu người dùng không đang kéo thì auto focus nhẹ?
-        // Không auto để tránh làm phiền, chỉ lưu count
-        lastFocusMoveCount = moveHistory.length;
+      if(!hasAnyMoveOnBoard()){
+        if(gameTimerInterval){
+          clearInterval(gameTimerInterval);
+          gameTimerInterval=null;
+        }
+        gameStartTime=null;
+        currentGameDuration=0;
+        gameTimerBaseDuration=0;
+        const big=document.getElementById('timeStorageCurrent');
+        if(big && big.textContent!=='0:00') big.textContent='0:00';
+        const st=document.getElementById('timeStorageStatus');
+        if(st && st.textContent!=='⏳ CHỜ NƯỚC ĐI'){
+          st.textContent='⏳ CHỜ NƯỚC ĐI';
+          st.style.color='#ffd4a3';
+          st.style.background='rgba(255,212,163,.12)';
+        }
       }
     }catch(e){}
   }, 1000);
