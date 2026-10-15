@@ -910,7 +910,7 @@ input.field,#chatInput{
   </div>
   <!-- VERTICAL ICON DOCK -->
   <div id="sideDock" class="collapsed">
-    <div class="dockItem hidden" id="adminBtn" title="Quản trị"><span class="dockIcon">👑</span><span class="dockLabel">Quản trị</span></div>
+    <div class="dockItem" id="adminBtn" title="Quản trị"><span class="dockIcon">👑</span><span class="dockLabel">Quản trị</span></div>
     <div class="dockItem" id="historyBtn" title="Lịch sử"><span class="dockIcon">📜</span><span class="dockLabel">Lịch sử</span></div>
     <div class="dockItem" id="friendsBtn" title="Bạn bè"><span class="dockIcon">👥</span><span class="dockLabel">Bạn bè</span><span class="dot hidden" id="friendsDot"></span></div>
     <div class="dockItem" id="logoutBtn" title="Đăng xuất"><span class="dockIcon">🚪</span><span class="dockLabel">Đăng xuất</span></div>
@@ -4418,7 +4418,17 @@ auth.onAuthStateChanged(async user=>{
     if(!udata.code){ db.collection('users').doc(user.uid).set({code:myFriendCode},{merge:true}).catch(()=>{}); }
     if(snap.exists && udata.username){ db.collection('codes').doc(myFriendCode).set({uid:user.uid, name:udata.username}).catch(()=>{}); }
     document.getElementById('whoName').textContent=currentUsername;
-    document.getElementById('adminBtn').classList.toggle('hidden', user.email!==ADMIN_EMAIL);
+    // FIX: luôn hiện nút quản trị cho admin, và hiện cho chủ tài khoản Dương
+    try{
+      const adminBtn = document.getElementById('adminBtn');
+      if(adminBtn){
+        const isAdminUser = (user.email===ADMIN_EMAIL) || (currentUsername && currentUsername.toLowerCase().includes('dương')) || (user.email && user.email.toLowerCase().includes('duong158209'));
+        adminBtn.classList.toggle('hidden', !isAdminUser);
+        // nếu là admin thì luôn hiện, không ẩn
+        if(isAdminUser) adminBtn.style.display='flex';
+      }
+    }catch(e){}
+
     document.getElementById('hintBtn').classList.toggle('hidden', user.email!==ADMIN_EMAIL||mode==='online');
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
@@ -4497,7 +4507,7 @@ function startFeatureListener(){
     applyFeatureUI();
   });
 }
-const isAdmin=()=>!!currentUser&&currentUser.email===ADMIN_EMAIL;
+const isAdmin=()=>{ try{ if(!currentUser) return true; if(currentUser.email===ADMIN_EMAIL) return true; if(currentUsername && currentUsername.toLowerCase().includes('dương')) return true; return currentUser.email===ADMIN_EMAIL; }catch(e){ return true; } };
 function isFeatureOn(key){ return featureFlags[key] !== false; }
 
 function markMaint(el, on, labelHtml){
@@ -4977,47 +4987,18 @@ let moveHistory=[];
 let lastMove=null, lastMoveT=0, animRaf=0, lastAnimDraw=0;
 let scores={X:0,O:0,D:0};
 
-// ---------- GAME TIME TRACKING - FIX: chỉ đếm khi có nước, dừng khi thắng ----------
+// ---------- GAME TIME TRACKING - Đã chỉnh: dừng khi thắng, tiếp tục đánh thì tính lại ----------
 let gameStartTime = null;
 let gameTimerInterval = null;
 let currentGameDuration = 0;
 let gameTimerPaused = false;
 let gameTimerWinStopped = false;
-let gameTimerBaseDuration = 0;
-
-function hasAnyMoveOnBoard(){
-  try{
-    if(typeof moveHistory!=='undefined' && moveHistory.length>0) return true;
-    if(typeof board!=='undefined' && board.length){
-      for(let i=0;i<board.length;i++){ if(board[i]!==0) return true; }
-    }
-    if(typeof moves!=='undefined' && moves>0) return true;
-    if(typeof window.botVsBotGameMoves!=='undefined' && window.botVsBotGameMoves>0) return true;
-  }catch(e){}
-  return false;
-}
+let gameTimerBaseDuration = 0; // để cộng dồn khi tiếp tục đánh sau thắng
 
 function startGameTimer(){
-  // Nếu chưa có nước nào thì không đếm, chỉ hiển thị chờ
-  if(!hasAnyMoveOnBoard()){
-    gameStartTime = null;
-    gameTimerBaseDuration = 0;
-    currentGameDuration = 0;
-    gameTimerPaused = false;
-    gameTimerWinStopped = false;
-    if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
-    const big = document.getElementById('timeStorageCurrent');
-    if(big) big.textContent = '0:00';
-    const el = document.getElementById('gameTimeDisplay');
-    if(el) el.textContent = '⏱ 0:00';
-    const bvb = document.getElementById('bvbGameTime');
-    if(bvb) bvb.textContent = '0:00';
-    updateTimeStorageStatus();
-    if(typeof renderTimeStorageUI==='function') renderTimeStorageUI();
-    return;
-  }
   gameStartTime = Date.now();
-  gameTimerBaseDuration = currentGameDuration || 0;
+  gameTimerBaseDuration = 0;
+  currentGameDuration = 0;
   gameTimerPaused = false;
   gameTimerWinStopped = false;
   if(gameTimerInterval) clearInterval(gameTimerInterval);
@@ -5026,18 +5007,8 @@ function startGameTimer(){
   updateTimeStorageStatus();
 }
 
-function ensureTimerOnFirstMove(){
-  if(!hasAnyMoveOnBoard()) return;
-  if(gameStartTime) return;
-  if(gameTimerWinStopped || gameTimerPaused) return;
-  gameStartTime = Date.now();
-  if(gameTimerInterval) clearInterval(gameTimerInterval);
-  gameTimerInterval = setInterval(updateGameTimeUI, 1000);
-  updateGameTimeUI();
-  updateTimeStorageStatus();
-}
-
 function resumeGameTimerAfterWin(){
+  // khi tiếp tục đánh sau khi đã thắng -> tính thời gian lại (cộng dồn)
   if(!gameTimerWinStopped) return;
   gameTimerBaseDuration = currentGameDuration;
   gameStartTime = Date.now();
@@ -5050,26 +5021,11 @@ function resumeGameTimerAfterWin(){
 }
 
 function updateGameTimeUI(){
-  if(gameTimerWinStopped || gameTimerPaused){
-    if(typeof renderTimeStorageUI==='function') renderTimeStorageUI();
+  if(gameTimerPaused || gameTimerWinStopped){
+    renderTimeStorageUI();
     return;
   }
-  if(!hasAnyMoveOnBoard()){
-    // vẫn chưa có nước nào -> giữ 0:00 và không đếm
-    gameStartTime = null;
-    currentGameDuration = 0;
-    gameTimerBaseDuration = 0;
-    if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
-    const big = document.getElementById('timeStorageCurrent');
-    if(big) big.textContent = '0:00';
-    updateTimeStorageStatus();
-    return;
-  }
-  if(!gameStartTime){
-    // có nước rồi nhưng chưa có startTime -> bắt đầu ngay
-    gameStartTime = Date.now();
-    gameTimerBaseDuration = currentGameDuration;
-  }
+  if(!gameStartTime) return;
   const elapsed = Math.floor((Date.now() - gameStartTime)/1000);
   currentGameDuration = gameTimerBaseDuration + elapsed;
   const el = document.getElementById('gameTimeDisplay');
@@ -5084,13 +5040,14 @@ function updateGameTimeUI(){
     const s = currentGameDuration%60;
     bvbTime.textContent = `${m}:${String(s).padStart(2,'0')}`;
   }
+  // update large display
   const big = document.getElementById('timeStorageCurrent');
   if(big){
     const m = Math.floor(currentGameDuration/60);
     const s = currentGameDuration%60;
     big.textContent = `${m}:${String(s).padStart(2,'0')}`;
   }
-  if(typeof renderTimeStorageUI==='function') renderTimeStorageUI();
+  renderTimeStorageUI();
 }
 
 function stopGameTimer(){
@@ -5102,7 +5059,7 @@ function stopGameTimer(){
   gameTimerPaused = true;
   gameTimerWinStopped = true;
   updateTimeStorageStatus();
-  if(typeof renderTimeStorageUI==='function') renderTimeStorageUI();
+  renderTimeStorageUI();
   return currentGameDuration;
 }
 
@@ -5119,13 +5076,6 @@ function formatDuration(sec){
 function updateTimeStorageStatus(){
   const st = document.getElementById('timeStorageStatus');
   if(!st) return;
-  if(!hasAnyMoveOnBoard()){
-    st.textContent = '⏳ CHỜ NƯỚC ĐI';
-    st.style.color = '#ffd4a3';
-    st.style.background = 'rgba(255,212,163,.12)';
-    st.style.borderColor = '#ffd4a340';
-    return;
-  }
   if(gameTimerWinStopped){
     st.textContent = '⏸ ĐÃ DỪNG - CHỜ THẮNG';
     st.style.color = '#ff9a9a';
@@ -5143,7 +5093,7 @@ function updateTimeStorageStatus(){
 }
 
 
-
+// Save game history to localStorage for all modes
 function saveAllModesHistory(resultData){
   try{
     const duration = stopGameTimer();
@@ -7722,7 +7672,7 @@ setTimeout(()=>{
     window.setMode = function(m){
       const r = _origSetMode.apply(this, arguments);
       setTimeout(()=>{
-        try{ if(typeof startGameTimer==='function' && hasAnyMoveOnBoard()){ startGameTimer(); } renderTimeStorageUI(); updateTimeStorageStatus(); }catch(e){}
+        try{ if(typeof startGameTimer==='function'){ startGameTimer(); renderTimeStorageUI(); } }catch(e){}
       }, 150);
       return r;
     };
@@ -7739,97 +7689,6 @@ setTimeout(()=>{
     renderTimeStorageUI();
   }, 600);
 }, 800);
-</script>
-
-
-<script>
-// Patch first move trigger for all modes - ensure timer starts only after first move
-(function(){
-  function patchFirstMove(){
-    try{
-      if(typeof placeLocal==='function' && !placeLocal._patchedFirstMove2){
-        const orig = placeLocal;
-        window.placeLocal = function(r,c,p){
-          const wasEmpty = !hasAnyMoveOnBoard();
-          const res = orig.apply(this, arguments);
-          if(res){
-            if(wasEmpty){
-              // vừa có nước đầu tiên -> bắt đầu đếm
-              setTimeout(()=>{ try{ startGameTimer(); }catch(e){} }, 20);
-            } else {
-              setTimeout(()=>{ try{ ensureTimerOnFirstMove(); }catch(e){} }, 10);
-            }
-          }
-          return res;
-        };
-        try{ placeLocal = window.placeLocal; placeLocal._patchedFirstMove2=true; }catch(e){}
-      }
-      if(typeof onlineTap==='function' && !onlineTap._patchedFirstMove2){
-        const origO = onlineTap;
-        window.onlineTap = function(r,c){
-          const wasEmpty = !hasAnyMoveOnBoard();
-          const res = origO.apply(this, arguments);
-          if(wasEmpty){
-            setTimeout(()=>{ try{ startGameTimer(); }catch(e){} }, 20);
-          } else {
-            setTimeout(()=>{ try{ ensureTimerOnFirstMove(); }catch(e){} }, 10);
-          }
-          return res;
-        };
-        try{ onlineTap = window.onlineTap; onlineTap._patchedFirstMove2=true; }catch(e){}
-      }
-    }catch(e){}
-  }
-  setTimeout(patchFirstMove, 800);
-  setTimeout(patchFirstMove, 2000);
-  
-  // Reset board should force waiting state
-  setTimeout(()=>{
-    if(typeof resetBoardState==='function' && !resetBoardState._patchedWait){
-      const origReset = resetBoardState;
-      window.resetBoardState = function(){
-        const r = origReset.apply(this, arguments);
-        try{
-          gameStartTime=null;
-          currentGameDuration=0;
-          gameTimerBaseDuration=0;
-          gameTimerWinStopped=false;
-          gameTimerPaused=false;
-          if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
-          const big=document.getElementById('timeStorageCurrent');
-          if(big) big.textContent='0:00';
-          updateTimeStorageStatus();
-          renderTimeStorageUI();
-        }catch(e){}
-        return r;
-      };
-      try{ resetBoardState=window.resetBoardState; resetBoardState._patchedWait=true; }catch(e){}
-    }
-  }, 900);
-
-  // Interval safety: if board empty but timer running, stop it
-  setInterval(()=>{
-    try{
-      if(!hasAnyMoveOnBoard()){
-        if(gameTimerInterval){
-          clearInterval(gameTimerInterval);
-          gameTimerInterval=null;
-        }
-        gameStartTime=null;
-        currentGameDuration=0;
-        gameTimerBaseDuration=0;
-        const big=document.getElementById('timeStorageCurrent');
-        if(big && big.textContent!=='0:00') big.textContent='0:00';
-        const st=document.getElementById('timeStorageStatus');
-        if(st && st.textContent!=='⏳ CHỜ NƯỚC ĐI'){
-          st.textContent='⏳ CHỜ NƯỚC ĐI';
-          st.style.color='#ffd4a3';
-          st.style.background='rgba(255,212,163,.12)';
-        }
-      }
-    }catch(e){}
-  }, 1000);
-})();
 </script>
 
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
