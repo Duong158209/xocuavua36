@@ -812,58 +812,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
             <div id="botXScore" style="text-align:center; font-size:.8rem; font-weight:800; color:#6ad4ff; background:rgba(59,124,255,.12); border-radius:6px; padding:4px;">0 thắng</div>
           </div>
 
-      <div id="botVsBotPanel" style="display:none; flex-direction:column; gap:12px; background:linear-gradient(145deg,#0e0c15,#1a1628); border:1.5px solid #ff6b4a40; border-radius:14px; padding:14px; box-shadow:0 0 20px #ff3b3b15; margin-top:10px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:.78rem; letter-spacing:.15em; color:#ff8a6a; font-weight:800;">⚔️ ĐẤU ĐỊA NGỤC - BOT VS BOT</div>
-          <div id="botVsBotStatus" style="font-size:.72rem; color:#ffd4a3; font-weight:700; background:rgba(255,107,74,.15); border:1px solid #ff6b4a30; border-radius:8px; padding:3px 8px;">Sẵn sàng</div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center;">
-          <div style="background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #3b7cff50; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:2px solid #3b7cff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.85rem; color:#6ad4ff;">X</span>
-              <span style="font-weight:800; font-size:.85rem;">Bot X</span>
-            </div>
-            <select id="botXVersion" style="width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700; font-size:.85rem;">
-              <option value="v8">v8 - Cổ điển (1.5s)</option>
-              <option value="v9">v9 - Tấn công (3s)</option>
-              <option value="v10">v10 - Chiến thuật (5s)</option>
-              <option value="v11" selected>v11 - Địa ngục mới (8s)</option>
-            </select>
-            <div id="botXScore" style="text-align:center; font-size:.8rem; font-weight:800; color:#6ad4ff; background:rgba(59,124,255,.12); border-radius:6px; padding:4px;">0 thắng</div>
-          </div>
-          <div style="font-weight:900; font-size:1.1rem; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60;">VS</div>
-          <div style="background:linear-gradient(145deg,#17131f,#1a1526); border:1.5px solid #ff7a7a50; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.85rem; color:#ff9a9a;">O</span>
-              <span style="font-weight:800; font-size:.85rem;">Bot O</span>
-            </div>
-            <select id="botOVersion" style="width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700; font-size:.85rem;">
-              <option value="v8">v8 - Cổ điển (1.5s)</option>
-              <option value="v9" selected>v9 - Tấn công (3s)</option>
-              <option value="v10">v10 - Chiến thuật (5s)</option>
-              <option value="v11">v11 - Địa ngục mới (8s)</option>
-            </select>
-            <div id="botOScore" style="text-align:center; font-size:.8rem; font-weight:800; color:#ff9a9a; background:rgba(255,122,122,.12); border-radius:6px; padding:4px;">0 thắng</div>
-          </div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-          <div class="btn" id="botVsBotStart" style="background:linear-gradient(135deg,#ff5a3a,#a51f4c); border-color:#ff6b4a; color:#fff; font-weight:800; padding:10px;">▶️ Bắt đầu</div>
-          <div class="btn" id="botVsBotPause" style="padding:10px;">⏸️ Tạm dừng</div>
-          <div class="btn" id="botVsBotNew" style="padding:10px;">↻ Ván mới</div>
-        </div>
-        <div style="display:flex; gap:8px; align-items:center; justify-content:space-between;">
-          <div style="display:flex; align-items:center; gap:6px; font-size:.75rem; opacity:.7;">
-            <span>Tốc độ:</span>
-            <select id="botVsBotSpeed" style="padding:4px 6px; border-radius:6px; border:1px solid #4a355e; background:#0e0c15; color:#fff; font-size:.75rem;">
-              <option value="1500">Chậm (1.5s)</option>
-              <option value="800" selected>Vừa (0.8s)</option>
-              <option value="300">Nhanh (0.3s)</option>
-              <option value="50">Siêu tốc (0.05s)</option>
-            </select>
-          </div>
-          <div id="botVsBotMoveCount" style="font-size:.75rem; opacity:.6;">0 nước</div>
-        </div>
-      </div>
+      
 
 
 
@@ -890,6 +839,60 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
             <div id="botOScore" style="text-align:center; font-size:.8rem; font-weight:800; color:#ff9a9a; background:rgba(255,122,122,.12); border-radius:6px; padding:4px;">0 thắng</div>
           </div>
         </div>
+
+      <div id="botVsBotPanel" style="display:none; flex-direction:column; gap:12px; background:linear-gradient(145deg,#0e0c15,#1a1628); border:1.5px solid #ff6b4a40; border-radius:14px; padding:14px; box-shadow:0 0 20px #ff3b3b15; margin-top:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:.78rem; letter-spacing:.15em; color:#ff8a6a; font-weight:800;">⚔️ BOT VS BOT - CHỌN VERSION</div>
+          <div id="botVsBotStatus" style="font-size:.72rem; color:#ffd4a3; font-weight:700; background:rgba(255,107,74,.15); border:1px solid #ff6b4a30; border-radius:8px; padding:4px 10px;">Sẵn sàng</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center;">
+          <div style="background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #3b7cff50; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:2px solid #3b7cff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.85rem; color:#6ad4ff;">X</span>
+              <span style="font-weight:800; font-size:.85rem;">Đi trước - Bot X</span>
+            </div>
+            <select id="botXVersion" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700; font-size:.9rem;">
+              <option value="v8">v8 - Cổ điển (1.5s)</option>
+              <option value="v9">v9 - Tấn công (3s)</option>
+              <option value="v10">v10 - Chiến thuật (5s)</option>
+              <option value="v11" selected>v11 - Địa ngục mới (8s)</option>
+            </select>
+            <div id="botXScore" style="text-align:center; font-size:.85rem; font-weight:800; color:#6ad4ff; background:rgba(59,124,255,.15); border-radius:8px; padding:6px;">0 thắng</div>
+          </div>
+          <div style="font-weight:900; font-size:1.2rem; color:#ffd4a3; text-shadow:0 0 12px #ff5a3a60;">VS</div>
+          <div style="background:linear-gradient(145deg,#17131f,#1a1526); border:1.5px solid #ff7a7a50; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:28px; height:28px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.85rem; color:#ff9a9a;">O</span>
+              <span style="font-weight:800; font-size:.85rem;">Đi sau - Bot O</span>
+            </div>
+            <select id="botOVersion" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700; font-size:.9rem;">
+              <option value="v8">v8 - Cổ điển (1.5s)</option>
+              <option value="v9" selected>v9 - Tấn công (3s)</option>
+              <option value="v10">v10 - Chiến thuật (5s)</option>
+              <option value="v11">v11 - Địa ngục mới (8s)</option>
+            </select>
+            <div id="botOScore" style="text-align:center; font-size:.85rem; font-weight:800; color:#ff9a9a; background:rgba(255,122,122,.15); border-radius:8px; padding:6px;">0 thắng</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+          <div class="btn" id="botVsBotStart" style="background:linear-gradient(135deg,#ff5a3a,#a51f4c); border-color:#ff6b4a; color:#fff; font-weight:800; padding:12px; font-size:.9rem;">▶️ Bắt đầu đấu</div>
+          <div class="btn" id="botVsBotPause" style="padding:12px; font-size:.85rem;">⏸️ Tạm dừng</div>
+          <div class="btn" id="botVsBotNew" style="padding:12px; font-size:.85rem;">↻ Ván mới</div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; background:rgba(0,0,0,.3); border-radius:8px; padding:8px 10px;">
+          <div style="display:flex; align-items:center; gap:8px; font-size:.8rem;">
+            <span style="opacity:.7;">Tốc độ:</span>
+            <select id="botVsBotSpeed" style="padding:6px 10px; border-radius:6px; border:1px solid #4a355e; background:#0e0c15; color:#fff; font-size:.8rem; font-weight:600;">
+              <option value="1500">Chậm (1.5s)</option>
+              <option value="800" selected>Vừa (0.8s)</option>
+              <option value="300">Nhanh (0.3s)</option>
+              <option value="50">Siêu tốc</option>
+            </select>
+          </div>
+          <div id="botVsBotMoveCount" style="font-size:.8rem; font-weight:700; opacity:.8; background:rgba(255,255,255,.08); padding:4px 10px; border-radius:6px;">0 nước</div>
+        </div>
+      </div>
+
         
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
           <div class="btn" id="botVsBotStart" style="background:linear-gradient(135deg,#ff5a3a,#a51f4c); border-color:#ff6b4a; color:#fff; font-weight:800; padding:10px;">▶️ Bắt đầu</div>
@@ -2925,19 +2928,39 @@ setInterval(updateCustomStatus, 600);
     if(botVsBotPanel){
       botVsBotPanel.style.display = isBotVsBot ? 'flex' : 'none';
     }
+    // Chặn bàn cờ khi bot vs bot
+    const boardWrapEl = document.getElementById('boardWrap');
+    if(boardWrapEl){
+      if(isBotVsBot){
+        // Để JS bot vs bot quyết định pointerEvents khi đang chạy
+        if(!window.botVsBotRunning){
+          boardWrapEl.style.pointerEvents = 'auto';
+        }
+      } else {
+        boardWrapEl.style.pointerEvents = 'auto';
+        boardWrapEl.style.opacity = '1';
+      }
+    }
 
-    // Cập nhật nhãn thắng
+    // Cập nhật nhãn thắng - FIX cho Bot vs Bot
     if(!labelX || !labelO) return;
-    if(isAi){
+    if(isBotVsBot){
+      const xVer = document.getElementById('botXVersion')?.value || 'v11';
+      const oVer = document.getElementById('botOVersion')?.value || 'v9';
+      labelX.textContent = `BOT ${xVer.toUpperCase()} (X)`;
+      labelO.textContent = `BOT ${oVer.toUpperCase()} (O)`;
+      // Đảm bảo pill hiển thị đúng
+      if(vsBadge){
+        vsBadge.textContent = 'VS';
+      }
+    } else if(isAi){
       // Khi đấu với máy: X là bạn, O là HELL/BOT
       labelX.textContent = 'BẠN (X)';
       if(isHell){
-        labelO.textContent = 'BOT (O)';
+        labelO.textContent = 'HELL (O)';
       } else {
         labelO.textContent = 'BOT (O)';
       }
-      // Nếu muốn phân biệt Hell: đổi thành HELL khi hell active
-      if(isHell) labelO.textContent = 'HELL (O)';
     } else {
       // 2 người hoặc online: chỉ hiện X và O thôi, không hiện Bạn/Hell
       labelX.textContent = 'X';
