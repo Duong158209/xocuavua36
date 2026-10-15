@@ -881,6 +881,29 @@ input.field,#chatInput{
 }
 </style>
 
+
+<style>
+#boardWrap #focusCurrentBtn{
+  position:absolute; left:10px; bottom:10px; z-index:15;
+  background:linear-gradient(135deg,#1a1526,#231b2f);
+  border:1.5px solid #ffd4a340; border-radius:12px;
+  padding:8px 12px; font-size:.78rem; font-weight:800; color:#ffd4a3;
+  cursor:pointer; display:flex; align-items:center; gap:6px;
+  box-shadow:0 4px 16px #0006, 0 0 0 1px #ffd4a320;
+  transition:.18s; user-select:none;
+}
+#boardWrap #focusCurrentBtn:hover{ transform:scale(1.05); border-color:#ffd4a3; box-shadow:0 6px 20px #0008, 0 0 12px #ff8a3a40; }
+#boardWrap #focusCurrentBtn:active{ transform:scale(.96); }
+#boardWrap #boardZoomControls{ position:absolute; top:10px; right:10px; z-index:15; display:flex; flex-direction:column; gap:8px; }
+#boardZoomControls .zBtn{
+  width:38px; height:38px; border-radius:12px; background:rgba(20,14,28,.85); backdrop-filter:blur(8px);
+  border:1.5px solid #4a355e; color:#ffd4a3; font-weight:900; font-size:1.1rem;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  box-shadow:0 4px 12px #0005; transition:.15s;
+}
+#boardZoomControls .zBtn:hover{ background:#2a1f3a; border-color:#ffd4a3; transform:scale(1.05); }
+</style>
+
 </head>
 <body>
 
@@ -1063,7 +1086,14 @@ input.field,#chatInput{
     <div id="warnBar" class="hidden"></div>
     <div id="hellMem" class="hidden"></div>
 
-    <div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas></div>
+    <div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas>
+    <div id="boardZoomControls">
+      <div class="zBtn" id="boardZoomIn" title="Phóng to">+</div>
+      <div class="zBtn" id="boardZoomOut" title="Thu nhỏ">−</div>
+      <div class="zBtn" id="boardZoomReset" title="1:1" style="font-size:.75rem;">1:1</div>
+    </div>
+    <div id="focusCurrentBtn" title="Dịch chuyển đến nước hiện tại">🎯 Nước hiện tại</div>
+</div>
     <div style="font-size:.7rem; letter-spacing:.12em; opacity:.45; padding:0 4px; line-height:1.4;">HỆ: 64×64 • CHUẨN GOMOKU • 5 LIÊN TIẾP THẮNG<br>Touch-friendly</div>
 
     <!-- ĐIỀU KHIỂN / panel theo chế độ -->
@@ -5152,15 +5182,31 @@ function fitBoard(){
   const W=wrap.clientWidth, H=wrap.clientHeight;
   if(W<10||H<10) return;
   if(SIZE>=64){
-    // 64x64 không thể nhét hết màn hình mà vẫn nhìn rõ, để ô 16-20px và cho kéo/pinch
-    const ideal = Math.floor(Math.min(W,H)*0.92 / 20); // hiển thị ~20 ô lúc đầu cho dễ nhìn
+    const ideal = Math.floor(Math.min(W,H)*0.92 / 20);
     cellSize = Math.max(10, Math.min(22, ideal || 18));
   } else {
     const target = Math.min(W,H)*0.96;
     const ideal = Math.floor(target / SIZE);
     cellSize = Math.max(18, Math.min(48, ideal));
+    // Đảm bảo không có khoảng trống: cellSize tối thiểu phải lấp đầy khung
+    const minToFillW = Math.ceil(W / SIZE);
+    const minToFillH = Math.ceil(H / SIZE);
+    const minFill = Math.max(minToFillW, minToFillH);
+    if(SIZE===15 && cellSize < minFill){
+      cellSize = minFill;
+    }
   }
 }
+
+function getMinCellSizeToFill(){
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+  const minW = Math.ceil(W / SIZE);
+  const minH = Math.ceil(H / SIZE);
+  // với 15x15 luôn phải lấp đầy, với 64x64 cho phép nhỏ hơn vì phải kéo
+  if(SIZE===15) return Math.max(minW, minH);
+  return 10;
+}
+
 function resize(){
   cv.width=wrap.clientWidth*devicePixelRatio;
   cv.height=wrap.clientHeight*devicePixelRatio;
@@ -5174,10 +5220,10 @@ function resize(){
 
 new ResizeObserver(resize).observe(wrap);
 function centerBoard(){
-  offX=(wrap.clientWidth - SIZE*cellSize)/2;
-  offY=(wrap.clientHeight - SIZE*cellSize)/2;
-  // đảm bảo không âm quá khi fit
+  offX=Math.round((wrap.clientWidth - SIZE*cellSize)/2);
+  offY=Math.round((wrap.clientHeight - SIZE*cellSize)/2);
 }
+
 function draw(){
   const dpr=devicePixelRatio;
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -5274,58 +5320,56 @@ let dragging=false,startX=0,startY=0,moved=false,startOffX=0,startOffY=0;
 function clampOffsets(){
   const W = wrap.clientWidth, H = wrap.clientHeight;
   const BW = SIZE * cellSize, BH = SIZE * cellSize;
-  // X
-  let minX, maxX;
+  // Không bao giờ để lộ khoảng trống quá ô cuối: giới hạn chặt chẽ
   if(BW <= W){
-    // board smaller than viewport -> center with small padding, not allow empty beyond
-    minX = 0;
-    maxX = W - BW;
-    // if we want centered, set both to (W-BW)/2? but allow dragging within that range
-    // For small board, clamp to stay inside: if offX < min, offX=min; if >max, max
-    // If board much smaller, keep it centered by default
-    if(BW < W*0.85){
-      const centerX = (W - BW)/2;
-      // allow slight movement but not beyond 20px padding
-      const pad = 20;
-      minX = Math.min(centerX - pad, 0);
-      maxX = Math.max(centerX + pad, W - BW);
-      // Actually if board small, keep near center
-      if(offX < minX) offX = minX;
-      if(offX > maxX) offX = maxX;
-    } else {
-      if(offX < minX) offX = minX;
-      if(offX > maxX) offX = maxX;
-    }
+    // Bàn nhỏ hơn khung -> luôn căn giữa chính xác, không cho kéo lộ trống
+    offX = Math.round((W - BW)/2);
   } else {
-    // board larger than viewport -> don't show empty beyond edges
-    minX = W - BW; // negative
-    maxX = 0;
+    // Bàn lớn hơn khung -> chỉ cho kéo trong phạm vi 0..W-BW, không vượt qua ô cuối
+    const minX = W - BW;
+    const maxX = 0;
     if(offX < minX) offX = minX;
     if(offX > maxX) offX = maxX;
   }
-  // Y
-  let minY, maxY;
   if(BH <= H){
-    minY = 0;
-    maxY = H - BH;
-    if(BH < H*0.85){
-      const centerY = (H - BH)/2;
-      const pad = 20;
-      const low = Math.min(centerY - pad, 0);
-      const high = Math.max(centerY + pad, H - BH);
-      if(offY < low) offY = low;
-      if(offY > high) offY = high;
-    } else {
-      if(offY < minY) offY = minY;
-      if(offY > maxY) offY = maxY;
-    }
+    offY = Math.round((H - BH)/2);
   } else {
-    minY = H - BH;
-    maxY = 0;
+    const minY = H - BH;
+    const maxY = 0;
     if(offY < minY) offY = minY;
     if(offY > maxY) offY = maxY;
   }
 }
+
+function focusOnCurrentMove(){
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  let targetR, targetC;
+  if(typeof lastMove!=='undefined' && lastMove && lastMove.r!=null){
+    targetR = lastMove.r; targetC = lastMove.c;
+  } else if(typeof moveHistory!=='undefined' && moveHistory.length){
+    const last = moveHistory[moveHistory.length-1];
+    targetR = last.r; targetC = last.c;
+  } else if(typeof moves!=='undefined' && moves>0){
+    // bot vs bot: try to get last from board scan? fallback center
+    targetR = Math.floor(SIZE/2); targetC = Math.floor(SIZE/2);
+  } else {
+    // chưa có nước nào -> về giữa bàn
+    targetR = Math.floor(SIZE/2); targetC = Math.floor(SIZE/2);
+  }
+  // Tính offset để đưa ô target vào giữa màn hình
+  const desiredOffX = Math.round(W/2 - (targetC * cellSize + cellSize/2));
+  const desiredOffY = Math.round(H/2 - (targetR * cellSize + cellSize/2));
+  offX = desiredOffX;
+  offY = desiredOffY;
+  clampOffsets();
+  draw();
+  // hiệu ứng nhấp nháy nhẹ để người dùng biết đã focus
+  try{
+    wrap.animate([{transform:'scale(0.98)'},{transform:'scale(1)'}],{duration:180, easing:'ease-out'});
+  }catch(e){}
+}
+window.focusOnCurrentMove = focusOnCurrentMove;
+
 
 const MIN_CELL=16, MAX_CELL=56;
 const ptrs=new Map();
@@ -5392,7 +5436,7 @@ cv.addEventListener('wheel', e=>{
   clampOffsets();
   draw();
 },{passive:false});
-document.getElementById('zoomOut').onclick=()=>{cellSize=Math.max(16,cellSize-6); clampOffsets(); draw();};
+document.getElementById('zoomOut').onclick=()=>{ const minF = (typeof getMinCellSizeToFill==='function'?getMinCellSizeToFill():16); cellSize=Math.max(minF,cellSize-6); clampOffsets(); draw();};
 document.getElementById('zoomIn').onclick=()=>{cellSize=Math.min(70,cellSize+6); clampOffsets(); draw();};
 
 function dirs(){return [[0,1],[1,0],[1,1],[1,-1]];}
@@ -7679,6 +7723,85 @@ setTimeout(()=>{
     renderTimeStorageUI();
   }, 600);
 }, 800);
+</script>
+
+
+<script>
+(function(){
+  function wireBoardZoomFix(){
+    const wrap = document.getElementById('boardWrap');
+    const btnIn = document.getElementById('boardZoomIn');
+    const btnOut = document.getElementById('boardZoomOut');
+    const btnReset = document.getElementById('boardZoomReset');
+    const btnFocus = document.getElementById('focusCurrentBtn');
+    if(!wrap) return;
+    // đồng bộ với hàm cũ zoomIn/zoomOut nếu có
+    if(btnIn){
+      btnIn.onclick = ()=>{
+        try{
+          cellSize = Math.min(70, cellSize+6);
+          if(typeof clampOffsets==='function') clampOffsets();
+          if(typeof draw==='function') draw();
+        }catch(e){}
+      };
+    }
+    if(btnOut){
+      btnOut.onclick = ()=>{
+        try{
+          const minF = (typeof getMinCellSizeToFill==='function'?getMinCellSizeToFill():16);
+          cellSize = Math.max(minF, cellSize-6);
+          if(typeof clampOffsets==='function') clampOffsets();
+          if(typeof draw==='function') draw();
+        }catch(e){}
+      };
+    }
+    if(btnReset){
+      btnReset.onclick = ()=>{
+        try{
+          if(typeof fitBoard==='function') fitBoard();
+          if(typeof centerBoard==='function') centerBoard();
+          if(typeof clampOffsets==='function') clampOffsets();
+          if(typeof draw==='function') draw();
+        }catch(e){}
+      };
+    }
+    if(btnFocus){
+      btnFocus.onclick = ()=>{
+        try{ if(typeof focusOnCurrentMove==='function') focusOnCurrentMove(); }catch(e){}
+      };
+    }
+    // ẩn nút zoom cũ botVsBotZoomControls đã bị tạo trước đó
+    const oldCtr = document.getElementById('botVsBotZoomControls');
+    if(oldCtr) oldCtr.style.display='none';
+  }
+  setTimeout(wireBoardZoomFix, 800);
+  setTimeout(wireBoardZoomFix, 2000);
+
+  // Sửa luôn hệ thống zoom bằng scale transform của bot vs bot: vô hiệu hoá transform để dùng chung cellSize/offX
+  // Patch apply() cũ
+  setTimeout(()=>{
+    try{
+      const wrap = document.getElementById('boardWrap');
+      const cv = document.getElementById('cv');
+      if(wrap && cv){
+        cv.style.transform='none';
+        cv.style.transformOrigin='center center';
+      }
+    }catch(e){}
+  }, 1000);
+
+  // Tự động focus vào nước mới đánh ở mọi chế độ
+  let lastFocusMoveCount = 0;
+  setInterval(()=>{
+    try{
+      if(typeof moveHistory!=='undefined' && moveHistory.length!==lastFocusMoveCount){
+        // nếu người dùng không đang kéo thì auto focus nhẹ?
+        // Không auto để tránh làm phiền, chỉ lưu count
+        lastFocusMoveCount = moveHistory.length;
+      }
+    }catch(e){}
+  }, 1000);
+})();
 </script>
 
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
