@@ -891,7 +891,15 @@ self.addEventListener('fetch', e=>{
     <div id="warnBar" class="hidden"></div>
     <div id="hellMem" class="hidden"></div>
 
-    <div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas></div>
+    
+<!-- FIX: Hiển thị bộ đếm giờ cho TẤT CẢ chế độ -->
+<div id="gameTimeBar" style="display:flex; align-items:center; justify-content:center; gap:12px; background:linear-gradient(135deg,rgba(255,107,74,.12),rgba(165,31,76,.12)); border:1px solid #ff6b4a40; border-radius:12px; padding:8px 16px; margin:8px 0; font-weight:700;">
+  <span style="font-size:.75rem; opacity:.7; letter-spacing:.08em;">THỜI GIAN VÁN ĐẤU</span>
+  <span id="gameTimeDisplay" style="font-size:1rem; font-weight:800; color:#ffd4a3; background:rgba(0,0,0,.3); padding:4px 12px; border-radius:8px; min-width:60px; text-align:center;">⏱ 0:00</span>
+  <span style="font-size:.7rem; opacity:.5;">(bắt đầu khi đánh nước đầu tiên)</span>
+</div>
+
+<div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas></div>
     <div style="font-size:.7rem; letter-spacing:.12em; opacity:.45; padding:0 4px; line-height:1.4;">HỆ: 64×64 • CHUẨN GOMOKU • 5 LIÊN TIẾP THẮNG<br>Touch-friendly</div>
 
     <!-- ĐIỀU KHIỂN / panel theo chế độ -->
@@ -1007,7 +1015,7 @@ self.addEventListener('fetch', e=>{
     <div class="ftab" id="tabReq">Lời mời<span class="dot hidden" id="reqDot"></span></div>
     <div class="ftab" id="tabAdd">Thêm bạn</div>
   </div>
-  <div id="friendsBody"></div>
+  <div style="padding:8px; text-align:center;"><div class="btn small" id="refreshPresenceBtn" style="font-size:.75rem; padding:6px 12px;">🔄 Làm mới trạng thái online</div></div><div id="friendsBody"></div>
 </div>
 
 <!-- HISTORY -->
@@ -4620,14 +4628,27 @@ function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||
 let presenceMap = {};
 let unsubPresence = null;
 function startPresenceListener(){
-  if(unsubPresence) unsubPresence();
+  if(unsubPresence) try{unsubPresence();}catch(e){}
   unsubPresence = db.collection('presence').onSnapshot(snap=>{
     presenceMap = {};
     snap.forEach(doc=>{
-      const d = doc.data();
-      presenceMap[d.uid] = d;
+      try{
+        const d = doc.data();
+        if(d && d.uid) presenceMap[d.uid] = d;
+      }catch(e){}
     });
     if(friendTab==='list') renderFriendsBody();
+    // Cập nhật header online count ngay cả khi không ở tab list
+    try{
+      const body=document.getElementById('friendsBody');
+      if(body && friendTab==='list'){
+        // renderFriendsBody đã làm, nhưng nếu đang ở tab khác thì vẫn cần update
+      }
+    }catch(e){}
+  }, err=>{
+    console.error('presence listener error', err);
+    // Retry sau 3s
+    setTimeout(()=>{ startPresenceListener(); }, 3000);
   });
 }
 function stopPresenceListener(){
@@ -4639,11 +4660,22 @@ function isUserOnline(uid){
   if(!p) return false;
   if(!p.online) return false;
   const now = Date.now();
-  const last = p.lastSeenMs || 0;
-  // Online nếu lastSeen trong 2 phút
-  return (now - last) < 120000;
+  // Ưu tiên lastSeenMs (client time)
+  let last = p.lastSeenMs || 0;
+  // Nếu không có lastSeenMs, thử lấy từ Firestore Timestamp
+  if(!last && p.lastSeen && p.lastSeen.toMillis){
+    try{ last = p.lastSeen.toMillis(); }catch(e){}
+  }
+  if(!last && p.lastSeen && p.lastSeen.seconds){
+    last = p.lastSeen.seconds * 1000;
+  }
+  // Nếu vẫn không có, nhưng online=true thì cho online 5 phút
+  if(!last) return true;
+  // Online nếu lastSeen trong 5 phút (tăng từ 2 phút để tránh lag mạng)
+  return (now - last) < 300000;
 }
 
+document.addEventListener('click', (e)=>{ if(e.target.id==='refreshPresenceBtn'){ const btn=e.target; btn.textContent='Đang làm mới...'; if(window.presenceRef){ window.presenceRef.set({online:true, lastSeen: firebase.firestore.FieldValue.serverTimestamp(), lastSeenMs: Date.now()}, {merge:true}).then(()=>{ setTimeout(()=>{ btn.textContent='🔄 Làm mới trạng thái online'; renderFriendsBody(); }, 500); }); } else { renderFriendsBody(); btn.textContent='🔄 Làm mới trạng thái online'; } } });
 function renderFriendsBody(){
   const body=document.getElementById('friendsBody');
   if(friendTab==='list'){
@@ -4840,7 +4872,14 @@ function stopGameTimer(){
   if(gameStartTime){
     currentGameDuration = Math.floor((Date.now() - gameStartTime)/1000);
   }
+  // Giữ lại hiển thị thời gian cuối cùng, không reset về 0
   return currentGameDuration;
+}
+function resetGameTimerDisplay(){
+  if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
+  gameStartTime=null; currentGameDuration=0;
+  const el=document.getElementById('gameTimeDisplay'); if(el) el.textContent='⏱ 0:00';
+  const bvb=document.getElementById('bvbGameTime'); if(bvb) bvb.textContent='0:00';
 }
 
 function formatDuration(sec){
@@ -5293,6 +5332,10 @@ function placeLocal(r,c,p){
   draw();
   const full = !win && isFull();
   moveHistory.push({r,c,p,endedWin:win?p:0,endedDraw:full});
+  // FIX: Bắt đầu tính giờ khi có nước đi đầu tiên trên bàn cờ (bất kỳ chế độ nào)
+  if(moveHistory.length===1){
+    startGameTimer();
+  }
   if(win){endGame(p,win); return true;}
   if(full){endGame(0); return true;}
   turn = p===1?2:1;
@@ -5568,8 +5611,9 @@ function hellCancel(){
 const subRow=document.getElementById('subRow');
 function resetBoardState(){hellCancel(); board=new Uint8Array(SIZE*SIZE); lastMove=null; turn=1; gameOver=false; winCells=[]; moveHistory=[]; setStatus(); draw();}
 function setMode(m){
-  // Bắt đầu tính thời gian ván mới khi đổi chế độ
-  setTimeout(()=>{ startGameTimer(); }, 100);
+  // FIX: Không tự tính giờ khi đổi chế độ, chỉ tính khi có nước đi đầu tiên
+  resetGameTimerDisplay();
+  const bvb=document.getElementById('bvbGameTime'); if(bvb) bvb.textContent='0:00';
 
   if(m==='ai' && !isFeatureOn('mode_ai')){ statusEl.textContent='Chơi với máy đang bảo trì.'; return; }
   if(m==='local' && !isFeatureOn('mode_local')){ statusEl.textContent='Chế độ 2 người đang bảo trì.'; return; }
@@ -6644,7 +6688,8 @@ document.addEventListener('click', (e)=>{
   
   function resetBoardBotVsBot(){
     window.botVsBotGameId = (window.botVsBotGameId||0)+1;
-    startGameTimer();
+    // Không start timer ở đây, chỉ start khi có nước đi đầu tiên
+    stopGameTimer(); gameStartTime=null; currentGameDuration=0;
     window._lastCountedGameId = -1;
     try{ Object.keys(window.hellWorkers||{}).forEach(k=>{ if(k.includes('_X_')||k.includes('_O_')){ try{window.hellWorkers[k].worker.terminate();}catch(_){} delete window.hellWorkers[k]; } }); }catch(_){}
 
@@ -6858,6 +6903,8 @@ document.addEventListener('click', (e)=>{
             moves++;
             const mc = document.getElementById('botVsBotMoveCount');
             if(mc) mc.textContent = moves + ' nước';
+            // Bắt đầu tính giờ khi bot đánh nước đầu tiên
+            try{ if(typeof moveHistory!=='undefined' && moveHistory.length===1) startGameTimer(); if(typeof moves!=='undefined' && moves===1) startGameTimer(); }catch(e){}
             if(!prevOver && gameOver){
               lastWinner = curTurn;
               onGameOver(curTurn);
@@ -6870,6 +6917,8 @@ document.addEventListener('click', (e)=>{
         
         if(window.botVsBotRunning && !window.botVsBotPaused){
           const speed = parseInt(document.getElementById('botVsBotSpeed')?.value || '800');
+          // FIX: Bắt đầu tính giờ khi bot vs bot có nước đầu tiên
+          try{ if((typeof moves!=='undefined' && moves===0) || (typeof moveHistory!=='undefined' && moveHistory.length===0)) { startGameTimer(); } }catch(e){}
           timer = setTimeout(doBotMove, speed);
         }
       }, curTurn, hellPen, hellTime, hellVer);
