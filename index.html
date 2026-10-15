@@ -705,10 +705,11 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
           <div style="background:#1f162e; border:1.5px solid #3b7cff60; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; align-items:center; gap:6px;"><span style="width:24px; height:24px; border-radius:50%; background:#1a1526; border:2px solid #3b7cff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.75rem; color:#6ad4ff;">X</span><span style="font-weight:800; font-size:.8rem;">Đi trước</span></div>
             <select id="botXVersion" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700;">
-              <option value="v8">v8 - Cổ điển - Nguyên bản 1.5s (1.5s)</option>
-              <option value="v9">v9 - Tấn công - Nguyên bản 3s (3s)</option>
-              <option value="v10">v10 - Chiến thuật - Nguyên bản 5s (5s)</option>
-              <option value="v11" selected>v11 - Địa ngục -  (8s)</option>
+              <option value="v8">v8 - Cổ điển - 1.5s</option>
+              <option value="v9">v9 - Tấn công - 3s</option>
+              <option value="v10">v10 - Chiến thuật - 5s</option>
+              <option value="v11">v11 - Địa ngục cũ - 8s</option>
+              <option value="v12" selected>v12 - Địa ngục mới - 8s - Mạnh nhất</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botXScore" style="font-weight:800; color:#6ad4ff;">0</span></div>
           </div>
@@ -716,10 +717,11 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
           <div style="background:#17131f; border:1.5px solid #ff7a7a60; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; align-items:center; gap:6px;"><span style="width:24px; height:24px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.75rem; color:#ff9a9a;">O</span><span style="font-weight:800; font-size:.8rem;">Đi sau</span></div>
             <select id="botOVersion" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700;">
-              <option value="v8">v8 - Cổ điển - Nguyên bản 1.5s (1.5s)</option>
-              <option value="v9" selected>v9 - Tấn công - Nguyên bản 3s (3s)</option>
-              <option value="v10">v10 - Chiến thuật - Nguyên bản 5s (5s)</option>
-              <option value="v11">v11 - Địa ngục -  (8s)</option>
+              <option value="v8">v8 - Cổ điển - 1.5s</option>
+              <option value="v9" selected>v9 - Tấn công - 3s</option>
+              <option value="v10">v10 - Chiến thuật - 5s</option>
+              <option value="v11">v11 - Địa ngục cũ - 8s</option>
+              <option value="v12">v12 - Địa ngục mới - 8s - Mạnh nhất</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botOScore" style="font-weight:800; color:#ff9a9a;">0</span></div>
           </div>
@@ -4761,7 +4763,7 @@ setInterval(updateCustomStatus, 600);
     // Cập nhật nhãn thắng - FIX cho Bot vs Bot
     if(!labelX || !labelO) return;
     if(isBotVsBot){
-      const xVer = document.getElementById('botXVersion')?.value || 'v11';
+      const xVer = document.getElementById('botXVersion')?.value || 'v12';
       const oVer = document.getElementById('botOVersion')?.value || 'v9';
       labelX.textContent = `BOT ${xVer.toUpperCase()} (X)`;
       labelO.textContent = `BOT ${oVer.toUpperCase()} (O)`;
@@ -5318,7 +5320,7 @@ document.addEventListener('click', (e)=>{
     const labelX = document.getElementById('labelX');
     const labelO = document.getElementById('labelO');
     if(isBot && labelX && labelO){
-      const xv = document.getElementById('botXVersion')?.value || 'v11';
+      const xv = document.getElementById('botXVersion')?.value || 'v12';
       const ov = document.getElementById('botOVersion')?.value || 'v9';
       labelX.textContent = `BOT ${xv.toUpperCase()} (X)`;
       labelO.textContent = `BOT ${ov.toUpperCase()} (O)`;
@@ -5383,7 +5385,7 @@ document.addEventListener('click', (e)=>{
     const statusEl = document.getElementById('botVsBotStatus');
     if(winner===1){
       botXWins++;
-      const xv = document.getElementById('botXVersion')?.value || 'v11';
+      const xv = document.getElementById('botXVersion')?.value || 'v12';
       if(statusEl) statusEl.textContent = `BOT X ${xv.toUpperCase()} THẮNG! ${moves} nước`;
       lastWinner = 1;
     } else if(winner===2){
