@@ -18,7 +18,6 @@ const ready = HellModule().then(m => {
     if (M._hell_set_seed) {
       M._hell_set_seed(mySeed);
     }
-    // Nếu có hàm set random, gọi luôn
     if (M._hell_set_random) {
       M._hell_set_random(mySeed);
     }
@@ -39,15 +38,13 @@ onmessage = async (e) => {
     const S = d.size, N = S * S;
     const board = new Uint8Array(d.b);
 
-    // FIX 1: Thêm nhiễu nhỏ vào thời gian suy nghĩ để 2 bot cùng engine không tính y hệt
-    // v2.0 và v13 sẽ có time khác nhau 50-150ms ngẫu nhiên
+    // FIX 1: Thêm nhiễu nhỏ vào thời gian để 2 bot cùng engine không tính y hệt
     let timeWithNoise = (d.t || 8000);
-    // Nếu là bot vs bot, thêm nhiễu dựa trên botId
     if (d.botId) {
       let hash = 0;
       for (let i = 0; i < d.botId.length; i++) hash = (hash * 31 + d.botId.charCodeAt(i)) | 0;
-      timeWithNoise += (hash % 200) - 100; // -100 đến +100ms
-      timeWithNoise += Math.floor((Math.random() - 0.5) * 100); // thêm random
+      timeWithNoise += (hash % 200) - 100;
+      timeWithNoise += Math.floor((Math.random() - 0.5) * 100);
       if (timeWithNoise < 500) timeWithNoise = 500;
     } else {
       timeWithNoise += Math.floor((Math.random() - 0.5) * 80);
@@ -60,9 +57,9 @@ onmessage = async (e) => {
       const base = M._hell_pen_ptr() >> 1, H = heap16();
       for (let i = 0; i < N; i++) {
         let v = d.pen[i] | 0;
-        // FIX 2: Thêm nhiễu nhỏ vào pen để mỗi bot nhớ khác nhau, không trùng
+        // FIX 2: Thêm nhiễu nhỏ vào pen để mỗi bot nhớ khác nhau
         if (d.botId && Math.random() < 0.1) {
-          v = Math.floor(v * (0.9 + Math.random()*0.2)); // nhiễu 10%
+          v = Math.floor(v * (0.9 + Math.random()*0.2));
         }
         H[base + i] = v < 0? 0 : (v > 65535? 65535 : v);
       }
@@ -72,11 +69,9 @@ onmessage = async (e) => {
     // Gọi engine C++ 2.0
     let m = M._hell_think(S, timeWithNoise, usePen);
 
-    // FIX 3: 15% ván đầu ( < 8 nước ) sẽ chọn nước ngẫu nhiên trong top 3 gần center để đa dạng khai cuộc
-    // Tránh trường hợp v2.0 vs v13 lúc nào cũng đánh y hệt nhau từ nước đầu
+    // FIX 3: 25% ván đầu (<6 nước) random trong vùng center để khai cuộc khác nhau
     const stoneCount = board.reduce((c, v) => c + (v!== 0? 1 : 0), 0);
     if (stoneCount < 6 && Math.random() < 0.25) {
-      // Tìm các ô trống gần center
       const center = Math.floor(S/2);
       const candidates = [];
       for (let r = center - 2; r <= center + 2; r++) {
@@ -87,7 +82,6 @@ onmessage = async (e) => {
         }
       }
       if (candidates.length > 0) {
-        // 25% chọn ngẫu nhiên trong vùng center để khai cuộc khác nhau
         m = candidates[Math.floor(Math.random() * candidates.length)];
       }
     }
