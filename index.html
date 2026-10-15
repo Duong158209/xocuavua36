@@ -5366,24 +5366,16 @@ function hellCancel(){
 // Nếu hell.js chưa được build / nạp lỗi thì tự động dùng lại engine JS v1.8.
 function hellThinkWasm(cb,bot,pen,timeLimit,verRaw){
   const id=++hellJob;
-  const fallback=()=>{ if(id!==hellJob) return; window.hellWasmBroken=true; hellThink(cb,bot,pen,timeLimit,'v2.0'); };
+  const fallback=()=>{ if(id!==hellJob) return; window.hellWasmBroken=true; hellThink(cb,bot,pen,timeLimit,'v1.8'); };
   try{
     if(!window.hellWorkers) window.hellWorkers={};
     const isBvb = window.botVsBotRunning || document.getElementById('modeBotVsBot')?.classList.contains('active');
-    // FIX: BOT VS BOT thì mỗi bên 1 worker riêng, không dùng chung TT -> không đánh y hệt nhau
-    // Key = version + bên X/O + gameId + random để tách não hoàn toàn
     const workerKey = isBvb ? (verRaw + '_' + (bot===1?'X':'O') + '_' + (window.botVsBotGameId||0) + '_' + Math.random().toString(36).slice(2,5)) : verRaw;
     let rec=window.hellWorkers[workerKey];
     if(!rec){
-      // Dùng worker mới đã fix trùng nước
-      const workerFile = 'hell-worker-v2-fixed.js';
       let w;
-      try{
-        w=new Worker(workerFile);
-      }catch(_){
-        w=new Worker('hell-worker.js');
-      }
-      rec={worker:w,cur:null, temp: isBvb};
+      try{ w=new Worker('hell-worker.js'); }catch(_){ w=new Worker('hell-worker.js'); }
+      rec={worker:w,cur:null,temp:isBvb};
       w.onerror=()=>{ try{w.terminate();}catch(_){} if(window.hellWorkers[workerKey]===rec) delete window.hellWorkers[workerKey]; if(rec.cur) rec.cur.fb(); };
       w.onmessage=e=>{
         const d=e.data, cur=rec.cur;
@@ -5393,7 +5385,6 @@ function hellThinkWasm(cb,bot,pen,timeLimit,verRaw){
         window.hellLastSearch=d.stats; cb(d.m);
       };
       window.hellWorkers[workerKey]=rec;
-      // Nếu là bot vs bot, tự dọn worker cũ sau 30s để không rò rỉ bộ nhớ
       if(isBvb){
         setTimeout(()=>{ try{ if(window.hellWorkers[workerKey]===rec){ rec.worker.terminate(); delete window.hellWorkers[workerKey]; } }catch(_){} }, 30000);
       }
@@ -5401,15 +5392,15 @@ function hellThinkWasm(cb,bot,pen,timeLimit,verRaw){
     rec.cur={id,fb:fallback};
     hellWorker=rec.worker;
     const snap=bot===1?board.map(v=>v?3-v:0):board.slice();
-    rec.worker.postMessage({id,b:snap.buffer,size:SIZE,pen:pen,t:timeLimit,botId:verRaw+'_'+(bot===1?'X':'O'),gameId:window.botVsBotGameId||0en||null,t:timeLimit||8000},[snap.buffer]);
+    rec.worker.postMessage({id,b:snap.buffer,size:SIZE,pen:pen||null,t:timeLimit||8000,botId:verRaw+'_'+(bot===1?'X':'O'),gameId:window.botVsBotGameId||0},[snap.buffer]);
   }catch(err){ console.error('hellThinkWasm error',err); fallback(); }
 }
 function hellThink(cb,bot,pen,timeLimit,version){
-  const verRaw = version || (window.hellWasmBroken ? 'v2.0' : 'v2.0');
+  const verRaw = version || (window.hellWasmBroken ? 'v1.8' : 'v2.0');
   if(verRaw.split('_')[0].indexOf('v2')===0) return hellThinkWasm(cb,bot,pen,timeLimit,verRaw);
   const id=++hellJob;
   const ver = verRaw.split('_')[0];
-  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v2.0'||ver==='v1_8'||ver==='v1.8o') ? 'hellSrcV1_8' : 'hellSrcV1_8';
+  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v1.8'||ver==='v1_8'||ver==='v1.8o') ? 'hellSrcV1_8' : 'hellSrcV1_8';
   const workerKey = verRaw;
   try{
     if(!window.hellWorkers) window.hellWorkers = {};
@@ -6490,7 +6481,7 @@ document.addEventListener('click', (e)=>{
     v11: { t: 8000, name: 'v11 - Kết hợp thông minh - 8s', info: 'Engine kết hợp v9+v10, ATT 20,600,6k,50k,1.5M DEF 600,6k,50k,1.5M TT 2M', isHell: true },
     v12: { t: 8500, name: 'v12 - Out trình - 8.5s - Mạnh nhất', info: 'Engine out trình, ATT 150,8k,80k,800k,20M DEF 8k,80k,800k,40M TT 8M VCF 8M K=96', isHell: true },
     v13: { t: 8500, name: 'v13 - Phòng thủ x5.5 - 8.5s', info: 'v12 + ba sống thật + DEF x5.5', isHell: true },
-    'v2.0': { t: 12000, name: 'v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s', info: 'MUST-BLOCK open-3, không hăng công quên chặn, search sâu hơn, DEF ×7.5', isHell: true },
+    'v1.8': { t: 12000, name: 'v1.8 - Hell mạnh hơn v13 (công+thủ) - 12s', info: 'MUST-BLOCK open-3, không hăng công quên chặn, search sâu hơn, DEF ×7.5', isHell: true },
     'v2.0': { t: 8000, name: 'v2.0 - C++ WASM - 8s', info: 'Engine C++ biên dịch WebAssembly: alpha-beta + VCF + TT, nhanh hơn JS nhiều lần', isHell: true }
   };
   
@@ -6530,7 +6521,6 @@ document.addEventListener('click', (e)=>{
   
   function resetBoardBotVsBot(){
     window.botVsBotGameId = (window.botVsBotGameId||0)+1;
-    // Xóa hết worker BOT VS BOT cũ để tạo mới hoàn toàn
     try{ Object.keys(window.hellWorkers||{}).forEach(k=>{ if(k.includes('_X_')||k.includes('_O_')){ try{window.hellWorkers[k].worker.terminate();}catch(_){} delete window.hellWorkers[k]; } }); }catch(_){}
 
     try{
@@ -6683,14 +6673,14 @@ document.addEventListener('click', (e)=>{
     let hellPen = null, hellTime = cfg.t, hellVer = ver;
     if(isHellBot){
       hellTime = undefined;
-      if(ver==='v2.0' || ver==='v1_8') hellVer = 'v2.0';
+      if(ver==='v1.8' || ver==='v1_8') hellVer = 'v1.8';
       else if(ver==='v13') hellVer = 'v13';
       else if(ver==='v12') hellVer = 'v12';
       else hellVer = ver;
       const otherSel = curTurn===1 ? document.getElementById('botOVersion') : document.getElementById('botXVersion');
       if(curTurn===2 && otherSel && otherSel.value==='v11') hellVer = 'v11o';
       if(curTurn===2 && ver==='v13' && otherSel && otherSel.value==='v13') hellVer = 'v13o';
-      if(curTurn===2 && (ver==='v2.0'||ver==='v1_8') && otherSel && (otherSel.value==='v2.0'||otherSel.value==='v1_8')) hellVer = 'v1.8o';
+      if(curTurn===2 && (ver==='v1.8'||ver==='v1_8') && otherSel && (otherSel.value==='v1.8'||otherSel.value==='v1_8')) hellVer = 'v1.8o';
       if(curTurn===2 && ver==='v2.0' && otherSel && otherSel.value==='v2.0') hellVer = 'v2.0o';
       try{ hellPen = (hellMemLoad().pen[posKey(board)] || null); }catch(e){ hellPen = null; }
     }
