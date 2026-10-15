@@ -711,16 +711,13 @@ self.addEventListener('fetch', e=>{
 
 
 <style>
-/* FIX CHẾ ĐỘ CHƠI BỊ LỆCH - Trở lại như cũ và cân đối */
-#onlinePanel {
+/* FIX LỆCH GIAO DIỆN - Cân đối nút không bị lệch ra ngoài */
+#onlinePanel, #controlPanel, #botCard, #boardWrap {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  background: linear-gradient(145deg,#1a1526,#13101d) !important;
-  border: 1px solid #4a355e30 !important;
-  border-radius: 16px !important;
-  padding: 14px !important;
-  margin: 8px 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 #onlinePanel > div {
   width: 100%;
@@ -728,19 +725,17 @@ self.addEventListener('fetch', e=>{
 }
 #roomCode {
   min-width: 0 !important;
-  flex: 1 1 0 !important;
-}
-#createRoomBtn, #joinRoomBtn {
-  flex: 0 0 auto !important;
-  white-space: nowrap !important;
-}
-#controlPanel, #botCard, #boardWrap, #gameTimeBar {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
 }
 @media (max-width: 600px) {
-  #app {
+  #onlinePanel {
+    padding: 12px !important;
+  }
+  #createRoomBtn, #joinRoomBtn {
+    padding: 10px 12px !important;
+    font-size: .8rem !important;
+  }
+  /* Tránh side dock che nội dung */
+  #app > div {
     padding-left: 4px !important;
     padding-right: 4px !important;
   }
@@ -768,11 +763,11 @@ self.addEventListener('fetch', e=>{
 
 <!-- APP -->
 <div id="app" class="hidden" style="height:100%; display:flex; flex-direction:column;">
-  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V1.8</h1>
+  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V2.0 • C++</h1>
 
   <div class="topbar" style="padding-left:8px;">
     <span class="who">Xin chào, <b id="whoName"></b></span>
-    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V1.8 • 15×15</span>
+    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V2.0 • 15×15 • C++ WASM</span>
   </div>
   <!-- VERTICAL ICON DOCK -->
   <div id="sideDock" class="collapsed">
@@ -788,7 +783,7 @@ self.addEventListener('fetch', e=>{
     <!-- HELL HEADER like image -->
     <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:linear-gradient(145deg,#1e162c,#14111e); border:1px solid #4a355e; border-radius:16px;">
       <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(145deg,#231b2f,#15111e); border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">H</div>
-      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v1.8</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
+      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v2.0</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
     </div>
 
         <!-- CHẾ ĐỘ CHƠI - restored -->
@@ -800,10 +795,14 @@ self.addEventListener('fetch', e=>{
         <div class="btn" id="modeOnline" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:10px 4px; min-height:68px;"><span style="font-size:1.4rem; line-height:1;">🌐</span><span style="font-size:.82rem; font-weight:800; margin-top:4px; white-space:nowrap;">Online</span></div>
         <div class="btn" id="modeBotVsBot" style="display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; padding:10px 4px; min-height:68px; border-color:#ff8a3a40;"><span style="font-size:1.4rem; line-height:1;">⚔️</span><span style="font-size:.78rem; font-weight:800; margin-top:4px; white-space:nowrap;">Bot vs Bot</span></div>
       </div>
-      <div id="onlinePanel" style="display:none; flex-direction:column; gap:8px; background:#0e0c15; border:1px solid #2a2236; border-radius:12px; padding:10px;">
-        <div style="font-size:.75rem; opacity:.6; letter-spacing:.1em;">PHÒNG ONLINE</div>
-        <div style="display:flex; gap:8px;">
-          <input id="roomCode" placeholder="Mã 4 ký tự" maxlength="4" style="flex:1; padding:10px 12px; border-radius:10px; border:1.5px solid #4a355e; background:#17131f; color:#fff; text-transform:uppercase; letter-spacing:2px; font-weight:800; text-align:center;">
+      <div id="onlinePanel" style="display:none; flex-direction:column; gap:10px; background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e40; border-radius:16px; padding:14px; margin:0 auto; width:100%; max-width:100%; box-sizing:border-box;">
+        <div style="font-size:.78rem; letter-spacing:.2em; color:#6ad4ff; font-weight:800; text-align:center;">🌐 PHÒNG ONLINE</div>
+        <div style="display:flex; gap:8px; flex-wrap:nowrap; width:100%;">
+          <input id="roomCode" placeholder="MÃ 4 KÝ TỰ" maxlength="4" style="flex:1 1 0; min-width:0; padding:12px 10px; border-radius:12px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; text-transform:uppercase; letter-spacing:2px; font-weight:800; text-align:center; font-size:.9rem; box-sizing:border-box;">
+          <button id="createRoomBtn" onclick="createRoom()" style="flex:0 0 auto; padding:12px 14px; border-radius:12px; background:linear-gradient(135deg,#6ad4ff,#4a90e2); color:#fff; border:none; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; box-sizing:border-box;">Tạo phòng</button>
+          <button id="joinRoomBtn" onclick="joinRoom()" style="flex:0 0 auto; padding:12px 14px; border-radius:12px; background:linear-gradient(135deg,#ff6b4a,#a51f6a); color:#fff; border:none; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; box-sizing:border-box;">Vào</button>
+        </div>
+        <div id="onlineStatus" style="font-size:.75rem; opacity:.7; text-align:center; background:rgba(255,255,255,.05); padding:6px 10px; border-radius:8px;">Sẵn sàng - Tạo phòng hoặc nhập mã để vào</div>
           <div class="btn small" id="createRoomBtn" style="flex:none; padding:10px 14px;">Tạo phòng</div>
           <div class="btn small active" id="joinRoomBtn" style="flex:none; padding:10px 14px;">Vào</div>
         </div>
@@ -919,7 +918,7 @@ self.addEventListener('fetch', e=>{
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,.3); border-radius:8px; padding:8px 10px;">
           <div style="display:flex; align-items:center; gap:6px; font-size:.78rem;"><span style="opacity:.7;">Tốc độ:</span><select id="botVsBotSpeed" style="padding:5px 8px; border-radius:6px; border:1px solid #4a355e; background:#0e0c15; color:#fff;"><option value="1500">Chậm 1.5s</option><option value="800" selected>Vừa 0.8s</option><option value="300">Nhanh 0.3s</option><option value="50">Siêu tốc</option></select></div>
-          <div id="botVsBotMoveCount" style="font-size:.8rem; font-weight:700; opacity:.7;">0 nước</div>
+          <div id="bvbGameTime" style="font-size:.8rem; font-weight:700; color:#ffd4a3; background:rgba(255,107,74,.15); border:1px solid #ff6b4a40; border-radius:8px; padding:4px 10px;">0:00</div><div id="botVsBotMoveCount" style="font-size:.8rem; font-weight:700; opacity:.7;">0 nước</div>
         </div>
       </div>
 
@@ -929,51 +928,64 @@ self.addEventListener('fetch', e=>{
     <div id="warnBar" class="hidden"></div>
     <div id="hellMem" class="hidden"></div>
 
-    <div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas></div>
+    
+<!-- FIX: Hiển thị bộ đếm giờ cho TẤT CẢ chế độ -->
+<div id="gameTimeBar" style="display:flex; align-items:center; justify-content:center; gap:12px; background:linear-gradient(135deg,rgba(255,107,74,.12),rgba(165,31,76,.12)); border:1px solid #ff6b4a40; border-radius:12px; padding:8px 16px; margin:8px 0; font-weight:700;">
+  <span style="font-size:.75rem; opacity:.7; letter-spacing:.08em;">THỜI GIAN VÁN ĐẤU</span>
+  <span id="gameTimeDisplay" style="font-size:1rem; font-weight:800; color:#ffd4a3; background:rgba(0,0,0,.3); padding:4px 12px; border-radius:8px; min-width:60px; text-align:center;">⏱ 0:00</span>
+  <span style="font-size:.7rem; opacity:.5;">(bắt đầu khi đánh nước đầu tiên)</span>
+</div>
+
+<div id="boardWrap" style="min-height:360px; aspect-ratio:1; flex:none;"><canvas id="cv"></canvas></div>
     <div style="font-size:.7rem; letter-spacing:.12em; opacity:.45; padding:0 4px; line-height:1.4;">HỆ: 64×64 • CHUẨN GOMOKU • 5 LIÊN TIẾP THẮNG<br>Touch-friendly</div>
 
-    <!-- ĐIỀU KHIỂN / panel theo chế độ -->
-    <div id="controlPanel" style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
-      <!-- AI / Local -->
+    
+    <!-- ĐIỀU KHIỂN / panel theo chế độ - ĐÃ ĐỔI THÀNH BỘ LƯU TRỮ THỜI GIAN -->
+    <div id="controlPanel" style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px; width:100%; max-width:100%; box-sizing:border-box; margin:0 auto;" style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+      <!-- AI / Local / All modes - Time Storage -->
       <div id="ctrlPanelNormal">
-        <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a8a; font-weight:800;">ĐIỀU KHIỂN</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
-          <div class="ctrlBtn" id="ctrlNewGame" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#231b2f,#1a1526); border:1.5px solid #4a355e; text-align:center; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">↻ Ván mới</div>
-          <div class="ctrlBtn" id="ctrlUndo" style="padding:14px 10px; border-radius:14px; background:#14111e; border:1px solid #3a2a4a; text-align:center; font-weight:600; opacity:.85; cursor:pointer;">Lùi 1 nước</div>
-          <div class="ctrlBtn" id="ctrlSwitch" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#1e1a2e,#161326); border:1px solid #4a355e; text-align:center; font-weight:700; cursor:pointer;">Đổi bên X→O</div>
-          <div class="ctrlBtn" id="ctrlHint" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#2a2418,#1e1a12); border:1px solid #6a5a2a; text-align:center; font-weight:700; color:#ffe4a3; cursor:pointer;">💡 Gợi ý</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a8a; font-weight:800;">⏱ LƯU TRỮ THỜI GIAN</div>
+          <div id="liveTimeValue" style="font-size:.9rem; font-weight:800; color:#ffd4a3; background:rgba(255,107,74,.15); padding:4px 10px; border-radius:8px;">0:00</div>
         </div>
-        <div style="background:#0e0c15; border:1px solid #2a2236; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; margin-top:10px;">
-          <div style="font-size:.72rem; letter-spacing:.18em; opacity:.5;">TRẠNG THÁI</div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Bạn là</span><span id="statusYou" style="font-weight:800;">X (đi trước)</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Lượt</span><span id="statusTurn" style="font-weight:800; color:#ff8a8a;">Bạn</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Tổng nước</span><span id="statusTotal">0</span></div>
-          <div id="resetHumanScoreBtn" class="ctrlBtn" style="margin-top:6px; padding:10px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid #4a355e; text-align:center; font-weight:700; font-size:.82rem; cursor:pointer;">↻ Reset điểm</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+          <div class="ctrlBtn" id="ctrlNewGame" style="padding:12px 10px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid #4a355e; text-align:center; cursor:pointer; font-weight:700;">↻ Ván mới</div>
+          <div class="ctrlBtn" id="ctrlUndo" style="padding:12px 10px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid #4a355e; text-align:center; cursor:pointer; font-weight:700;">↩ Lùi 1 nước</div>
+        </div>
+        <div id="timeStorageList" style="margin-top:12px; max-height:280px; overflow:auto;">
+          <div style="opacity:.5; font-size:.8rem; text-align:center; padding:12px;">Chưa có ván nào</div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <div class="btn small" id="clearTimeStorage" style="flex:1; font-size:.7rem; padding:6px; text-align:center; background:rgba(255,59,90,.15); border:1px solid #ff3b5a40;">🗑 Xóa lịch sử thời gian</div>
+          <div class="btn small" id="ctrlResetScore" style="flex:1; font-size:.7rem; padding:6px; text-align:center;">↻ Reset điểm</div>
         </div>
       </div>
 
-      <!-- Online: không có Lùi 1 nước -->
+      <!-- Online - cũng là Time Storage -->
       <div id="ctrlPanelOnline" style="display:none;">
-        <div style="font-size:.78rem; letter-spacing:.2em; color:#6ad4ff; font-weight:800;">PHÒNG ONLINE</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
-          <div class="ctrlBtn" id="ctrlOnlineNew" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#231b2f,#1a1526); border:1.5px solid #4a355e; text-align:center; font-weight:700; cursor:pointer;">↻ Ván mới</div>
-          <div class="ctrlBtn" id="ctrlOnlineChat" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#1a2030,#121820); border:1px solid #3b7cff50; text-align:center; font-weight:700; color:#9ec5ff; cursor:pointer;">💬 Chat</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:.78rem; letter-spacing:.2em; color:#6ad4ff; font-weight:800;">⏱ LƯU TRỮ THỜI GIAN ONLINE</div>
+          <div style="font-size:.9rem; font-weight:800; color:#ffd4a3; background:rgba(255,107,74,.15); padding:4px 10px; border-radius:8px;" id="onlineLiveTime">0:00</div>
         </div>
-        <div style="background:#0e0c15; border:1px solid #2a2236; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; margin-top:10px;">
-          <div style="font-size:.72rem; letter-spacing:.18em; opacity:.5;">TRẠNG THÁI ONLINE</div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Bạn</span><span id="onlineYouSeat" style="font-weight:800;">—</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Đối thủ</span><span id="onlineOpSeat" style="font-weight:800;">Chờ...</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Lượt</span><span id="onlineTurnInfo" style="font-weight:800; color:#6ad4ff;">—</span></div>
-          <div style="font-size:.78rem; opacity:.55; margin-top:4px; line-height:1.35;">Không thể lùi nước trong online — mỗi nước đã đánh là cố định.</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+          <div class="ctrlBtn" id="onlineNewGame" style="padding:12px 10px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid #4a355e; text-align:center; cursor:pointer; font-weight:700;">↻ Ván mới</div>
+          <div class="ctrlBtn" id="onlineLeave" style="padding:12px 10px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid #4a355e; text-align:center; cursor:pointer; font-weight:700;">🚪 Rời phòng</div>
         </div>
+        <div id="timeStorageListOnline" style="margin-top:12px; max-height:280px; overflow:auto;"></div>
       </div>
 
-      <!-- Bot vs Bot: panel thi đấu -->
+      <!-- Bot vs Bot - cũng là Time Storage -->
       <div id="ctrlPanelBotVsBot" style="display:none;">
         <div style="display:flex; align-items:center; justify-content:space-between;">
-          <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a6a; font-weight:800;">ĐẤU TRƯỜNG BOT</div>
-          <div id="bvbLiveBadge" style="font-size:.7rem; font-weight:800; padding:4px 10px; border-radius:999px; background:rgba(255,107,74,.15); border:1px solid #ff6b4a40; color:#ffd4a3;">SẴN SÀNG</div>
+          <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a6a; font-weight:800;">⚔️ BOT VS BOT • THỜI GIAN</div>
+          <div style="display:flex; gap:6px;">
+            <div style="font-size:.8rem; font-weight:700; color:#ffd4a3; background:rgba(255,107,74,.15); border-radius:8px; padding:4px 10px;" id="bvbGameTime">0:00</div>
+          </div>
         </div>
+        <div id="timeStorageListBvb" style="margin-top:12px; max-height:280px; overflow:auto;"></div>
+      </div>
+    </div>
+
         <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center; margin-top:10px;">
           <div style="background:#1a2035; border:1.5px solid #3b7cff50; border-radius:14px; padding:12px; text-align:center;">
             <div style="font-size:.7rem; opacity:.6; letter-spacing:.1em;">BOT X</div>
@@ -1045,7 +1057,7 @@ self.addEventListener('fetch', e=>{
     <div class="ftab" id="tabReq">Lời mời<span class="dot hidden" id="reqDot"></span></div>
     <div class="ftab" id="tabAdd">Thêm bạn</div>
   </div>
-  <div id="friendsBody"></div>
+  <div style="padding:8px; text-align:center;"><div class="btn small" id="refreshPresenceBtn" style="font-size:.75rem; padding:6px 12px;">🔄 Làm mới trạng thái online</div></div><div id="friendsBody"></div>
 </div>
 
 <!-- HISTORY -->
@@ -4219,19 +4231,8 @@ document.getElementById('authSubmit').onclick=async()=>{
       errEl.textContent='Đang đăng nhập...';
       await auth.signInWithEmailAndPassword(email,pass);
       errEl.textContent='Đăng nhập thành công! Đang vào...';
+      setTimeout(()=>{ try{ const a=document.getElementById('authScreen'); const app=document.getElementById('app'); if(a && !a.classList.contains('hidden')){ a.classList.add('hidden'); a.style.display='none'; if(app){ app.classList.remove('hidden'); app.style.display='flex'; } } }catch(e){} }, 500);
       errEl.style.color='#22c55e';
-      // FIX: Force vào app sau 500ms nếu onAuthStateChanged chậm
-      setTimeout(()=>{
-        try{
-          const authScreen=document.getElementById('authScreen');
-          const app=document.getElementById('app');
-          if(authScreen && !authScreen.classList.contains('hidden')){
-            authScreen.classList.add('hidden');
-            authScreen.style.display='none';
-            if(app){ app.classList.remove('hidden'); app.style.display='flex'; }
-          }
-        }catch(e){}
-      }, 500);
     }
   }catch(e){ 
     console.error('Auth error:', e);
@@ -4290,7 +4291,6 @@ auth.onAuthStateChanged(async user=>{
   hellMem=null; hellLearnDelta=null;
   if(user){
     currentUser=user;
-    // FIX: Đảm bảo luôn vào app dù Firestore lỗi
     try{
       const snap=await db.collection('users').doc(user.uid).get().catch(e=>{ console.warn('users get failed', e); return {exists:false, data:()=>({})}; });
       const udata = snap && snap.exists ? snap.data() : {};
@@ -4301,7 +4301,6 @@ auth.onAuthStateChanged(async user=>{
       currentUsername = (user.email ? user.email.split('@')[0] : 'Người chơi') || 'Người chơi';
       myFriendCode = user.uid.slice(-6).toUpperCase();
     }
-    // FIX: Ẩn màn hình đăng nhập NGAY LẬP TỨC, không đợi các listener
     try{
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('authScreen').style.display='none';
@@ -4310,7 +4309,6 @@ auth.onAuthStateChanged(async user=>{
       const who=document.getElementById('whoName'); if(who) who.textContent=currentUsername;
       setTimeout(()=>{ try{ resize(); centerBoard(); draw(); }catch(e){} }, 50);
     }catch(e){ console.error('show app error', e); }
-
     if(!udata.code){ db.collection('users').doc(user.uid).set({code:myFriendCode},{merge:true}).catch(()=>{}); }
     if(snap.exists && udata.username){ db.collection('codes').doc(myFriendCode).set({uid:user.uid, name:udata.username}).catch(()=>{}); }
     document.getElementById('whoName').textContent=currentUsername;
@@ -4347,7 +4345,7 @@ auth.onAuthStateChanged(async user=>{
     }catch(e){ console.error('presence error', e); }
     startFriendListeners();
     startFeatureListener();
-    startPresenceListener();
+    try{ startPresenceListener(); }catch(e){ console.warn('presence listener fail', e); }
   } else {
     currentUser=null;
     try{
@@ -4620,6 +4618,31 @@ document.getElementById('historyClose').onclick=()=>{document.getElementById('hi
 async function loadHistory(){
   const body=document.getElementById('historyBody');
   body.innerHTML='<div class="empty">Đang tải...</div>';
+  // Hiển thị lịch sử tất cả chế độ (localStorage) trước
+  let localHist = [];
+  try{ localHist = JSON.parse(localStorage.getItem('xo5_all_history')||'[]'); }catch(e){}
+  let html = '';
+  if(localHist.length>0){
+    html += `<div style="font-size:.8rem; font-weight:800; color:#ff8a6a; margin:8px 0 6px; letter-spacing:.08em;">📱 LỊCH SỬ TẤT CẢ CHẾ ĐỘ (${localHist.length})</div>`;
+    localHist.slice(0,50).forEach(entry=>{
+      const winColor = entry.winner===1?'#ff6b6a':entry.winner===2?'#4ecdc4':'#aaa';
+      const winText = entry.winner===1?'X thắng':entry.winner===2?'O thắng':'Hòa';
+      html += `<div style="display:flex; flex-direction:column; gap:4px; background:rgba(255,255,255,.06); border:1px solid #4a355e; border-radius:10px; padding:10px; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:.8rem; font-weight:700; color:#ffe4b5;">${entry.modeLabel||entry.mode} • ${winText}</span>
+          <span style="font-size:.7rem; color:#ffd4a3; background:rgba(255,107,74,.15); padding:2px 8px; border-radius:6px;">⏱ ${entry.durationLabel||formatDuration(entry.duration||0)}</span>
+        </div>
+        <div style="font-size:.72rem; opacity:.7; display:flex; gap:8px; flex-wrap:wrap;">
+          <span>📅 ${entry.dateLabel||new Date(entry.timestamp).toLocaleString('vi-VN')}</span>
+          <span>🎯 ${entry.moves||0} nước</span>
+          ${entry.botX?`<span>🤖 ${entry.botX.toUpperCase()} vs ${entry.botO?entry.botO.toUpperCase():''}</span>`:''}
+        </div>
+      </div>`;
+    });
+  } else {
+    html += `<div style="opacity:.6; font-size:.8rem; text-align:center; padding:12px;">Chưa có lịch sử đấu</div>`;
+  }
+  html += `<div style="font-size:.8rem; font-weight:800; color:#a78bfa; margin:16px 0 6px; letter-spacing:.08em;">🌐 LỊCH SỬ ONLINE (Firestore)</div>`;
   try{
     const q=await db.collection('matches').where('uid','==',currentUser.uid).limit(300).get();
     const rows=q.docs.map(d=>d.data()).filter(d=>d.mode==='Online');
@@ -4662,16 +4685,64 @@ function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||
 let presenceMap = {};
 let unsubPresence = null;
 function startPresenceListener(){
-  if(unsubPresence) unsubPresence();
+  if(unsubPresence) try{unsubPresence();}catch(e){}
   unsubPresence = db.collection('presence').onSnapshot(snap=>{
     presenceMap = {};
     snap.forEach(doc=>{
-      const d = doc.data();
-      presenceMap[d.uid] = d;
+      try{
+        const d = doc.data();
+        if(d && d.uid) presenceMap[d.uid] = d;
+      }catch(e){}
     });
     if(friendTab==='list') renderFriendsBody();
+    // Cập nhật header online count ngay cả khi không ở tab list
+    try{
+      const body=document.getElementById('friendsBody');
+      if(body && friendTab==='list'){
+        // renderFriendsBody đã làm, nhưng nếu đang ở tab khác thì vẫn cần update
+      }
+    }catch(e){}
+  }, err=>{
+    console.error('presence listener error', err);
+    // Retry sau 3s
+    setTimeout(()=>{ try{ startPresenceListener(); }catch(e){ console.warn('presence listener fail', e); } }, 3000);
   });
 }
+
+// DEBUG: Hiển thị presenceMap để debug
+window.debugPresence = function(){
+  console.log('presenceMap', presenceMap);
+  console.log('friendsList', friendsList);
+  alert('presenceMap: ' + JSON.stringify(presenceMap, null, 2).substring(0,1000) + '\nfriends: ' + friendsList.map(f=>f.name+':'+f.uid).join(', '));
+};
+
+// FIX: Thêm fallback - nếu presence collection không đọc được do Firestore rules, thử đọc từng bạn bè riêng
+async function checkFriendOnlineStatus(friendUid){
+  try{
+    const doc = await db.collection('presence').doc(friendUid).get();
+    if(doc.exists){
+      const data = doc.data();
+      presenceMap[friendUid] = data;
+      return isUserOnline(friendUid);
+    }
+  }catch(e){
+    console.error('checkFriendOnlineStatus error', e, friendUid);
+  }
+  return false;
+}
+
+async function refreshAllFriendsPresence(){
+  const btn = document.getElementById('refreshPresenceBtn');
+  if(btn) btn.textContent = '⏳ Đang kiểm tra...';
+  try{
+    for(const f of friendsList){
+      await checkFriendOnlineStatus(f.uid);
+    }
+    renderFriendsBody();
+  }catch(e){ console.error(e); }
+  if(btn) btn.textContent = '🔄 Làm mới trạng thái online';
+}
+
 function stopPresenceListener(){
   if(unsubPresence){ unsubPresence(); unsubPresence=null; }
   presenceMap = {};
@@ -4681,17 +4752,22 @@ function isUserOnline(uid){
   if(!p) return false;
   if(!p.online) return false;
   const now = Date.now();
+  // Ưu tiên lastSeenMs (client time)
   let last = p.lastSeenMs || 0;
+  // Nếu không có lastSeenMs, thử lấy từ Firestore Timestamp
   if(!last && p.lastSeen && p.lastSeen.toMillis){
     try{ last = p.lastSeen.toMillis(); }catch(e){}
   }
   if(!last && p.lastSeen && p.lastSeen.seconds){
     last = p.lastSeen.seconds * 1000;
   }
+  // Nếu vẫn không có, nhưng online=true thì cho online 5 phút
   if(!last) return true;
+  // Online nếu lastSeen trong 5 phút (tăng từ 2 phút để tránh lag mạng)
   return (now - last) < 300000;
 }
 
+document.addEventListener('click', (e)=>{ if(e.target.id==='refreshPresenceBtn'){ refreshAllFriendsPresence(); } });
 function renderFriendsBody(){
   const body=document.getElementById('friendsBody');
   if(friendTab==='list'){
@@ -4846,43 +4922,58 @@ const SIZE=64; // YÊU CẦU: 64x64 cho tất cả
 const idx=(r,c)=>r*SIZE+c;
 const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;
 let board=new Uint8Array(SIZE*SIZE);
+// Timer will be started in setMode/newGame
 let turn=1, gameOver=false, winCells=[];
 let moveHistory=[];
 let lastMove=null, lastMoveT=0, animRaf=0, lastAnimDraw=0;
 let scores={X:0,O:0,D:0};
 
-// ---------- GAME TIME TRACKING - FIX: bắt đầu khi có nước đầu tiên, dừng khi thắng ----------
+// ---------- GAME TIME TRACKING - Tính thời gian ván đấu tất cả chế độ ----------
+
 let gameStartTime = null;
 let gameTimerInterval = null;
 let currentGameDuration = 0;
 let gameTimerRunning = false;
 
 function startGameTimer(){
+  // Chỉ bắt đầu nếu chưa chạy
   if(gameTimerRunning) return;
   if(!gameStartTime){
-    gameStartTime = Date.now() - (currentGameDuration*1000);
+    gameStartTime = Date.now() - (currentGameDuration*1000); // tiếp tục nếu đã có duration
   }
   gameTimerRunning = true;
   if(gameTimerInterval) clearInterval(gameTimerInterval);
   gameTimerInterval = setInterval(updateGameTimeUI, 1000);
   updateGameTimeUI();
+  const bar = document.getElementById('gameTimeBar');
+  if(bar) bar.style.borderColor='#ff6b4a';
 }
 
 function updateGameTimeUI(){
-  if(!gameStartTime && currentGameDuration===0){
-    const el=document.getElementById('gameTimeDisplay'); if(el) el.textContent='⏱ 0:00';
-    return;
-  }
+  if(!gameStartTime && currentGameDuration===0) return;
   if(gameTimerRunning){
     currentGameDuration = Math.floor((Date.now() - gameStartTime)/1000);
   }
-  const m = Math.floor(currentGameDuration/60);
-  const s = currentGameDuration%60;
-  const txt = `${m}:${String(s).padStart(2,'0')}`;
-  const el=document.getElementById('gameTimeDisplay'); if(el) el.textContent='⏱ '+txt;
-  const bvb=document.getElementById('bvbGameTime'); if(bvb) bvb.textContent=txt;
-  const live=document.getElementById('liveTimeValue'); if(live) live.textContent=txt;
-  const onlineLive=document.getElementById('onlineLiveTime'); if(onlineLive) onlineLive.textContent=txt;
+  const el = document.getElementById('gameTimeDisplay');
+  if(el){
+    const m = Math.floor(currentGameDuration/60);
+    const s = currentGameDuration%60;
+    el.textContent = `⏱ ${m}:${String(s).padStart(2,'0')}`;
+    el.style.color = gameTimerRunning ? '#ffd4a3' : '#ff6a6a';
+  }
+  const bvbTime = document.getElementById('bvbGameTime');
+  if(bvbTime){
+    const m = Math.floor(currentGameDuration/60);
+    const s = currentGameDuration%60;
+    bvbTime.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  }
+  // Cập nhật luôn trong panel lưu trữ
+  const liveEl = document.getElementById('liveTimeValue');
+  if(liveEl){
+    const m = Math.floor(currentGameDuration/60);
+    const s = currentGameDuration%60;
+    liveEl.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  }
 }
 
 function stopGameTimer(){
@@ -4892,6 +4983,8 @@ function stopGameTimer(){
   }
   gameTimerRunning = false;
   updateGameTimeUI();
+  const bar = document.getElementById('gameTimeBar');
+  if(bar) bar.style.borderColor='#ff3b3b60';
   return currentGameDuration;
 }
 
@@ -4901,7 +4994,6 @@ function resetGameTimerDisplay(){
   const el=document.getElementById('gameTimeDisplay'); if(el) el.textContent='⏱ 0:00';
   const bvb=document.getElementById('bvbGameTime'); if(bvb) bvb.textContent='0:00';
   const live=document.getElementById('liveTimeValue'); if(live) live.textContent='0:00';
-  const onlineLive=document.getElementById('onlineLiveTime'); if(onlineLive) onlineLive.textContent='0:00';
 }
 
 function formatDuration(sec){
@@ -4912,25 +5004,28 @@ function formatDuration(sec){
 
 function saveAllModesHistory(resultData){
   try{
-    const duration = currentGameDuration || 0;
+    const duration = currentGameDuration || stopGameTimer();
     const entry = {
       id: Date.now(),
       mode: resultData.mode || window.mode || 'ai',
       modeLabel: resultData.modeLabel || getModeLabel(resultData.mode || window.mode),
       winner: resultData.winner,
       winnerLabel: resultData.winner===1?'X':resultData.winner===2?'O':'Hòa',
-      moves: resultData.moves || 0,
+      moves: resultData.moves || (typeof moveHistory!=='undefined'?moveHistory.length:0) || (typeof moves!=='undefined'?moves:0),
       duration: duration,
       durationLabel: formatDuration(duration),
       timestamp: Date.now(),
       dateLabel: new Date().toLocaleString('vi-VN'),
       botX: resultData.botX || '',
-      botO: resultData.botO || ''
+      botO: resultData.botO || '',
+      playerX: resultData.playerX || '',
+      playerO: resultData.playerO || ''
     };
     let hist = JSON.parse(localStorage.getItem('xo5_all_history')||'[]');
     hist.unshift(entry);
     if(hist.length>200) hist=hist.slice(0,200);
     localStorage.setItem('xo5_all_history', JSON.stringify(hist));
+    // Cập nhật UI lưu trữ ngay lập tức
     renderTimeStorage();
     return entry;
   }catch(e){ console.error('save history error',e); }
@@ -4945,22 +5040,35 @@ function getModeLabel(mode){
 }
 
 function renderTimeStorage(){
-  const containers = ['timeStorageList','timeStorageListOnline','timeStorageListBvb'];
+  const container = document.getElementById('timeStorageList');
+  if(!container) return;
   let hist = [];
   try{ hist = JSON.parse(localStorage.getItem('xo5_all_history')||'[]'); }catch(e){}
-  const html = hist.length===0 ? '<div style="opacity:.5; font-size:.8rem; text-align:center; padding:12px;">Chưa có ván nào<br><span style="font-size:.7rem;">Đánh nước đầu tiên để bắt đầu tính giờ</span></div>' : hist.slice(0,10).map((entry,i)=>{
+  if(hist.length===0){
+    container.innerHTML = '<div style="opacity:.5; font-size:.8rem; text-align:center; padding:12px;">Chưa có ván nào<br><span style="font-size:.7rem;">Đánh nước đầu tiên để bắt đầu tính giờ</span></div>';
+    return;
+  }
+  let html='';
+  hist.slice(0,10).forEach((entry,i)=>{
     const winColor = entry.winner===1?'#ff6b6a':entry.winner===2?'#4ecdc4':'#aaa';
     const isLatest = i===0;
-    return `<div style="display:flex; flex-direction:column; gap:3px; background:${isLatest?'rgba(255,107,74,.12)':'rgba(255,255,255,.04)'}; border:1px solid ${isLatest?'#ff6b4a60':'#4a355e40'}; border-radius:10px; padding:8px 10px; margin-bottom:6px;">
+    html += `<div style="display:flex; flex-direction:column; gap:3px; background:${isLatest?'rgba(255,107,74,.12)':'rgba(255,255,255,.04)'}; border:1px solid ${isLatest?'#ff6b4a60':'#4a355e40'}; border-radius:10px; padding:8px 10px; margin-bottom:6px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:.75rem; font-weight:700; color:#ffe4b5;">${isLatest?'🔥 ':''}${entry.modeLabel} • <span style="color:${winColor}">${entry.winnerLabel}</span></span>
+        <span style="font-size:.75rem; font-weight:700; color:#ffe4b5;">${isLatest?'🔥 ':''}${entry.modeLabel||entry.mode} • <span style="color:${winColor}">${entry.winnerLabel||entry.winner}</span></span>
         <span style="font-size:.75rem; font-weight:800; color:#ffd4a3; background:rgba(0,0,0,.3); padding:2px 8px; border-radius:6px;">⏱ ${entry.durationLabel}</span>
       </div>
-      <div style="font-size:.68rem; opacity:.6; display:flex; gap:8px;"><span>${entry.dateLabel}</span><span>• ${entry.moves} nước</span></div>
+      <div style="font-size:.68rem; opacity:.6; display:flex; gap:8px;">
+        <span>${entry.dateLabel||''}</span>
+        <span>• ${entry.moves||0} nước</span>
+        ${entry.botX?`<span>• ${entry.botX.toUpperCase()} vs ${entry.botO?entry.botO.toUpperCase():''}</span>`:''}
+      </div>
     </div>`;
-  }).join('');
-  containers.forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=html; });
+  });
+  container.innerHTML = html;
 }
+
+
+// Hook vào các hàm reset để bắt đầu tính giờ
 
 try{ const hs=JSON.parse(localStorage.getItem('xo5_human_scores')||'null'); if(hs&&typeof hs==='object') scores={X:hs.X|0,O:hs.O|0,D:hs.D|0}; }catch(e){}
 function resetHumanScores(){
@@ -5344,6 +5452,19 @@ function endGame(winner, cells){
     if(winner===1) statusEl.textContent='Bot X thắng!';
     else if(winner===2) statusEl.textContent='Bot O thắng!';
     else statusEl.textContent='Hòa!';
+    // Lưu lịch sử + thời gian cho tất cả chế độ (trừ online đã lưu riêng)
+    try{
+      const dur = stopGameTimer();
+      if(mode!=='online'){
+        saveAllModesHistory({
+          mode: mode,
+          winner: winner,
+          moves: typeof moveHistory!=='undefined'?moveHistory.length:0,
+          playerX: mode==='ai'?(mySide===1?currentUsername||'Bạn':'Máy'):'X',
+          playerO: mode==='ai'?(mySide===2?currentUsername||'Bạn':'Máy'):'O'
+        });
+      }
+    }catch(e){}
   }
   draw();
 }
@@ -5355,7 +5476,10 @@ function placeLocal(r,c,p){
   draw();
   const full = !win && isFull();
   moveHistory.push({r,c,p,endedWin:win?p:0,endedDraw:full});
-  if(moveHistory.length===1){ startGameTimer(); }
+  // FIX: Bắt đầu tính giờ khi có nước đi đầu tiên trên bàn cờ (bất kỳ chế độ nào)
+  if(moveHistory.length===1){
+    startGameTimer();
+  }
   if(win){endGame(p,win); return true;}
   if(full){endGame(0); return true;}
   turn = p===1?2:1;
@@ -5555,11 +5679,13 @@ function hellThinkWasm(cb,bot,pen,timeLimit,verRaw){
   const fallback=()=>{ if(id!==hellJob) return; window.hellWasmBroken=true; hellThink(cb,bot,pen,timeLimit,'v1.8'); };
   try{
     if(!window.hellWorkers) window.hellWorkers={};
-    let rec=window.hellWorkers[verRaw];
+    const isBvb = window.botVsBotRunning || document.getElementById('modeBotVsBot')?.classList.contains('active');
+    const workerKey = isBvb ? (verRaw + '_' + (bot===1?'X':'O') + '_' + (window.botVsBotGameId||0) + '_' + Math.random().toString(36).slice(2,5)) : verRaw;
+    let rec=window.hellWorkers[workerKey];
     if(!rec){
-      const w=new Worker('hell-worker.js');
-      rec={worker:w,cur:null};
-      w.onerror=()=>{ try{w.terminate();}catch(_){} if(window.hellWorkers[verRaw]===rec) delete window.hellWorkers[verRaw]; if(rec.cur) rec.cur.fb(); };
+      let w; try{ w=new Worker('hell-worker.js'); }catch(_){ w=new Worker('hell-worker.js'); }
+      rec={worker:w,cur:null,temp:isBvb};
+      w.onerror=()=>{ try{w.terminate();}catch(_){} if(window.hellWorkers[workerKey]===rec) delete window.hellWorkers[workerKey]; if(rec.cur) rec.cur.fb(); };
       w.onmessage=e=>{
         const d=e.data, cur=rec.cur;
         if(d.fatal){ if(cur) cur.fb(); return; }
@@ -5567,12 +5693,13 @@ function hellThinkWasm(cb,bot,pen,timeLimit,verRaw){
         if(d.error||d.m==null){ cur.fb(); return; }
         window.hellLastSearch=d.stats; cb(d.m);
       };
-      window.hellWorkers[verRaw]=rec;
+      window.hellWorkers[workerKey]=rec;
+      if(isBvb){ setTimeout(()=>{ try{ if(window.hellWorkers[workerKey]===rec){ rec.worker.terminate(); delete window.hellWorkers[workerKey]; } }catch(_){} }, 30000); }
     }
     rec.cur={id,fb:fallback};
     hellWorker=rec.worker;
     const snap=bot===1?board.map(v=>v?3-v:0):board.slice();
-    rec.worker.postMessage({id,b:snap.buffer,size:SIZE,pen:pen||null,t:timeLimit||8000},[snap.buffer]);
+    rec.worker.postMessage({id,b:snap.buffer,size:SIZE,pen:pen||null,t:timeLimit||8000,botId:verRaw+'_'+(bot===1?'X':'O'),gameId:window.botVsBotGameId||0},[snap.buffer]);
   }catch(err){ console.error('hellThinkWasm error',err); fallback(); }
 }
 function hellThink(cb,bot,pen,timeLimit,version){
@@ -5628,6 +5755,10 @@ function hellCancel(){
 const subRow=document.getElementById('subRow');
 function resetBoardState(){hellCancel(); board=new Uint8Array(SIZE*SIZE); lastMove=null; turn=1; gameOver=false; winCells=[]; moveHistory=[]; setStatus(); draw();}
 function setMode(m){
+  // FIX: Không tự tính giờ khi đổi chế độ, chỉ tính khi có nước đi đầu tiên
+  resetGameTimerDisplay();
+  const bvb=document.getElementById('bvbGameTime'); if(bvb) bvb.textContent='0:00';
+
   if(m==='ai' && !isFeatureOn('mode_ai')){ statusEl.textContent='Chơi với máy đang bảo trì.'; return; }
   if(m==='local' && !isFeatureOn('mode_local')){ statusEl.textContent='Chế độ 2 người đang bảo trì.'; return; }
   if(m==='online' && !isFeatureOn('mode_online')){ statusEl.textContent='Online đang bảo trì.'; return; }
@@ -5721,63 +5852,115 @@ function randCode(){
   return s;
 }
 async function createRoom(){
-  if(!currentUser){ statusEl.textContent='Bạn chưa đăng nhập.'; return; }
+  if(!currentUser){
+    statusEl.textContent='Bạn chưa đăng nhập.';
+    return;
+  }
   statusEl.textContent='Đang tạo phòng...';
   const btnCreate = document.getElementById('createRoomBtn');
+  const btnJoin = document.getElementById('joinRoomBtn');
   if(btnCreate) btnCreate.textContent='⏳ Đang tạo...';
+  
+  // Thử tạo mã phòng duy nhất, retry nếu trùng
   let code=null, ref=null, tries=0;
   while(tries<10){
     const c=randCode();
     const r=db.collection('rooms').doc(c);
     try{
       const snap=await r.get();
-      if(!snap.exists){ code=c; ref=r; break; }
+      if(!snap.exists){
+        code=c; ref=r; break;
+      }
     }catch(e){ code=c; ref=r; break; }
     tries++;
   }
-  if(!code){ statusEl.textContent='Lỗi tạo mã phòng, thử lại.'; if(btnCreate) btnCreate.textContent='Tạo phòng'; return; }
+  if(!code){
+    statusEl.textContent='Lỗi tạo mã phòng, thử lại.';
+    if(btnCreate) btnCreate.textContent='Tạo phòng';
+    return;
+  }
+  
   try{
     const side = (typeof mySide!=='undefined' && mySide===2)?'O':'X';
     await ref.set({
-      board:Array.from(new Uint8Array(SIZE*SIZE)), turn:1, status:'waiting',
-      seats:{[side]:{uid:currentUser.uid,name:currentUsername}}, winner:0, winCells:[],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUser.uid
+      board:Array.from(new Uint8Array(SIZE*SIZE)), 
+      turn:1, 
+      status:'waiting',
+      seats:{[side]:{uid:currentUser.uid,name:currentUsername}}, 
+      winner:0, 
+      winCells:[],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: currentUser.uid
     });
     roomRef=ref; roomCode=code; mySeat=side;
-    const input=document.getElementById('roomCode'); if(input) input.value=code;
+    const input=document.getElementById('roomCode');
+    if(input){ input.value=code; }
     statusEl.textContent='Đã tạo phòng '+code+' - Đang chờ đối thủ...';
     if(btnCreate) btnCreate.textContent='✅ Đã tạo '+code;
     setTimeout(()=>{ if(btnCreate) btnCreate.textContent='Tạo phòng'; }, 3000);
     subscribeRoom();
-  }catch(e){ console.error('createRoom error', e); statusEl.textContent='Lỗi tạo phòng: '+(e.message||e.code); if(btnCreate) btnCreate.textContent='Tạo phòng'; }
+  }catch(e){ 
+    console.error('createRoom error', e);
+    statusEl.textContent='Lỗi tạo phòng: '+(e.message||e.code);
+    if(btnCreate) btnCreate.textContent='Tạo phòng';
+  }
 }
 async function joinRoom(){
-  if(!currentUser){ statusEl.textContent='Bạn chưa đăng nhập.'; return; }
+  if(!currentUser){
+    statusEl.textContent='Bạn chưa đăng nhập.';
+    return;
+  }
   const input=document.getElementById('roomCode');
   let code=(input?.value||'').toUpperCase().trim().replace(/[^A-Z0-9]/g,'');
   if(input) input.value=code;
-  if(code.length!==4){ statusEl.textContent='Nhập mã phòng 4 ký tự (VD: AB12).'; if(input){ input.style.borderColor='#ff3b5a'; setTimeout(()=>{ input.style.borderColor='#4a355e'; }, 2000); } return; }
+  if(code.length!==4){ 
+    statusEl.textContent='Nhập mã phòng 4 ký tự (VD: AB12).'; 
+    if(input) input.style.borderColor='#ff3b5a';
+    setTimeout(()=>{ if(input) input.style.borderColor='#4a355e'; }, 2000);
+    return; 
+  }
   const btnJoin = document.getElementById('joinRoomBtn');
   if(btnJoin) btnJoin.textContent='⏳ Đang vào...';
   statusEl.textContent='Đang vào phòng '+code+'...';
   const ref=db.collection('rooms').doc(code);
   try{
     const snap=await ref.get();
-    if(!snap.exists){ statusEl.textContent='Không tìm thấy phòng '+code+'.'; if(btnJoin) btnJoin.textContent='Vào'; return; }
-    const data=snap.data(); const seats=data.seats||{};
+    if(!snap.exists){ 
+      statusEl.textContent='Không tìm thấy phòng '+code+'. Kiểm tra lại mã.'; 
+      if(btnJoin) btnJoin.textContent='Vào';
+      return; 
+    }
+    const data=snap.data();
+    const seats=data.seats||{};
     const had = seats.X&&seats.X.uid===currentUser.uid ? 'X' : seats.O&&seats.O.uid===currentUser.uid ? 'O' : null;
-    if(had){ mySeat=had; statusEl.textContent='Bạn đã ở trong phòng '+code+' ('+mySeat+')'; }
-    else {
-      if(seats.X&&seats.O){ statusEl.textContent='Phòng '+code+' đã đầy.'; if(btnJoin) btnJoin.textContent='Vào'; return; }
+    if(had){
+      mySeat=had;
+      statusEl.textContent='Bạn đã ở trong phòng '+code+' ('+mySeat+')';
+    } else {
+      if(seats.X&&seats.O){ 
+        // Kiểm tra nếu có người offline lâu thì cho chiếm chỗ
+        statusEl.textContent='Phòng '+code+' đã đầy.'; 
+        if(btnJoin) btnJoin.textContent='Vào';
+        return; 
+      }
       const free = seats.X ? 'O' : 'X';
-      await ref.update({['seats.'+free]:{uid:currentUser.uid,name:currentUsername}, status:'playing', joinedAt: firebase.firestore.FieldValue.serverTimestamp()});
-      mySeat=free; statusEl.textContent='Đã vào phòng '+code+' - Bạn là '+mySeat+'!';
+      await ref.update({
+        ['seats.'+free]:{uid:currentUser.uid,name:currentUsername}, 
+        status:'playing',
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      mySeat=free;
+      statusEl.textContent='Đã vào phòng '+code+' - Bạn là '+mySeat+' - Bắt đầu đấu!';
     }
     roomRef=ref; roomCode=code;
     if(btnJoin) btnJoin.textContent='✅ Đã vào';
     setTimeout(()=>{ if(btnJoin) btnJoin.textContent='Vào'; }, 2000);
     subscribeRoom();
-  }catch(e){ console.error('joinRoom error', e); statusEl.textContent='Lỗi vào phòng: '+(e.message||e.code||'thử lại'); if(btnJoin) btnJoin.textContent='Vào'; }
+  }catch(e){ 
+    console.error('joinRoom error', e);
+    statusEl.textContent='Lỗi vào phòng: '+(e.message||e.code||'thử lại');
+    if(btnJoin) btnJoin.textContent='Vào';
+  }
 }
 function subscribeRoom(){
   if(unsub) unsub();
@@ -6722,6 +6905,12 @@ document.addEventListener('click', (e)=>{
   }
   
   function resetBoardBotVsBot(){
+    window.botVsBotGameId = (window.botVsBotGameId||0)+1;
+    // Không start timer ở đây, chỉ start khi có nước đi đầu tiên
+    stopGameTimer(); gameStartTime=null; currentGameDuration=0;
+    window._lastCountedGameId = -1;
+    try{ Object.keys(window.hellWorkers||{}).forEach(k=>{ if(k.includes('_X_')||k.includes('_O_')){ try{window.hellWorkers[k].worker.terminate();}catch(_){} delete window.hellWorkers[k]; } }); }catch(_){}
+
     try{
       if(typeof hellCancel === 'function') hellCancel();
       if(typeof board !== 'undefined'){
@@ -6767,17 +6956,44 @@ document.addEventListener('click', (e)=>{
   }
   
   function onGameOver(winner){
+    // Lưu lịch sử Bot vs Bot với thời gian
+    try{ const dur = stopGameTimer(); }catch(e){}
+
+    // FIX: Chặn cộng 2 điểm - chỉ tính 1 lần mỗi ván
+    if(window._lastCountedGameId === window.botVsBotGameId) return;
+    window._lastCountedGameId = window.botVsBotGameId;
     if(!winner && lastWinner!==0) winner = lastWinner;
     console.log('BotVsBot GameOver winner:', winner, 'auto:', window.botVsBotAuto, 'running:', window.botVsBotRunning);
     
     const statusEl = document.getElementById('botVsBotStatus');
     if(winner===1){
       botXWins++;
+      // Lưu lịch sử Bot vs Bot
+      try{
+        saveAllModesHistory({
+          mode: 'botVsBot',
+          modeLabel: 'Bot vs Bot',
+          winner: 1,
+          botX: document.getElementById('botXVersion')?.value||'v12',
+          botO: document.getElementById('botOVersion')?.value||'v9',
+          moves: typeof moves!=='undefined'?moves:0
+        });
+      }catch(e){}
       const xv = document.getElementById('botXVersion')?.value || 'v12';
       if(statusEl) statusEl.textContent = `BOT X ${xv.toUpperCase()} THẮNG! ${moves} nước`;
       lastWinner = 1;
     } else if(winner===2){
       botOWins++;
+      try{
+        saveAllModesHistory({
+          mode: 'botVsBot',
+          modeLabel: 'Bot vs Bot',
+          winner: 2,
+          botX: document.getElementById('botXVersion')?.value||'v12',
+          botO: document.getElementById('botOVersion')?.value||'v9',
+          moves: typeof moves!=='undefined'?moves:0
+        });
+      }catch(e){}
       const ov = document.getElementById('botOVersion')?.value || 'v9';
       if(statusEl) statusEl.textContent = `BOT O ${ov.toUpperCase()} THẮNG! ${moves} nước`;
       lastWinner = 2;
@@ -6905,6 +7121,8 @@ document.addEventListener('click', (e)=>{
             moves++;
             const mc = document.getElementById('botVsBotMoveCount');
             if(mc) mc.textContent = moves + ' nước';
+            // Bắt đầu tính giờ khi bot đánh nước đầu tiên
+            try{ if(typeof moveHistory!=='undefined' && moveHistory.length===1) startGameTimer(); if(typeof moves!=='undefined' && moves===1) startGameTimer(); }catch(e){}
             if(!prevOver && gameOver){
               lastWinner = curTurn;
               onGameOver(curTurn);
@@ -6917,6 +7135,8 @@ document.addEventListener('click', (e)=>{
         
         if(window.botVsBotRunning && !window.botVsBotPaused){
           const speed = parseInt(document.getElementById('botVsBotSpeed')?.value || '800');
+          // FIX: Bắt đầu tính giờ khi bot vs bot có nước đầu tiên
+          try{ if((typeof moves!=='undefined' && moves===0) || (typeof moveHistory!=='undefined' && moveHistory.length===0)) { startGameTimer(); } }catch(e){}
           timer = setTimeout(doBotMove, speed);
         }
       }, curTurn, hellPen, hellTime, hellVer);
@@ -6928,14 +7148,9 @@ document.addEventListener('click', (e)=>{
     if(isBotMode()){
       lastWinner = winner;
       console.log('endGame override bot vs bot winner:', winner);
-      // Gọi onGameOver sau khi origEndGame để đảm bảo điểm được cộng và auto reset
-      setTimeout(()=>{
-        if(isBotMode() && typeof gameOver !== 'undefined' && gameOver){
-          if(typeof onGameOver === 'function'){
-            onGameOver(winner);
-          }
-        }
-      }, 100);
+      // FIX: Không gọi onGameOver ở đây nữa vì doBotMove đã gọi, tránh cộng 2 điểm
+      // Chỉ giữ lại lastWinner để doBotMove dùng
+      
     }
     if(origEndGame) return origEndGame.apply(this, arguments);
     gameOver=true; winCells=cells||[];
@@ -7245,6 +7460,43 @@ document.addEventListener('click', (e)=>{
   if(mb) obs.observe(mb, {attributes:true, attributeFilter:['class']});
   // init display
   setTimeout(()=>{ try{ refreshHumanScoreUI(); }catch(e){} }, 300);
+})();
+</script>
+
+
+<script>
+// Sync time storage lists for all panels
+(function(){
+  function syncAllTimeLists(){
+    const main = document.getElementById('timeStorageList');
+    const online = document.getElementById('timeStorageListOnline');
+    const bvb = document.getElementById('timeStorageListBvb');
+    if(main) renderTimeStorage();
+    if(online && main) online.innerHTML = main.innerHTML;
+    if(bvb && main) bvb.innerHTML = main.innerHTML;
+  }
+  setInterval(syncAllTimeLists, 1000);
+  document.addEventListener('click', (e)=>{
+    if(e.target.id==='clearTimeStorage'){
+      if(confirm('Xóa toàn bộ lịch sử thời gian?')){
+        localStorage.removeItem('xo5_all_history');
+        renderTimeStorage();
+      }
+    }
+  });
+  // Override renderTimeStorage to sync all
+  const origRender = window.renderTimeStorage;
+  window.renderTimeStorage = function(){
+    if(origRender) origRender();
+    const main = document.getElementById('timeStorageList');
+    const online = document.getElementById('timeStorageListOnline');
+    const bvb = document.getElementById('timeStorageListBvb');
+    if(main){
+      if(online) online.innerHTML = main.innerHTML;
+      if(bvb) bvb.innerHTML = main.innerHTML;
+    }
+  };
+  setTimeout(()=>{ try{ renderTimeStorage(); }catch(e){} }, 500);
 })();
 </script>
 
