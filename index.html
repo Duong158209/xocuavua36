@@ -3844,11 +3844,19 @@ const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 const wrap=document.getElementById('boardWrap');
 const statusEl=document.getElementById('status');
 
+function fitBoard(){
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+  if(W<10||H<10) return;
+  const target = Math.min(W,H)*0.96;
+  const ideal = Math.floor(target / SIZE);
+  cellSize = Math.max(18, Math.min(48, ideal));
+}
 function resize(){
   cv.width=wrap.clientWidth*devicePixelRatio;
   cv.height=wrap.clientHeight*devicePixelRatio;
   cv.style.width=wrap.clientWidth+'px';
   cv.style.height=wrap.clientHeight+'px';
+  fitBoard();
   centerBoard();
   clampOffsets();
   draw();
@@ -3858,6 +3866,7 @@ new ResizeObserver(resize).observe(wrap);
 function centerBoard(){
   offX=(wrap.clientWidth - SIZE*cellSize)/2;
   offY=(wrap.clientHeight - SIZE*cellSize)/2;
+  // đảm bảo không âm quá khi fit
 }
 function draw(){
   const dpr=devicePixelRatio;
@@ -4008,7 +4017,7 @@ function clampOffsets(){
   }
 }
 
-const MIN_CELL=8, MAX_CELL=64;
+const MIN_CELL=16, MAX_CELL=56;
 const ptrs=new Map();
 let pinchDist0=0, pinchSize0=0, pinchWorld={x:0,y:0}, wasPinch=false;
 function ptrPair(){ const [a,b]=[...ptrs.values()]; return {a,b,dist:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2,my:(a.y+b.y)/2}; }
