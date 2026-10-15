@@ -887,6 +887,13 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
           <div class="btn" id="botVsBotPause" style="padding:12px;">⏸️ Dừng</div>
           <div class="btn" id="botVsBotNew" style="padding:12px;">↻ Mới</div>
         </div>
+        <div style="display:flex; gap:8px; align-items:center; background:rgba(0,0,0,.3); border-radius:8px; padding:8px 10px; flex-wrap:wrap;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:.8rem; cursor:pointer; background:rgba(255,107,74,.15); border:1px solid #ff6b4a30; border-radius:6px; padding:4px 8px;">
+            <input type="checkbox" id="botVsBotAutoChk" checked style="accent-color:#ff6b4a;"> 
+            <span>Tự động ván mới</span>
+          </label>
+          <div class="btn small" id="botVsBotResetScore" style="padding:4px 10px; font-size:.75rem; background:rgba(255,255,255,.08);">↻ Reset điểm</div>
+        </div>
         <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,.3); border-radius:8px; padding:8px 10px;">
           <div style="display:flex; align-items:center; gap:6px; font-size:.78rem;"><span style="opacity:.7;">Tốc độ:</span><select id="botVsBotSpeed" style="padding:5px 8px; border-radius:6px; border:1px solid #4a355e; background:#0e0c15; color:#fff;"><option value="1500">Chậm 1.5s</option><option value="800" selected>Vừa 0.8s</option><option value="300">Nhanh 0.3s</option><option value="50">Siêu tốc</option></select></div>
           <div id="botVsBotMoveCount" style="font-size:.8rem; font-weight:700; opacity:.7;">0 nước</div>
@@ -3391,10 +3398,12 @@ document.addEventListener('click', (e)=>{
 
 
 
+
+
+
 <script>
-// BOT VS BOT FIXED: bot đi sau mãi k đánh, bot đi trước k hiện nước, thêm thu phóng
+// BOT VS BOT - FIXED SCORING + AUTO CONTINUOUS
 (function(){
-  console.log('BotVsBot FIXED init');
   const VERSIONS = {
     v8:  { t: 1200, name: 'v8 Cổ điển' },
     v9:  { t: 2500, name: 'v9 Tấn công' },
@@ -3404,8 +3413,10 @@ document.addEventListener('click', (e)=>{
   
   window.botVsBotRunning = false;
   window.botVsBotPaused = false;
+  window.botVsBotAuto = true; // chạy liên tục
   let timer = null;
-  let botXWins = 0, botOWins = 0, moves = 0;
+  let botXWins = 0, botOWins = 0, botDraws = 0, moves = 0;
+  let lastWinner = 0; // lưu người thắng ván vừa rồi
   
   function isBotMode(){
     return document.getElementById('modeBotVsBot')?.classList.contains('active');
@@ -3416,10 +3427,9 @@ document.addEventListener('click', (e)=>{
     const panel = document.getElementById('botVsBotPanel');
     const botCard = document.getElementById('botCard');
     const onlinePanel = document.getElementById('onlinePanel');
-    const boardWrap = document.getElementById('boardWrap');
     
     if(panel) panel.style.display = isBot ? 'flex' : 'none';
-    if(onlinePanel) onlinePanel.style.display = 'none'; // luôn ẩn onlinePanel khi ở bot vs bot, để JS bên ngoài xử lý
+    if(onlinePanel) onlinePanel.style.display = 'none';
     if(botCard) botCard.style.display = isBot ? 'none' : 'flex';
     
     const labelX = document.getElementById('labelX');
@@ -3431,18 +3441,9 @@ document.addEventListener('click', (e)=>{
       labelO.textContent = `BOT ${ov.toUpperCase()} (O)`;
     }
     
-    if(boardWrap){
-      if(isBot && window.botVsBotRunning){
-        // Khi đang chạy thì chặn click người chơi nhưng vẫn cho phép zoom (wheel/pinch)
-        boardWrap.style.pointerEvents = 'auto'; // để zoom vẫn hoạt động
-        const cv = document.getElementById('cv');
-        if(cv) cv.style.pointerEvents = 'none'; // chặn đặt cờ
-      } else {
-        boardWrap.style.pointerEvents = 'auto';
-        const cv = document.getElementById('cv');
-        if(cv) cv.style.pointerEvents = 'auto';
-      }
-    }
+    // Cập nhật checkbox auto
+    const autoChk = document.getElementById('botVsBotAutoChk');
+    if(autoChk) window.botVsBotAuto = autoChk.checked;
   }
   
   function resetBoardBotVsBot(){
@@ -3455,76 +3456,113 @@ document.addEventListener('click', (e)=>{
         if(typeof gameOver !== 'undefined') gameOver = false;
         if(typeof turn !== 'undefined') turn = 1;
         if(typeof lastMove !== 'undefined') lastMove = null;
-        if(typeof lastWinPlayer !== 'undefined') lastWinPlayer = 0;
-        if(typeof draw === 'function') draw();
-      }
-      if(typeof resetBoardState === 'function'){
-        // Không gọi resetBoardState vì nó set mode, chỉ reset board
-        if(typeof board !== 'undefined') board = new Uint8Array(SIZE*SIZE);
-        if(typeof moveHistory !== 'undefined') moveHistory = [];
-        if(typeof winCells !== 'undefined') winCells = [];
-        if(typeof gameOver !== 'undefined') gameOver = false;
-        if(typeof turn !== 'undefined') turn = 1;
         if(typeof draw === 'function') draw();
       }
     }catch(e){ console.error(e); }
     moves = 0;
+    lastWinner = 0;
     const mc = document.getElementById('botVsBotMoveCount');
     if(mc) mc.textContent = '0 nước';
     const st = document.getElementById('status');
     if(st && isBotMode()){
       const xv = document.getElementById('botXVersion')?.value?.toUpperCase() || 'V11';
       const ov = document.getElementById('botOVersion')?.value?.toUpperCase() || 'V9';
-      st.textContent = `BOT VS BOT - SẴN SÀNG - ${xv} vs ${ov} - BẤM BẮT ĐẦU`;
+      st.textContent = `BOT VS BOT - SẴN SÀNG - ${xv} vs ${ov}`;
       st.classList.remove('bot-thinking');
     }
   }
   
-  function onGameOver(){
-    window.botVsBotRunning = false;
-    if(timer){ clearTimeout(timer); timer=null; }
+  function updateScoreDisplay(){
+    const scX = document.getElementById('scX');
+    const scO = document.getElementById('scO');
+    const bx = document.getElementById('botXScore');
+    const bo = document.getElementById('botOScore');
     
-    let winner = 0;
-    if(typeof lastWinPlayer !== 'undefined' && lastWinPlayer!==0) winner = lastWinPlayer;
-    else if(typeof turn !== 'undefined') winner = 3-turn;
+    if(bx) bx.textContent = botXWins;
+    if(bo) bo.textContent = botOWins;
+    if(scX) scX.innerHTML = `<span>${botXWins}</span><span style="font-size:.85em; opacity:.9;"> thắng</span>`;
+    if(scO) scO.innerHTML = `<span>${botOWins}</span><span style="font-size:.85em; opacity:.9;"> thắng</span>`;
+    
+    // Lưu vào localStorage để không mất khi reload
+    try{
+      localStorage.setItem('botVsBotScore', JSON.stringify({x:botXWins, o:botOWins, d:botDraws}));
+    }catch(e){}
+  }
+  
+  function loadScore(){
+    try{
+      const s = JSON.parse(localStorage.getItem('botVsBotScore')||'{"x":0,"o":0,"d":0}');
+      botXWins = s.x||0; botOWins = s.o||0; botDraws = s.d||0;
+      updateScoreDisplay();
+    }catch(e){}
+  }
+  
+  function onGameOver(winnerParam){
+    // winnerParam là người thắng thực sự (1=X, 2=O, 0=hòa)
+    let winner = winnerParam;
+    if(!winner){
+      // Fallback đoán từ game
+      if(typeof lastWinner !== 'undefined' && lastWinner!==0) winner = lastWinner;
+      else if(typeof turn !== 'undefined') winner = 3-turn;
+    }
+    
+    console.log('Game over, winner:', winner, 'lastWinner:', lastWinner);
     
     const statusEl = document.getElementById('botVsBotStatus');
     if(winner===1){
       botXWins++;
       const xv = document.getElementById('botXVersion')?.value || 'v11';
-      if(statusEl) statusEl.textContent = `BOT X ${xv.toUpperCase()} THẮNG!`;
-      const el = document.getElementById('botXScore');
-      if(el) el.textContent = botXWins;
-      const scX = document.getElementById('scX');
-      if(scX) scX.innerHTML = `<span>${botXWins}</span><span style="font-size:.85em; opacity:.9;">thắng</span>`;
+      if(statusEl) statusEl.textContent = `BOT X ${xv.toUpperCase()} THẮNG! - ${moves} nước`;
+      lastWinner = 1;
     } else if(winner===2){
       botOWins++;
       const ov = document.getElementById('botOVersion')?.value || 'v9';
-      if(statusEl) statusEl.textContent = `BOT O ${ov.toUpperCase()} THẮNG!`;
-      const el = document.getElementById('botOScore');
-      if(el) el.textContent = botOWins;
-      const scO = document.getElementById('scO');
-      if(scO) scO.innerHTML = `<span>${botOWins}</span><span style="font-size:.85em; opacity:.9;">thắng</span>`;
+      if(statusEl) statusEl.textContent = `BOT O ${ov.toUpperCase()} THẮNG! - ${moves} nước`;
+      lastWinner = 2;
     } else {
-      if(statusEl) statusEl.textContent = 'Hòa!';
+      botDraws++;
+      if(statusEl) statusEl.textContent = `Hòa! - ${moves} nước`;
+      lastWinner = 0;
     }
     
+    updateScoreDisplay();
+    
     const mainSt = document.getElementById('status');
-    if(mainSt && statusEl) mainSt.textContent = statusEl.textContent + ` - ${moves} nước - BẤM VÁN MỚI ĐỂ TIẾP`;
+    if(mainSt && statusEl){
+      mainSt.textContent = statusEl.textContent + (window.botVsBotAuto ? ' - Tự reset sau 2.5s...' : ' - Bấm Mới để tiếp');
+      mainSt.classList.remove('bot-thinking');
+    }
     
-    const boardWrap = document.getElementById('boardWrap');
-    if(boardWrap) boardWrap.style.pointerEvents = 'auto';
-    const cv = document.getElementById('cv');
-    if(cv) cv.style.pointerEvents = 'auto';
-    
-    const startBtn = document.getElementById('botVsBotStart');
-    if(startBtn) startBtn.textContent = '▶️ Bắt đầu';
+    // Chạy liên tục nếu bật auto
+    if(window.botVsBotAuto && window.botVsBotRunning && !window.botVsBotPaused){
+      timer = setTimeout(()=>{
+        if(!isBotMode()) return;
+        if(!window.botVsBotAuto) return;
+        resetBoardBotVsBot();
+        const st = document.getElementById('botVsBotStatus');
+        if(st) st.textContent = 'Ván mới - Đang chạy liên tục...';
+        if(window.botVsBotRunning) doBotMove();
+      }, 2500);
+    } else {
+      window.botVsBotRunning = false;
+      if(timer){ clearTimeout(timer); timer=null; }
+      const boardWrap = document.getElementById('boardWrap');
+      if(boardWrap) boardWrap.style.pointerEvents = 'auto';
+      const cv = document.getElementById('cv');
+      if(cv) cv.style.pointerEvents = 'auto';
+      const startBtn = document.getElementById('botVsBotStart');
+      if(startBtn) startBtn.textContent = '▶️ Bắt đầu';
+    }
   }
   
-  function doBotMove(){
+  async function doBotMove(){
     if(!window.botVsBotRunning || window.botVsBotPaused) return;
     if(typeof gameOver !== 'undefined' && gameOver){
-      onGameOver();
+      // Nếu gameOver mà chưa xử lý thắng, xử lý
+      if(lastWinner===0){
+        // Thử lấy winner từ turn
+        onGameOver(3-turn);
+      }
       return;
     }
     
@@ -3543,18 +3581,16 @@ document.addEventListener('click', (e)=>{
       mainSt.classList.add('bot-thinking');
     }
     
-    // Set HELL_TIME tạm thời cho worker
     try{
       if(typeof HELL_TIME !== 'undefined'){
         window._oldHT = HELL_TIME;
         HELL_TIME = cfg.t;
       }
+      window.HELL_TIME = cfg.t;
     }catch(e){}
     
-    // Dùng hellThink (worker) để tính nước đi - FIX bot đi sau không đánh
     if(typeof hellThink === 'function'){
       hellThink((moveIdx)=>{
-        // Khôi phục HELL_TIME
         try{
           if(typeof window._oldHT !== 'undefined') HELL_TIME = window._oldHT;
         }catch(e){}
@@ -3564,80 +3600,85 @@ document.addEventListener('click', (e)=>{
         if(moveIdx>=0 && moveIdx < SIZE*SIZE && board[moveIdx]===0){
           const r = Math.floor(moveIdx / SIZE);
           const c = moveIdx % SIZE;
+          lastWinner = 0; // reset
+          // placeLocal sẽ gọi endGame nếu thắng
+          const prevGameOver = gameOver;
+          let placed = false;
           if(typeof placeLocal === 'function'){
-            const ok = placeLocal(r,c,curTurn);
-            if(!ok){
-              console.error('placeLocal failed', r,c,curTurn);
+            placed = placeLocal(r,c,curTurn);
+            // placeLocal đã gọi endGame nếu thắng, kiểm tra gameOver mới
+            if(!prevGameOver && gameOver){
+              // Thắng
+              lastWinner = curTurn;
+              moves++;
+              const mc = document.getElementById('botVsBotMoveCount');
+              if(mc) mc.textContent = moves + ' nước';
+              onGameOver(curTurn);
+              return;
             }
           } else {
             board[moveIdx]=curTurn;
             if(typeof draw === 'function') draw();
             if(typeof turn !== 'undefined') turn = 3-curTurn;
+            placed = true;
           }
-          moves++;
-          const mc = document.getElementById('botVsBotMoveCount');
-          if(mc) mc.textContent = moves + ' nước';
-          
-          if(typeof gameOver !== 'undefined' && gameOver){
-            onGameOver();
-            return;
+          if(placed){
+            moves++;
+            const mc = document.getElementById('botVsBotMoveCount');
+            if(mc) mc.textContent = moves + ' nước';
+            
+            if(typeof gameOver !== 'undefined' && gameOver){
+              if(lastWinner===0) lastWinner = curTurn;
+              onGameOver(curTurn);
+              return;
+            }
           }
         } else {
           console.error('Invalid moveIdx', moveIdx);
-          // Thử nước gần trung tâm
-          const center = Math.floor(SIZE*SIZE/2);
-          if(board[center]===0 && typeof placeLocal === 'function'){
-            placeLocal(Math.floor(center/SIZE), center%SIZE, curTurn);
-            moves++;
-          }
         }
         
-        // Nước tiếp theo
         if(window.botVsBotRunning && !window.botVsBotPaused){
           const speed = parseInt(document.getElementById('botVsBotSpeed')?.value || '800');
           timer = setTimeout(doBotMove, speed);
         }
       }, curTurn, null);
-    } else {
-      // Fallback nếu không có hellThink
-      let mv = -1;
-      const empties=[];
-      for(let i=0;i<board.length;i++) if(board[i]===0) empties.push(i);
-      mv = empties[Math.floor(Math.random()*empties.length)] || Math.floor(SIZE*SIZE/2);
-      const r = Math.floor(mv / SIZE);
-      const c = mv % SIZE;
-      if(typeof placeLocal === 'function') placeLocal(r,c,curTurn);
-      moves++;
-      if(window.botVsBotRunning && !window.botVsBotPaused){
-        const speed = parseInt(document.getElementById('botVsBotSpeed')?.value || '800');
-        timer = setTimeout(doBotMove, speed);
-      }
     }
   }
   
-  // Chặn người chơi đặt cờ khi bot vs bot đang chạy, nhưng cho phép zoom
-  function shouldBlockBoardClick(){
-    return isBotMode() && window.botVsBotRunning;
-  }
+  // Override endGame để bắt thắng thua cho bot vs bot
+  const origEndGame = window.endGame;
+  window.endGame = function(winner, cells){
+    if(isBotMode()){
+      // Lưu winner trước khi origEndGame xóa gì đó
+      lastWinner = winner;
+      console.log('endGame called, winner:', winner);
+    }
+    if(origEndGame) return origEndGame.apply(this, arguments);
+    // Fallback
+    gameOver=true; winCells=cells||[];
+    if(winner===1){ if(typeof scores !== 'undefined') scores.X++; }
+    else if(winner===2){ if(typeof scores !== 'undefined') scores.O++; }
+    const scX = document.getElementById('scX');
+    const scO = document.getElementById('scO');
+    if(scX && typeof scores !== 'undefined') scX.textContent=scores.X;
+    if(scO && typeof scores !== 'undefined') scO.textContent=scores.O;
+    if(typeof draw === 'function') draw();
+  };
+  try{ endGame = window.endGame; }catch(e){}
   
-  // Gắn vào cellTapped để chặn
+  // Block human moves
   const origCellTapped = window.cellTapped;
   window.cellTapped = function(r,c){
-    if(shouldBlockBoardClick()){
-      console.log('Blocked human move during bot vs bot');
+    if(isBotMode() && window.botVsBotRunning){
+      return;
+    }
+    if(isBotMode() && !window.botVsBotRunning){
+      // Trong bot vs bot mà chưa chạy thì cũng không cho người đánh
       return;
     }
     if(origCellTapped) return origCellTapped(r,c);
-    // fallback original logic
-    if(typeof placeLocal !== 'undefined' && typeof turn !== 'undefined'){
-      if(isBotMode()){
-        // Trong bot vs bot mà không chạy thì không cho người đánh
-        return;
-      }
-    }
   };
   
-  // Click handlers
   document.addEventListener('click', (e)=>{
     const btn = e.target.closest('.btn');
     if(!btn) return;
@@ -3645,15 +3686,14 @@ document.addEventListener('click', (e)=>{
     if(btn.id === 'modeBotVsBot'){
       document.querySelectorAll('#modeAi, #modeLocal, #modeOnline, #modeBotVsBot').forEach(b=>b?.classList.remove('active'));
       btn.classList.add('active');
-      if(typeof mode !== 'undefined') mode = 'botVsBot'; // set mode global
+      if(typeof mode !== 'undefined') mode = 'botVsBot';
       window.botVsBotRunning = false;
       window.botVsBotPaused = false;
       if(timer){ clearTimeout(timer); timer=null; }
       if(typeof hellCancel === 'function') hellCancel();
       resetBoardBotVsBot();
+      loadScore();
       updateUI();
-      const st = document.getElementById('botVsBotStatus');
-      if(st) st.textContent = 'Sẵn sàng - Chọn v rồi Bắt đầu';
       return;
     }
     
@@ -3662,13 +3702,7 @@ document.addEventListener('click', (e)=>{
       window.botVsBotPaused = false;
       if(timer){ clearTimeout(timer); timer=null; }
       if(typeof hellCancel === 'function') hellCancel();
-      if(typeof mode !== 'undefined'){
-        mode = btn.id==='modeAi'?'ai':(btn.id==='modeLocal'?'local':'online');
-      }
-      const bw = document.getElementById('boardWrap');
-      if(bw) bw.style.pointerEvents='auto';
-      const cv = document.getElementById('cv');
-      if(cv) cv.style.pointerEvents='auto';
+      if(typeof mode !== 'undefined') mode = btn.id==='modeAi'?'ai':(btn.id==='modeLocal'?'local':'online');
     }
     
     if(btn.id === 'botVsBotStart'){
@@ -3684,13 +3718,9 @@ document.addEventListener('click', (e)=>{
       window.botVsBotRunning = true;
       window.botVsBotPaused = false;
       if(typeof gameOver !== 'undefined' && gameOver) resetBoardBotVsBot();
-      else if(moves===0 || (typeof board !== 'undefined' && board.every(v=>v===0))) resetBoardBotVsBot();
-      // Nếu bàn đã có cờ thì tiếp tục từ đó
-      if(typeof board !== 'undefined' && board.some(v=>v!==0)){
-        // Đếm lại moves
-        moves = board.filter(v=>v!==0).length;
-        const mc = document.getElementById('botVsBotMoveCount');
-        if(mc) mc.textContent = moves + ' nước';
+      else if(moves===0) {
+        // Kiểm tra board trống
+        if(typeof board !== 'undefined' && board.every(v=>v===0)) resetBoardBotVsBot();
       }
       btn.textContent = '▶️ Đang chạy';
       updateUI();
@@ -3706,7 +3736,7 @@ document.addEventListener('click', (e)=>{
       const st = document.getElementById('botVsBotStatus');
       if(st) st.textContent = window.botVsBotPaused ? 'Tạm dừng' : 'Tiếp tục...';
       if(!window.botVsBotPaused) doBotMove();
-      else if(timer){ clearTimeout(timer); timer=null; if(typeof hellCancel === 'function') hellCancel(); }
+      else { if(timer){ clearTimeout(timer); timer=null; } if(typeof hellCancel === 'function') hellCancel(); }
     }
     
     if(btn.id === 'botVsBotNew'){
@@ -3716,185 +3746,90 @@ document.addEventListener('click', (e)=>{
       if(typeof hellCancel === 'function') hellCancel();
       resetBoardBotVsBot();
       const st = document.getElementById('botVsBotStatus');
-      if(st) st.textContent = 'Sẵn sàng - Bấm Bắt đầu';
+      if(st) st.textContent = 'Sẵn sàng';
       const sb = document.getElementById('botVsBotStart');
       if(sb) sb.textContent = '▶️ Bắt đầu';
       const pb = document.getElementById('botVsBotPause');
       if(pb) pb.textContent = '⏸️ Dừng';
       updateUI();
     }
-  });
-  
-  document.addEventListener('change', (e)=>{
-    if(e.target.id === 'botXVersion' || e.target.id === 'botOVersion'){
-      updateUI();
-      const st = document.getElementById('status');
-      if(st && isBotMode() && !window.botVsBotRunning){
-        const xv = document.getElementById('botXVersion')?.value?.toUpperCase() || 'V11';
-        const ov = document.getElementById('botOVersion')?.value?.toUpperCase() || 'V9';
-        st.textContent = `BOT VS BOT - SẴN SÀNG - ${xv} vs ${ov}`;
-      }
+    
+    if(btn.id === 'botVsBotResetScore'){
+      botXWins = 0; botOWins = 0; botDraws = 0;
+      updateScoreDisplay();
+      try{ localStorage.removeItem('botVsBotScore'); }catch(e){}
     }
   });
   
-  // Patch setStatus để không hiện (bạn) khi bot vs bot
-  const origSetStatus = window.setStatus;
-  if(typeof origSetStatus === 'function' || typeof setStatus === 'function'){
-    const patch = function(){
-      if(isBotMode()){
-        const st = document.getElementById('status');
-        if(!st) return;
-        if(typeof gameOver !== 'undefined' && gameOver) return;
-        if(window.botVsBotRunning) return; // doBotMove sẽ set
-        const xv = document.getElementById('botXVersion')?.value?.toUpperCase() || 'V11';
-        const ov = document.getElementById('botOVersion')?.value?.toUpperCase() || 'V9';
-        st.textContent = `BOT VS BOT - SẴN SÀNG - ${xv} vs ${ov} - BẤM BẮT ĐẦU`;
-        if(typeof refreshMarks === 'function') refreshMarks();
-        return;
-      }
-      if(origSetStatus) return origSetStatus.apply(this, arguments);
-      // fallback
-      if(typeof gameOver !== 'undefined' && !gameOver){
-        const el = document.getElementById('status');
-        if(el) el.textContent='Lượt của '+(turn===1?'X':'O')+(mode==='ai'?(turn===mySide?' (bạn)':' (máy)'):'');
-        if(typeof refreshMarks === 'function') refreshMarks();
-      }
-    };
-    window.setStatus = patch;
-    try{ setStatus = patch; }catch(e){ window.setStatus = patch; }
-  }
+  document.addEventListener('change', (e)=>{
+    if(e.target.id === 'botXVersion' || e.target.id === 'botOVersion' || e.target.id === 'botVsBotAutoChk'){
+      if(e.target.id === 'botVsBotAutoChk') window.botVsBotAuto = e.target.checked;
+      updateUI();
+    }
+  });
   
-  // THU PHÓNG BÀN CỜ KHI XEM BOT VS BOT
+  // Zoom controls for bot vs bot
   (function(){
     const wrap = document.getElementById('boardWrap');
     const cv = document.getElementById('cv');
     if(!wrap || !cv) return;
-    
-    let scale = 1;
-    let offsetX = 0, offsetY = 0;
-    let isDraggingBoard = false;
-    let lastTouchDist = 0;
-    let startX = 0, startY = 0;
-    let startOffsetX = 0, startOffsetY = 0;
-    
-    function applyTransform(){
-      cv.style.transform = `scale(${scale}) translate(${offsetX/scale}px, ${offsetY/scale}px)`;
-      cv.style.transformOrigin = 'center center';
-    }
-    
-    // Wheel zoom
+    let scale = 1, offsetX = 0, offsetY = 0, isDragging = false, lastDist = 0, startX=0, startY=0, startOffX=0, startOffY=0;
+    function apply(){ cv.style.transform = `scale(${scale}) translate(${offsetX/scale}px, ${offsetY/scale}px)`; cv.style.transformOrigin='center center'; }
     wrap.addEventListener('wheel', (e)=>{
-      if(!isBotMode()) return; // chỉ cho zoom khi xem bot vs bot
+      if(!isBotMode()) return;
       e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      scale = Math.max(0.5, Math.min(3, scale + delta));
-      applyTransform();
+      const d = e.deltaY>0 ? -0.1 : 0.1;
+      scale = Math.max(0.5, Math.min(3, scale+d));
+      apply();
     }, {passive:false});
-    
-    // Touch pinch zoom
     wrap.addEventListener('touchstart', (e)=>{
       if(!isBotMode()) return;
       if(e.touches.length===2){
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        lastTouchDist = Math.hypot(dx, dy);
-      } else if(e.touches.length===1){
-        // Pan khi đã zoom
-        if(scale>1){
-          isDraggingBoard = true;
-          startX = e.touches[0].clientX;
-          startY = e.touches[0].clientY;
-          startOffsetX = offsetX;
-          startOffsetY = offsetY;
-        }
+        const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+        lastDist=Math.hypot(dx,dy);
+      } else if(e.touches.length===1 && scale>1){
+        isDragging=true; startX=e.touches[0].clientX; startY=e.touches[0].clientY; startOffX=offsetX; startOffY=offsetY;
       }
     }, {passive:false});
-    
     wrap.addEventListener('touchmove', (e)=>{
       if(!isBotMode()) return;
       if(e.touches.length===2){
         e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const dist = Math.hypot(dx, dy);
-        if(lastTouchDist>0){
-          const factor = dist / lastTouchDist;
-          scale = Math.max(0.5, Math.min(3, scale * factor));
-          applyTransform();
-        }
-        lastTouchDist = dist;
-      } else if(e.touches.length===1 && isDraggingBoard && scale>1){
+        const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+        const dist=Math.hypot(dx,dy);
+        if(lastDist>0){ scale=Math.max(0.5, Math.min(3, scale*dist/lastDist)); apply(); }
+        lastDist=dist;
+      } else if(e.touches.length===1 && isDragging && scale>1){
         e.preventDefault();
-        const dx = e.touches[0].clientX - startX;
-        const dy = e.touches[0].clientY - startY;
-        offsetX = startOffsetX + dx;
-        offsetY = startOffsetY + dy;
-        applyTransform();
+        offsetX=startOffX+e.touches[0].clientX-startX;
+        offsetY=startOffY+e.touches[0].clientY-startY;
+        apply();
       }
     }, {passive:false});
+    wrap.addEventListener('touchend', (e)=>{ if(e.touches.length<2) lastDist=0; if(e.touches.length===0) isDragging=false; });
+    wrap.addEventListener('dblclick', ()=>{ if(!isBotMode()) return; scale=1; offsetX=0; offsetY=0; apply(); });
     
-    wrap.addEventListener('touchend', (e)=>{
-      if(e.touches.length<2) lastTouchDist = 0;
-      if(e.touches.length===0) isDraggingBoard = false;
-    });
-    
-    // Double click reset zoom
-    wrap.addEventListener('dblclick', (e)=>{
-      if(!isBotMode()) return;
-      scale = 1;
-      offsetX = 0;
-      offsetY = 0;
-      applyTransform();
-    });
-    
-    // Nút thu phóng
-    const zoomControls = document.createElement('div');
-    zoomControls.id = 'botVsBotZoomControls';
-    zoomControls.style.cssText = 'display:none; position:absolute; top:8px; right:8px; z-index:10; flex-direction:column; gap:6px;';
-    zoomControls.innerHTML = `
-      <div class="btn small" id="zoomInBtn" style="width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.6); border:1px solid #4a355e; border-radius:8px; font-weight:800;">+</div>
-      <div class="btn small" id="zoomOutBtn" style="width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.6); border:1px solid #4a355e; border-radius:8px; font-weight:800;">−</div>
-      <div class="btn small" id="zoomResetBtn" style="width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.6); border:1px solid #4a355e; border-radius:8px; font-size:.7rem;">1:1</div>
-    `;
-    wrap.style.position = 'relative';
-    wrap.appendChild(zoomControls);
-    
-    function updateZoomControls(){
-      zoomControls.style.display = isBotMode() ? 'flex' : 'none';
-    }
-    
-    document.getElementById('zoomInBtn')?.addEventListener('click', ()=>{
-      scale = Math.min(3, scale + 0.2);
-      applyTransform();
-    });
-    document.getElementById('zoomOutBtn')?.addEventListener('click', ()=>{
-      scale = Math.max(0.5, scale - 0.2);
-      if(scale===1){ offsetX=0; offsetY=0; }
-      applyTransform();
-    });
-    document.getElementById('zoomResetBtn')?.addEventListener('click', ()=>{
-      scale = 1;
-      offsetX = 0;
-      offsetY = 0;
-      applyTransform();
-    });
-    
-    setInterval(updateZoomControls, 500);
+    const ctr = document.createElement('div');
+    ctr.id='botVsBotZoomControls';
+    ctr.style.cssText='display:none; position:absolute; top:8px; right:8px; z-index:10; flex-direction:column; gap:6px;';
+    ctr.innerHTML='<div class="btn small" id="zoomInBtn" style="width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.6); border:1px solid #4a355e; border-radius:8px;">+</div><div class="btn small" id="zoomOutBtn" style="width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.6); border:1px solid #4a355e; border-radius:8px;">−</div><div class="btn small" id="zoomResetBtn" style="width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.6); border:1px solid #4a355e; border-radius:8px; font-size:.7rem;">1:1</div>';
+    wrap.style.position='relative';
+    wrap.appendChild(ctr);
+    document.getElementById('zoomInBtn')?.addEventListener('click', ()=>{ scale=Math.min(3,scale+0.2); apply(); });
+    document.getElementById('zoomOutBtn')?.addEventListener('click', ()=>{ scale=Math.max(0.5,scale-0.2); if(scale===1){offsetX=0; offsetY=0;} apply(); });
+    document.getElementById('zoomResetBtn')?.addEventListener('click', ()=>{ scale=1; offsetX=0; offsetY=0; apply(); });
+    setInterval(()=>{ ctr.style.display=isBotMode()?'flex':'none'; }, 500);
   })();
   
-  // Patch updateUIByMode
   const chk = setInterval(()=>{
     if(typeof updateUIByMode === 'function'){
       const orig = updateUIByMode;
-      window.updateUIByMode = function(){
-        orig.apply(this, arguments);
-        updateUI();
-      };
+      window.updateUIByMode = function(){ orig.apply(this, arguments); updateUI(); };
       clearInterval(chk);
     }
   }, 500);
   
-  setTimeout(updateUI, 800);
+  setTimeout(()=>{ updateUI(); loadScore(); }, 800);
 })();
 </script>
 
