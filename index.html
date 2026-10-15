@@ -105,6 +105,27 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
+</style><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
 
 @keyframes hellFireBoard{
   0%{box-shadow:0 0 0 1px #ff654240,0 16px 40px #0009; filter:brightness(1);}
@@ -1046,67 +1067,56 @@ input.field,#chatInput{
     <div style="font-size:.7rem; letter-spacing:.12em; opacity:.45; padding:0 4px; line-height:1.4;">HỆ: 64×64 • CHUẨN GOMOKU • 5 LIÊN TIẾP THẮNG<br>Touch-friendly</div>
 
     <!-- ĐIỀU KHIỂN / panel theo chế độ -->
-    <div id="controlPanel" style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;">
-      <!-- AI / Local -->
-      <div id="ctrlPanelNormal">
-        <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a8a; font-weight:800;">ĐIỀU KHIỂN</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
-          <div class="ctrlBtn" id="ctrlNewGame" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#231b2f,#1a1526); border:1.5px solid #4a355e; text-align:center; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">↻ Ván mới</div>
-          <div class="ctrlBtn" id="ctrlUndo" style="padding:14px 10px; border-radius:14px; background:#14111e; border:1px solid #3a2a4a; text-align:center; font-weight:600; opacity:.85; cursor:pointer;">Lùi 1 nước</div>
-          <div class="ctrlBtn" id="ctrlSwitch" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#1e1a2e,#161326); border:1px solid #4a355e; text-align:center; font-weight:700; cursor:pointer;">Đổi bên X→O</div>
-          <div class="ctrlBtn" id="ctrlHint" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#2a2418,#1e1a12); border:1px solid #6a5a2a; text-align:center; font-weight:700; color:#ffe4a3; cursor:pointer;">💡 Gợi ý</div>
+        <div id="controlPanel" style="background:linear-gradient(145deg,#1a1526,#13101d); border:1px solid #4a355e30; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:12px;">
+      <!-- UNIFIED TIME STORAGE FOR ALL MODES -->
+      <div id="ctrlPanelTimeStorage" style="display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:.78rem; letter-spacing:.2em; color:#ffd4a3; font-weight:900;">⏱ BỘ LƯU THỜI GIAN</div>
+          <div id="timeStorageStatus" style="font-size:.68rem; font-weight:800; padding:4px 10px; border-radius:999px; background:rgba(122,255,154,.12); border:1px solid #7aff9a30; color:#7aff9a;">▶ ĐANG ĐẾM</div>
         </div>
-        <div style="background:#0e0c15; border:1px solid #2a2236; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; margin-top:10px;">
-          <div style="font-size:.72rem; letter-spacing:.18em; opacity:.5;">TRẠNG THÁI</div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Bạn là</span><span id="statusYou" style="font-weight:800;">X (đi trước)</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Lượt</span><span id="statusTurn" style="font-weight:800; color:#ff8a8a;">Bạn</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Tổng nước</span><span id="statusTotal">0</span></div>
-          <div id="resetHumanScoreBtn" class="ctrlBtn" style="margin-top:6px; padding:10px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid #4a355e; text-align:center; font-weight:700; font-size:.82rem; cursor:pointer;">↻ Reset điểm</div>
+
+        <div style="background:linear-gradient(145deg,#231b2f,#15111e); border:1.5px solid #ffd4a350; border-radius:16px; padding:16px; text-align:center; position:relative; overflow:hidden;">
+          <div style="font-size:.7rem; opacity:.6; letter-spacing:.18em; margin-bottom:6px;">THỜI GIAN VÁN HIỆN TẠI</div>
+          <div id="timeStorageCurrent" style="font-size:2.6rem; font-weight:900; letter-spacing:.04em; color:#ffd4a3; text-shadow:0 0 20px #ff8a3a60; line-height:1;">0:00</div>
+          <div id="gameTimeDisplay" style="display:none;">⏱ 0:00</div>
+          <div id="bvbGameTime" style="display:none;">0:00</div>
+          <div style="font-size:.72rem; opacity:.5; margin-top:8px;">Dừng khi có bên thắng • Đánh tiếp thì tính lại</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div class="ctrlBtn" id="ctrlNewGameUnified" style="padding:12px 10px; border-radius:12px; background:linear-gradient(135deg,#ff5a3a,#ff8a3a); border:none; text-align:center; font-weight:800; color:#fff; cursor:pointer; box-shadow:0 4px 16px #ff5a3a40;">↻ Ván mới</div>
+          <div class="ctrlBtn" id="ctrlContinueAfterWin" style="padding:12px 10px; border-radius:12px; background:#1a2035; border:1.5px solid #3b7cff50; text-align:center; font-weight:700; color:#9ec5ff; cursor:pointer;">▶ Đánh tiếp</div>
+        </div>
+
+        <div style="background:#0e0c15; border:1px solid #2a2236; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:.72rem; letter-spacing:.18em; opacity:.6; font-weight:800;">KHO LƯU VỪA CHƠI</div>
+            <div style="display:flex; gap:6px;">
+              <span id="timeStorageCount" style="font-size:.7rem; background:rgba(255,212,163,.15); border:1px solid #ffd4a340; padding:2px 8px; border-radius:999px; color:#ffd4a3;">0 ván</span>
+              <span id="ctrlClearTimeHistory" style="font-size:.68rem; padding:2px 8px; border-radius:999px; background:rgba(255,80,80,.12); border:1px solid #ff505030; color:#ff9a9a; cursor:pointer;">Xóa</span>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center;">
+            <div style="background:rgba(255,255,255,.04); border-radius:10px; padding:8px 4px;"><div style="font-size:.65rem; opacity:.5;">TỔNG</div><div id="timeStatTotal" style="font-weight:800; font-size:.9rem;">0</div></div>
+            <div style="background:rgba(255,255,255,.04); border-radius:10px; padding:8px 4px;"><div style="font-size:.65rem; opacity:.5;">TB</div><div id="timeStatAvg" style="font-weight:800; font-size:.9rem; color:#7aff9a;">0s</div></div>
+            <div style="background:rgba(255,255,255,.04); border-radius:10px; padding:8px 4px;"><div style="font-size:.65rem; opacity:.5;">NHANH NHẤT</div><div id="timeStatBest" style="font-weight:800; font-size:.9rem; color:#6ad4ff;">—</div></div>
+          </div>
+          <div id="timeHistoryList" style="max-height:220px; overflow:auto; display:flex; flex-direction:column; gap:6px; scrollbar-width:thin;">
+            <div style="font-size:.8rem; opacity:.5; text-align:center; padding:20px 0;">Chưa có ván nào</div>
+          </div>
+        </div>
+
+        <div style="font-size:.7rem; opacity:.45; line-height:1.4; text-align:center; padding:4px;">
+          ⏱ Thời gian sẽ <b style="color:#ffd4a3;">dừng cho đến khi có 1 bên thắng</b>. Nếu 2 bot / 2 người / người vs bot tiếp tục đánh thì sẽ tính lại.
         </div>
       </div>
 
-      <!-- Online: không có Lùi 1 nước -->
-      <div id="ctrlPanelOnline" style="display:none;">
-        <div style="font-size:.78rem; letter-spacing:.2em; color:#6ad4ff; font-weight:800;">PHÒNG ONLINE</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
-          <div class="ctrlBtn" id="ctrlOnlineNew" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#231b2f,#1a1526); border:1.5px solid #4a355e; text-align:center; font-weight:700; cursor:pointer;">↻ Ván mới</div>
-          <div class="ctrlBtn" id="ctrlOnlineChat" style="padding:14px 10px; border-radius:14px; background:linear-gradient(145deg,#1a2030,#121820); border:1px solid #3b7cff50; text-align:center; font-weight:700; color:#9ec5ff; cursor:pointer;">💬 Chat</div>
-        </div>
-        <div style="background:#0e0c15; border:1px solid #2a2236; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; margin-top:10px;">
-          <div style="font-size:.72rem; letter-spacing:.18em; opacity:.5;">TRẠNG THÁI ONLINE</div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Bạn</span><span id="onlineYouSeat" style="font-weight:800;">—</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Đối thủ</span><span id="onlineOpSeat" style="font-weight:800;">Chờ...</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:.9rem;"><span style="opacity:.6;">Lượt</span><span id="onlineTurnInfo" style="font-weight:800; color:#6ad4ff;">—</span></div>
-          <div style="font-size:.78rem; opacity:.55; margin-top:4px; line-height:1.35;">Không thể lùi nước trong online — mỗi nước đã đánh là cố định.</div>
-        </div>
-      </div>
-
-      <!-- Bot vs Bot: panel thi đấu -->
-      <div id="ctrlPanelBotVsBot" style="display:none;">
-        <div style="display:flex; align-items:center; justify-content:space-between;">
-          <div style="font-size:.78rem; letter-spacing:.2em; color:#ff8a6a; font-weight:800;">ĐẤU TRƯỜNG BOT</div>
-          <div id="bvbLiveBadge" style="font-size:.7rem; font-weight:800; padding:4px 10px; border-radius:999px; background:rgba(255,107,74,.15); border:1px solid #ff6b4a40; color:#ffd4a3;">SẴN SÀNG</div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center; margin-top:10px;">
-          <div style="background:#1a2035; border:1.5px solid #3b7cff50; border-radius:14px; padding:12px; text-align:center;">
-            <div style="font-size:.7rem; opacity:.6; letter-spacing:.1em;">BOT X</div>
-            <div id="bvbCtrlX" style="font-weight:900; font-size:1rem; color:#6ad4ff; margin-top:4px;">—</div>
-            <div style="font-size:.75rem; margin-top:6px; opacity:.7;">Thắng: <b id="bvbCtrlXScore">0</b></div>
-          </div>
-          <div style="font-weight:900; color:#ffd4a3; font-size:1.1rem;">VS</div>
-          <div style="background:#2a1520; border:1.5px solid #ff7a7a50; border-radius:14px; padding:12px; text-align:center;">
-            <div style="font-size:.7rem; opacity:.6; letter-spacing:.1em;">BOT O</div>
-            <div id="bvbCtrlO" style="font-weight:900; font-size:1rem; color:#ff9a9a; margin-top:4px;">—</div>
-            <div style="font-size:.75rem; margin-top:6px; opacity:.7;">Thắng: <b id="bvbCtrlOScore">0</b></div>
-          </div>
-        </div>
-        <div style="background:#0e0c15; border:1px solid #2a2236; border-radius:14px; padding:12px; margin-top:10px; display:flex; flex-direction:column; gap:6px;">
-          <div style="display:flex; justify-content:space-between; font-size:.88rem;"><span style="opacity:.6;">Nước hiện tại</span><span id="bvbCtrlMoves" style="font-weight:800;">0</span></div>
-          <div style="display:flex; justify-content:space-between; font-size:.88rem;"><span style="opacity:.6;">Đang nghĩ</span><span id="bvbCtrlThinking" style="font-weight:800; color:#ff9a9a;">—</span></div>
-          <div style="font-size:.78rem; opacity:.55; line-height:1.4; margin-top:4px;">Hai bot tự đánh với engine nguyên bản. Chọn phiên bản phía trên rồi bấm Bắt đầu.</div>
-        </div>
-      </div>
+      <!-- Giữ các panel cũ ẩn để không vỡ JS cũ -->
+      <div id="ctrlPanelNormal" style="display:none !important;"></div>
+      <div id="ctrlPanelOnline" style="display:none !important;"></div>
+      <div id="ctrlPanelBotVsBot" style="display:none !important;"></div>
     </div>
+
 
     <div style="background:linear-gradient(145deg,#14111e,#0e0c15); border:1px solid #3a2a4a30; border-radius:16px; padding:12px;">
       <div style="font-size:.72rem; letter-spacing:.18em; opacity:.5; margin-bottom:8px;">LỊCH SỬ (5 NƯỚC CUỐI)</div>
@@ -4967,43 +4977,84 @@ let moveHistory=[];
 let lastMove=null, lastMoveT=0, animRaf=0, lastAnimDraw=0;
 let scores={X:0,O:0,D:0};
 
-// ---------- GAME TIME TRACKING - Tính thời gian ván đấu tất cả chế độ ----------
+// ---------- GAME TIME TRACKING - Đã chỉnh: dừng khi thắng, tiếp tục đánh thì tính lại ----------
 let gameStartTime = null;
 let gameTimerInterval = null;
 let currentGameDuration = 0;
+let gameTimerPaused = false;
+let gameTimerWinStopped = false;
+let gameTimerBaseDuration = 0; // để cộng dồn khi tiếp tục đánh sau thắng
 
 function startGameTimer(){
   gameStartTime = Date.now();
+  gameTimerBaseDuration = 0;
   currentGameDuration = 0;
+  gameTimerPaused = false;
+  gameTimerWinStopped = false;
   if(gameTimerInterval) clearInterval(gameTimerInterval);
   gameTimerInterval = setInterval(updateGameTimeUI, 1000);
   updateGameTimeUI();
+  updateTimeStorageStatus();
+}
+
+function resumeGameTimerAfterWin(){
+  // khi tiếp tục đánh sau khi đã thắng -> tính thời gian lại (cộng dồn)
+  if(!gameTimerWinStopped) return;
+  gameTimerBaseDuration = currentGameDuration;
+  gameStartTime = Date.now();
+  gameTimerPaused = false;
+  gameTimerWinStopped = false;
+  if(gameTimerInterval) clearInterval(gameTimerInterval);
+  gameTimerInterval = setInterval(updateGameTimeUI, 1000);
+  updateGameTimeUI();
+  updateTimeStorageStatus();
 }
 
 function updateGameTimeUI(){
+  if(gameTimerPaused || gameTimerWinStopped){
+    renderTimeStorageUI();
+    return;
+  }
   if(!gameStartTime) return;
-  currentGameDuration = Math.floor((Date.now() - gameStartTime)/1000);
+  const elapsed = Math.floor((Date.now() - gameStartTime)/1000);
+  currentGameDuration = gameTimerBaseDuration + elapsed;
   const el = document.getElementById('gameTimeDisplay');
   if(el){
     const m = Math.floor(currentGameDuration/60);
     const s = currentGameDuration%60;
     el.textContent = `⏱ ${m}:${String(s).padStart(2,'0')}`;
   }
-  // Also update bot vs bot timer
   const bvbTime = document.getElementById('bvbGameTime');
   if(bvbTime){
     const m = Math.floor(currentGameDuration/60);
     const s = currentGameDuration%60;
     bvbTime.textContent = `${m}:${String(s).padStart(2,'0')}`;
   }
+  // update large display
+  const big = document.getElementById('timeStorageCurrent');
+  if(big){
+    const m = Math.floor(currentGameDuration/60);
+    const s = currentGameDuration%60;
+    big.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  }
+  renderTimeStorageUI();
 }
 
 function stopGameTimer(){
   if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
-  if(gameStartTime){
-    currentGameDuration = Math.floor((Date.now() - gameStartTime)/1000);
+  if(gameStartTime && !gameTimerPaused && !gameTimerWinStopped){
+    const elapsed = Math.floor((Date.now() - gameStartTime)/1000);
+    currentGameDuration = gameTimerBaseDuration + elapsed;
   }
+  gameTimerPaused = true;
+  gameTimerWinStopped = true;
+  updateTimeStorageStatus();
+  renderTimeStorageUI();
   return currentGameDuration;
+}
+
+function stopGameTimerForWin(){
+  return stopGameTimer();
 }
 
 function formatDuration(sec){
@@ -5011,6 +5062,26 @@ function formatDuration(sec){
   const m=Math.floor(sec/60), s=sec%60;
   return `${m}m ${s}s`;
 }
+
+function updateTimeStorageStatus(){
+  const st = document.getElementById('timeStorageStatus');
+  if(!st) return;
+  if(gameTimerWinStopped){
+    st.textContent = '⏸ ĐÃ DỪNG - CHỜ THẮNG';
+    st.style.color = '#ff9a9a';
+    st.style.background = 'rgba(255,80,80,.15)';
+    st.style.borderColor = '#ff505040';
+  } else if(gameTimerPaused){
+    st.textContent = '⏸ TẠM DỪNG';
+    st.style.color = '#ffd4a3';
+  } else {
+    st.textContent = '▶ ĐANG ĐẾM';
+    st.style.color = '#7aff9a';
+    st.style.background = 'rgba(122,255,154,.12)';
+    st.style.borderColor = '#7aff9a30';
+  }
+}
+
 
 // Save game history to localStorage for all modes
 function saveAllModesHistory(resultData){
@@ -7361,6 +7432,253 @@ document.addEventListener('click', (e)=>{
   // init display
   setTimeout(()=>{ try{ refreshHumanScoreUI(); }catch(e){} }, 300);
 })();
+</script>
+
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script>
+<script>
+// ===== TIME STORAGE LOGIC - Unified for all modes =====
+function renderTimeStorageUI(){
+  try{
+    const listEl = document.getElementById('timeHistoryList');
+    const countEl = document.getElementById('timeStorageCount');
+    const totalEl = document.getElementById('timeStatTotal');
+    const avgEl = document.getElementById('timeStatAvg');
+    const bestEl = document.getElementById('timeStatBest');
+    if(!listEl) return;
+    let hist = [];
+    try{ hist = JSON.parse(localStorage.getItem('xo5_all_history')||'[]'); }catch(e){ hist=[]; }
+    // stats
+    if(countEl) countEl.textContent = `${hist.length} ván`;
+    if(totalEl) totalEl.textContent = hist.length;
+    if(hist.length>0){
+      const durations = hist.map(h=>h.duration||0).filter(d=>d>0);
+      if(durations.length){
+        const avg = Math.round(durations.reduce((a,b)=>a+b,0)/durations.length);
+        const best = Math.min(...durations);
+        if(avgEl) avgEl.textContent = (typeof formatDuration==='function'?formatDuration(avg):avg+'s');
+        if(bestEl) bestEl.textContent = (typeof formatDuration==='function'?formatDuration(best):best+'s');
+      }
+    } else {
+      if(avgEl) avgEl.textContent = '0s';
+      if(bestEl) bestEl.textContent = '—';
+    }
+    if(hist.length===0){
+      listEl.innerHTML = '<div style="font-size:.8rem; opacity:.5; text-align:center; padding:20px 0;">Chưa có ván nào</div>';
+      return;
+    }
+    // render last 20
+    const rows = hist.slice(0,20).map((h,i)=>{
+      const isWin = h.winner!==0;
+      const winColor = h.winner===1 ? '#6ad4ff' : h.winner===2 ? '#ff9a9a' : '#ffd4a3';
+      const modeLabel = h.modeLabel || h.mode || '';
+      const durLabel = h.durationLabel || (typeof formatDuration==='function'?formatDuration(h.duration||0):(h.duration||0)+'s');
+      const date = h.dateLabel ? h.dateLabel.split(',')[0] : '';
+      const winnerLabel = h.winner===0?'Hòa':(h.winner===1?'X thắng':'O thắng');
+      return `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:10px; padding:8px 10px; font-size:.82rem;">
+        <div style="display:flex; flex-direction:column; gap:2px; flex:1;">
+          <div style="display:flex; gap:6px; align-items:center;"><span style="font-weight:800; color:${winColor};">${winnerLabel}</span><span style="font-size:.7rem; opacity:.5; background:rgba(255,255,255,.08); padding:1px 6px; border-radius:999px;">${modeLabel}</span><span style="font-size:.68rem; opacity:.4;">${h.moves||0} nước</span></div>
+          <div style="font-size:.68rem; opacity:.4;">${date}</div>
+        </div>
+        <div style="font-weight:900; color:#ffd4a3; font-size:.95rem;">${durLabel}</div>
+      </div>`;
+    }).join('');
+    listEl.innerHTML = rows;
+  }catch(e){ console.error('renderTimeStorageUI',e); }
+}
+
+// Hook new game buttons to start timer
+function wireTimeStorageControls(){
+  const newBtn = document.getElementById('ctrlNewGameUnified');
+  if(newBtn){
+    newBtn.onclick = ()=>{
+      // call existing new game logic
+      try{
+        const mode = (typeof window.mode!=='undefined'?window.mode: (document.getElementById('modeBotVsBot')?.classList.contains('active')?'botVsBot': (document.getElementById('modeLocal')?.classList.contains('active')?'local':'ai')));
+        if(typeof resetBoardState==='function' && mode!=='botVsBot'){
+          resetBoardState();
+          if(typeof startGameTimer==='function') startGameTimer();
+          gameOver=false;
+          if(typeof draw==='function') draw();
+          if(typeof setStatus==='function') setStatus();
+        } else {
+          // try click hidden original new game if exists
+          const orig = document.getElementById('ctrlNewGame') || document.getElementById('newGameBtn') || document.getElementById('botVsBotNew');
+          if(orig) orig.click();
+          else if(typeof startGameTimer==='function') startGameTimer();
+          // For bot vs bot, restart board
+          if(window.botVsBotRunning){
+            // keep running, just reset board state via existing function if any
+            try{ if(typeof window.botVsBotReset==='function') window.botVsBotReset(); }catch(e){}
+          }
+        }
+        // reset flags
+        gameTimerWinStopped=false;
+        gameTimerPaused=false;
+        gameStartTime=Date.now();
+        gameTimerBaseDuration=0;
+        if(typeof startGameTimer==='function') startGameTimer();
+        renderTimeStorageUI();
+      }catch(e){ console.error(e); }
+    };
+  }
+  const contBtn = document.getElementById('ctrlContinueAfterWin');
+  if(contBtn){
+    contBtn.onclick = ()=>{
+      try{
+        // Cho phép đánh tiếp sau khi thắng
+        if(typeof gameOver!=='undefined' && gameOver){
+          gameOver=false;
+          winCells=[];
+          if(typeof draw==='function') draw();
+          if(typeof setStatus==='function') setStatus();
+          if(typeof resumeGameTimerAfterWin==='function') resumeGameTimerAfterWin();
+          else if(typeof startGameTimer==='function'){
+            // fallback: tiếp tục tính lại
+            gameTimerWinStopped=false;
+            gameTimerPaused=false;
+            gameStartTime=Date.now();
+            if(gameTimerInterval) clearInterval(gameTimerInterval);
+            gameTimerInterval=setInterval(updateGameTimeUI,1000);
+          }
+          const st = document.getElementById('status');
+          if(st) st.textContent = 'Tiếp tục đánh - thời gian đang chạy lại!';
+        } else {
+          // nếu chưa thắng thì chỉ resume
+          if(typeof resumeGameTimerAfterWin==='function' && gameTimerWinStopped) resumeGameTimerAfterWin();
+        }
+      }catch(e){}
+    };
+  }
+  const clearBtn = document.getElementById('ctrlClearTimeHistory');
+  if(clearBtn){
+    clearBtn.onclick = ()=>{
+      if(!confirm('Xóa toàn bộ kho lưu thời gian?')) return;
+      try{ localStorage.removeItem('xo5_all_history'); renderTimeStorageUI(); }catch(e){}
+    };
+  }
+}
+
+// Patch endGame to ensure time stops on win for ALL modes
+(function(){
+  const origEnd = window.endGame;
+  // We will override after definition via polling
+  const tryPatch = ()=>{
+    if(typeof window.endGame!=='function' && typeof endGame==='function'){
+      // global endGame exists
+      const _orig = endGame;
+      window.endGame = function(winner,cells){
+        try{ if(typeof stopGameTimerForWin==='function') stopGameTimerForWin(); else if(typeof stopGameTimer==='function') stopGameTimer(); }catch(e){}
+        try{
+          // ensure history saved for non-BvB too
+          const mode = (typeof window.mode!=='undefined'?window.mode:'ai');
+          if(mode!=='online' && mode!=='botVsBot'){
+            const dur = (typeof currentGameDuration!=='undefined'?currentGameDuration:0);
+            try{
+              let hist = JSON.parse(localStorage.getItem('xo5_all_history')||'[]');
+              // check if already saved by orig
+            }catch(e){}
+          }
+        }catch(e){}
+        return _orig.apply(this, arguments);
+      };
+      // also patch global
+      try{ endGame = window.endGame; }catch(e){}
+      console.log('endGame patched for time stop');
+      return true;
+    }
+    if(typeof window.endGame==='function' && !window.endGame._patched){
+      const _orig2 = window.endGame;
+      window.endGame = function(w,c){
+        try{ if(typeof stopGameTimerForWin==='function') stopGameTimerForWin(); }catch(e){}
+        return _orig2.apply(this, arguments);
+      };
+      window.endGame._patched=true;
+      return true;
+    }
+    return false;
+  };
+  setTimeout(tryPatch, 500);
+  setTimeout(tryPatch, 2000);
+  // Also patch onGameOver for bot vs bot to stop timer already does, but ensure status update
+  setTimeout(()=>{
+    if(typeof window.onGameOver==='function' && !window.onGameOver._patchedTime){
+      const _o = window.onGameOver;
+      window.onGameOver = function(w){
+        try{ if(typeof stopGameTimerForWin==='function') stopGameTimerForWin(); }catch(e){}
+        const r = _o.apply(this, arguments);
+        setTimeout(()=>{ renderTimeStorageUI(); updateTimeStorageStatus(); }, 200);
+        return r;
+      };
+      window.onGameOver._patchedTime=true;
+    }
+  }, 800);
+})();
+
+// Allow continuing after win: patch placeLocal and cellTapped
+setTimeout(()=>{
+  // patch placeLocal to auto resume timer if game was stopped for win
+  if(typeof placeLocal==='function' && !placeLocal._patchedTime){
+    const _origPlace = placeLocal;
+    window.placeLocal = function(r,c,p){
+      const wasWinStopped = (typeof gameTimerWinStopped!=='undefined' && gameTimerWinStopped);
+      const wasGameOver = (typeof gameOver!=='undefined' && gameOver);
+      if(wasGameOver && wasWinStopped){
+        // cho phép đánh tiếp -> resume timer và mở lại game
+        try{
+          gameOver=false;
+          winCells=[];
+          if(typeof resumeGameTimerAfterWin==='function') resumeGameTimerAfterWin();
+        }catch(e){}
+      }
+      const res = _origPlace.apply(this, arguments);
+      if(res && wasWinStopped){
+        // đã tiếp tục đánh
+        updateTimeStorageStatus();
+      }
+      return res;
+    };
+    try{ placeLocal = window.placeLocal; placeLocal._patchedTime=true; }catch(e){}
+  }
+
+  // patch onlineTap if exists
+  if(typeof onlineTap==='function' && !onlineTap._patchedTime){
+    const _origOnline = onlineTap;
+    window.onlineTap = function(r,c){
+      const wasWinStopped = (typeof gameTimerWinStopped!=='undefined' && gameTimerWinStopped);
+      if(wasWinStopped && typeof gameOver!=='undefined' && gameOver){
+        try{ gameOver=false; winCells=[]; resumeGameTimerAfterWin(); }catch(e){}
+      }
+      return _origOnline.apply(this, arguments);
+    };
+    try{ onlineTap=window.onlineTap; onlineTap._patchedTime=true; }catch(e){}
+  }
+
+  // patch bot move to auto resume timer if bots continue after win (auto reset will start new timer via startGameTimer)
+  // For bot vs bot auto next game, ensure startGameTimer is called
+  const origStart = window.startGameTimer;
+  // hook setMode to start timer for any mode
+  if(typeof setMode==='function' && !setMode._patchedTime){
+    const _origSetMode = setMode;
+    window.setMode = function(m){
+      const r = _origSetMode.apply(this, arguments);
+      setTimeout(()=>{
+        try{ if(typeof startGameTimer==='function'){ startGameTimer(); renderTimeStorageUI(); } }catch(e){}
+      }, 150);
+      return r;
+    };
+    try{ setMode=window.setMode; setMode._patchedTime=true; }catch(e){}
+  }
+
+  wireTimeStorageControls();
+  renderTimeStorageUI();
+  setInterval(renderTimeStorageUI, 3000);
+  // initial timer start if not running
+  setTimeout(()=>{
+    if(!gameStartTime && typeof startGameTimer==='function') startGameTimer();
+    updateTimeStorageStatus();
+    renderTimeStorageUI();
+  }, 600);
+}, 800);
 </script>
 
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
