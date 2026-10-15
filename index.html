@@ -4218,8 +4218,20 @@ document.getElementById('authSubmit').onclick=async()=>{
       console.log('Signing in...');
       errEl.textContent='Đang đăng nhập...';
       await auth.signInWithEmailAndPassword(email,pass);
-      errEl.textContent='Đăng nhập thành công!';
+      errEl.textContent='Đăng nhập thành công! Đang vào...';
       errEl.style.color='#22c55e';
+      // FIX: Force vào app sau 500ms nếu onAuthStateChanged chậm
+      setTimeout(()=>{
+        try{
+          const authScreen=document.getElementById('authScreen');
+          const app=document.getElementById('app');
+          if(authScreen && !authScreen.classList.contains('hidden')){
+            authScreen.classList.add('hidden');
+            authScreen.style.display='none';
+            if(app){ app.classList.remove('hidden'); app.style.display='flex'; }
+          }
+        }catch(e){}
+      }, 500);
     }
   }catch(e){ 
     console.error('Auth error:', e);
@@ -4278,16 +4290,27 @@ auth.onAuthStateChanged(async user=>{
   hellMem=null; hellLearnDelta=null;
   if(user){
     currentUser=user;
+    // FIX: Đảm bảo luôn vào app dù Firestore lỗi
     try{
-      const snap=await db.collection('users').doc(user.uid).get();
-      const udata = snap.exists ? snap.data() : {};
-      currentUsername = udata.username || user.email.split('@')[0] || 'Người chơi';
+      const snap=await db.collection('users').doc(user.uid).get().catch(e=>{ console.warn('users get failed', e); return {exists:false, data:()=>({})}; });
+      const udata = snap && snap.exists ? snap.data() : {};
+      currentUsername = udata.username || (user.email ? user.email.split('@')[0] : 'Người chơi') || 'Người chơi';
       myFriendCode = udata.code || user.uid.slice(-6).toUpperCase();
     }catch(e){
       console.error('users doc read error', e);
-      currentUsername = user.email.split('@')[0] || 'Người chơi';
+      currentUsername = (user.email ? user.email.split('@')[0] : 'Người chơi') || 'Người chơi';
       myFriendCode = user.uid.slice(-6).toUpperCase();
     }
+    // FIX: Ẩn màn hình đăng nhập NGAY LẬP TỨC, không đợi các listener
+    try{
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('authScreen').style.display='none';
+      document.getElementById('app').classList.remove('hidden');
+      document.getElementById('app').style.display='flex';
+      const who=document.getElementById('whoName'); if(who) who.textContent=currentUsername;
+      setTimeout(()=>{ try{ resize(); centerBoard(); draw(); }catch(e){} }, 50);
+    }catch(e){ console.error('show app error', e); }
+
     if(!udata.code){ db.collection('users').doc(user.uid).set({code:myFriendCode},{merge:true}).catch(()=>{}); }
     if(snap.exists && udata.username){ db.collection('codes').doc(myFriendCode).set({uid:user.uid, name:udata.username}).catch(()=>{}); }
     document.getElementById('whoName').textContent=currentUsername;
