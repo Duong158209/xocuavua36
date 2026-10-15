@@ -215,18 +215,19 @@
 /* Status không làm nhảy layout khi bot suy nghĩ */
 #status{
   min-height:28px !important;
-  height:28px !important;
+  height:auto !important;
+  min-height:28px !important;
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
   transition:none !important;
 }
 #status.bot-thinking{
-  padding:4px 12px !important;
+  padding:6px 12px !important;
   margin:4px auto !important;
   min-height:28px !important;
   height:auto !important;
-  max-height:36px !important;
+  max-height:48px !important;
 }
 
 
@@ -559,18 +560,19 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 /* Status không làm nhảy layout khi bot suy nghĩ */
 #status{
   min-height:28px !important;
-  height:28px !important;
+  height:auto !important;
+  min-height:28px !important;
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
   transition:none !important;
 }
 #status.bot-thinking{
-  padding:4px 12px !important;
+  padding:6px 12px !important;
   margin:4px auto !important;
   min-height:28px !important;
   height:auto !important;
-  max-height:36px !important;
+  max-height:48px !important;
 }
 
 
@@ -707,11 +709,11 @@ self.addEventListener('fetch', e=>{
 
 <!-- APP -->
 <div id="app" class="hidden" style="height:100%; display:flex; flex-direction:column;">
-  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V1.5</h1>
+  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V1.7</h1>
 
   <div class="topbar" style="padding-left:8px;">
     <span class="who">Xin chào, <b id="whoName"></b></span>
-    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V1.5 • 15×15</span>
+    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V1.7 • 15×15</span>
   </div>
   <!-- VERTICAL ICON DOCK -->
   <div id="sideDock" class="collapsed">
@@ -727,7 +729,7 @@ self.addEventListener('fetch', e=>{
     <!-- HELL HEADER like image -->
     <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:linear-gradient(145deg,#1e162c,#14111e); border:1px solid #4a355e; border-radius:16px;">
       <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(145deg,#231b2f,#15111e); border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">H</div>
-      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v1.5</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
+      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v1.7</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
     </div>
 
         <!-- CHẾ ĐỘ CHƠI - restored -->
@@ -822,8 +824,8 @@ self.addEventListener('fetch', e=>{
               <option value="v10">v10 - Chiến thuật - 5s</option>
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
-              <option value="v1.5" selected>v1.5 - Hell nâng cấp (MUST-BLOCK + nhìn sâu) - 11s</option>
               <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
+              <option value="v1.7" selected>v1.7 - Hell mạnh hơn v13 (công+thủ) - 12s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botXScore" style="font-weight:800; color:#6ad4ff;">0</span></div>
           </div>
@@ -836,8 +838,8 @@ self.addEventListener('fetch', e=>{
               <option value="v10">v10 - Chiến thuật - 5s</option>
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
-              <option value="v1.5">v1.5 - Hell nâng cấp (MUST-BLOCK + nhìn sâu) - 11s</option>
               <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
+              <option value="v1.7">v1.7 - Hell mạnh hơn v13 (công+thủ) - 12s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botOScore" style="font-weight:800; color:#ff9a9a;">0</span></div>
           </div>
@@ -2166,17 +2168,17 @@ const Hell=(()=>{
 
 </script>
 
-<script type="text/plain" id="hellSrcV1_5">// v1.5 - HELL + fix bảo trì Địa ngục - MUST-BLOCK open-3 + deeper search + DEF-first
-// v1.5: open-3 đối thủ gần như bắt buộc phải chặn, không được bỏ để công; nhìn sâu hơn (~11s)
-const HELL_TIME=11000, HELL_SOFT=6500;
+<script type="text/plain" id="hellSrcV1_7">// v1.7 - HELL STRONGER vs v13: defense + finishing power + deeper VCF
+// v1.7: giữ MUST-BLOCK, tăng ATT/double-threat, VCF mạnh hơn để không thua v13
+const HELL_TIME=12000, HELL_SOFT=7000;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
-  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=36, VCF_NODES=2800000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
-  const OPEN4=45000000, FOUR=1400000, OPEN3=280000, BRK3=90000, THREE3=16000, DBL3=1400000, OPEN2=2800, DBL_OPEN2=14000;
-  const W=[0,8,70,520,3600,0];
-  const DK=7.5; // v1.5: tăng mạnh hệ số phòng thủ
-  // ATT vừa phải (không hăng quá), DEF boost mạnh để không quên chặn
-  const ATT=[280,14000,140000,1400000,35000000], DEF=[0,220,1800,16000,2400000].map(v=>Math.round(v*DK));
+  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=40, VCF_NODES=3500000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
+  const OPEN4=50000000, FOUR=1600000, OPEN3=320000, BRK3=110000, THREE3=20000, DBL3=1800000, OPEN2=3500, DBL_OPEN2=18000;
+  const W=[0,10,85,620,4200,0];
+  const DK=7.0; // v1.7: DEF mạnh nhưng không làm mù tấn công
+  // ATT tăng để thắng đua nước với v13; DEF vẫn cao để không bỏ chặn
+  const ATT=[400,20000,200000,2000000,50000000], DEF=[0,240,2000,18000,2600000].map(v=>Math.round(v*DK));
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -2288,21 +2290,23 @@ const Hell=(()=>{
         if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; if(a===2) open2++; }
         if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; } }
       }
-      // DEFENSE-FIRST v1.1c: chặn open-3 của đối thủ gần như bắt buộc
-      let defMul = goingSecond ? 4.0*DK : 2.8*DK;
-      if(isDefCon || oth3>=1 || oth4>=1) defMul = Math.max(defMul, 6.0*DK);
-      // Chặn tứ / ba sống đối thủ — bonus CỰC CAO (không cho phép bỏ qua để công)
-      if(oth4>=1) s += 1200000 * defMul;
-      if(oth3>=2) s += 700000 * defMul;
-      else if(oth3>=1) s += 220000 * defMul;  // single open-3: phải ưu tiên chặn, không được hăng công
-      // Tấn công: chỉ mạnh khi thật sự nguy hiểm
-      if(th4>=1) s += 220000;
-      if(th3>=2) s += 160000;
-      else if(th3>=1) s += 14000;             // tạo ba thường không được hơn việc chặn ba đối thủ
-      if(open2>=2) s += DBL_OPEN2;
-      // Ưu tiên nước vừa công vừa thủ
-      if(mk && (bl || oth3>=1 || oth4>=1)) s += 150000;
-      s += Math.max(0, 26 - (Math.abs(r-center)+Math.abs(c-center))) * (goingSecond ? 1.0 : 1.5);
+      // v1.7: chặn bắt buộc + tấn công dứt điểm (không thua v13 vì hăng/quên)
+      let defMul = goingSecond ? 3.6*DK : 2.4*DK;
+      if(isDefCon || oth3>=1 || oth4>=1) defMul = Math.max(defMul, 5.5*DK);
+      // Chặn — vẫn ưu tiên cao
+      if(oth4>=1) s += 1400000 * defMul;
+      if(oth3>=2) s += 800000 * defMul;
+      else if(oth3>=1) s += 260000 * defMul;
+      // Tấn công — tăng mạnh double-threat / tứ để thắng đua
+      if(th4>=1) s += 900000;
+      if(th3>=2) s += 550000;   // double ba sống = gần như thắng
+      else if(th3>=1) s += 28000;
+      if(open2>=2) s += DBL_OPEN2 * 2;
+      // Vừa công vừa thủ
+      if(mk && (bl || oth3>=1 || oth4>=1)) s += 200000;
+      // Nếu đang bị đe dọa: phạt nước không chặn
+      if((oth3>=1 || oth4>=1) && !bl && th4===0) s -= 180000;
+      s += Math.max(0, 28 - (Math.abs(r-center)+Math.abs(c-center))) * (goingSecond ? 1.2 : 2.0);
       if(bl) blk.push(i);
       if(quiet&&!mk&&th4===0&&oth4===0&&oth3===0) continue;
       cells.push(i); scs.push(s+Math.min(hist[i],12000)+(counter[i]>=0?600:0)); mks.push((mk||th4||oth4||oth3)?1:0);
@@ -5310,9 +5314,9 @@ function hellCancel(){
 }
 function hellThink(cb,bot,pen,timeLimit,version){
   const id=++hellJob;
-  const verRaw = version || 'v1.5';
+  const verRaw = version || 'v1.7';
   const ver = verRaw.split('_')[0];
-  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v1.5'||ver==='v1_2'||ver==='v1.5o'||ver==='v1.1'||ver==='v1_1') ? 'hellSrcV1_5' : 'hellSrcV1_5';
+  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v1.7'||ver==='v1_7'||ver==='v1.7o') ? 'hellSrcV1_7' : 'hellSrcV1_7';
   const workerKey = verRaw;
   try{
     if(!window.hellWorkers) window.hellWorkers = {};
@@ -6392,7 +6396,7 @@ document.addEventListener('click', (e)=>{
     v11: { t: 8000, name: 'v11 - Kết hợp thông minh - 8s', info: 'Engine kết hợp v9+v10, ATT 20,600,6k,50k,1.5M DEF 600,6k,50k,1.5M TT 2M', isHell: true },
     v12: { t: 8500, name: 'v12 - Out trình - 8.5s - Mạnh nhất', info: 'Engine out trình, ATT 150,8k,80k,800k,20M DEF 8k,80k,800k,40M TT 8M VCF 8M K=96', isHell: true },
     v13: { t: 8500, name: 'v13 - Phòng thủ x5.5 - 8.5s', info: 'v12 + ba sống thật + DEF x5.5', isHell: true },
-    'v1.5': { t: 11000, name: 'v1.5 - Hell nâng cấp MUST-BLOCK + nhìn sâu - 11s', info: 'MUST-BLOCK open-3, không hăng công quên chặn, search sâu hơn, DEF ×7.5', isHell: true }
+    'v1.7': { t: 12000, name: 'v1.7 - Hell mạnh hơn v13 (công+thủ) - 12s', info: 'MUST-BLOCK open-3, không hăng công quên chặn, search sâu hơn, DEF ×7.5', isHell: true }
   };
   
   window.botVsBotRunning = false; localStorage.setItem('botVsBotRunning','0'); try{ navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage('STOP'); }catch(e){} 
@@ -6557,15 +6561,24 @@ document.addEventListener('click', (e)=>{
     const ver = sel ? sel.value : 'v11';
     const cfg = VERSIONS[ver] || VERSIONS.v11;
     
+    const sideLabel = curTurn===1 ? 'X' : 'O';
+    const verLabel = String(ver).toUpperCase();
+    const thinkMsg = `BOT ${verLabel} (${sideLabel}) đang suy nghĩ`;
     const statusEl = document.getElementById('botVsBotStatus');
     if(statusEl){
-      statusEl.textContent = `BOT ${ver.toUpperCase()} (${curTurn===1?'X':'O'}) nguyên bản ${cfg.t/1000}s - ${cfg.name}`;
+      statusEl.innerHTML = `<span class="bot-thinking-wrap"><span class="bot-thinking-dot"></span><span class="bot-thinking-text">${thinkMsg}</span></span>`;
     }
     const mainSt = document.getElementById('status');
     if(mainSt){
-      mainSt.textContent = `LƯỢT BOT ${ver.toUpperCase()} (${curTurn===1?'X':'O'}) - NGUYÊN BẢN ${cfg.t/1000}s`;
+      mainSt.innerHTML = `<span class="bot-thinking-wrap"><span class="bot-thinking-dot"></span><span class="bot-thinking-text">${thinkMsg} · ${cfg.t/1000}s</span></span>`;
       mainSt.classList.add('bot-thinking');
     }
+    const bvbThink = document.getElementById('bvbCtrlThinking');
+    if(bvbThink){
+      bvbThink.innerHTML = `<span class="bot-thinking-wrap"><span class="bot-thinking-dot"></span><span>${thinkMsg}</span></span>`;
+    }
+    const bvbBadge = document.getElementById('bvbLiveBadge');
+    if(bvbBadge){ bvbBadge.textContent='ĐANG NGHĨ'; bvbBadge.style.color='#ff9a9a'; }
     
     // V11 = bot Địa ngục: gọi engine y hệt aiMove() khi chơi với người
     // (cùng engine hellSrcV11, cùng bộ nhớ pen, không ép thời gian/phiên bản, cùng cách xử lý khi nước lỗi).
@@ -6574,14 +6587,14 @@ document.addEventListener('click', (e)=>{
     let hellPen = null, hellTime = cfg.t, hellVer = ver;
     if(isHellBot){
       hellTime = undefined;
-      if(ver==='v1.5' || ver==='v1_2') hellVer = 'v1.5';
+      if(ver==='v1.7' || ver==='v1_7') hellVer = 'v1.7';
       else if(ver==='v13') hellVer = 'v13';
       else if(ver==='v12') hellVer = 'v12';
       else hellVer = ver;
       const otherSel = curTurn===1 ? document.getElementById('botOVersion') : document.getElementById('botXVersion');
       if(curTurn===2 && otherSel && otherSel.value==='v11') hellVer = 'v11o';
       if(curTurn===2 && ver==='v13' && otherSel && otherSel.value==='v13') hellVer = 'v13o';
-      if(curTurn===2 && (ver==='v1.5'||ver==='v1_2') && otherSel && (otherSel.value==='v1.5'||otherSel.value==='v1_2')) hellVer = 'v1.5o';
+      if(curTurn===2 && (ver==='v1.7'||ver==='v1_7') && otherSel && (otherSel.value==='v1.7'||otherSel.value==='v1_7')) hellVer = 'v1.7o';
       try{ hellPen = (hellMemLoad().pen[posKey(board)] || null); }catch(e){ hellPen = null; }
     }
     
@@ -6897,12 +6910,20 @@ document.addEventListener('click', (e)=>{
     const co=document.getElementById('bvbCtrlOScore'); if(co) co.textContent=so;
     const mc=document.getElementById('botVsBotMoveCount')?.textContent || '0';
     const m2=document.getElementById('bvbCtrlMoves'); if(m2) m2.textContent=mc;
-    const st=document.getElementById('botVsBotStatus')?.textContent||'';
     const badge=document.getElementById('bvbLiveBadge');
     const think=document.getElementById('bvbCtrlThinking');
+    const mainSt=document.getElementById('status');
+    const hasThinkUI = !!(mainSt && mainSt.classList.contains('bot-thinking'));
     if(window.botVsBotRunning && !window.botVsBotPaused){
-      if(badge){ badge.textContent='ĐANG ĐẤU'; badge.style.color='#ff9a9a'; }
-      if(think) think.textContent = st || 'Bot đang nghĩ...';
+      if(badge){ badge.textContent = hasThinkUI ? 'ĐANG NGHĨ' : 'ĐANG ĐẤU'; badge.style.color='#ff9a9a'; }
+      // Không ghi đè nếu doBotMove đã gắn chấm đỏ nhấp nháy
+      if(think && !think.querySelector('.bot-thinking-dot') && hasThinkUI){
+        const t = (typeof turn!=='undefined' && turn===1)
+          ? (document.getElementById('botXVersion')?.value||'X')
+          : (document.getElementById('botOVersion')?.value||'O');
+        const side = (typeof turn!=='undefined' && turn===1) ? 'X' : 'O';
+        think.innerHTML = '<span class="bot-thinking-wrap"><span class="bot-thinking-dot"></span><span>BOT '+String(t).toUpperCase()+' ('+side+') đang suy nghĩ</span></span>';
+      }
     } else if(window.botVsBotPaused){
       if(badge){ badge.textContent='TẠM DỪNG'; badge.style.color='#ffd4a3'; }
       if(think) think.textContent='—';
