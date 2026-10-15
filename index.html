@@ -567,7 +567,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
     <input class="field" id="authPass" placeholder="Mật khẩu" type="password" style="padding:12px; border-radius:10px; border:1px solid #4a355e; background:#0e0c15; color:#fff; width:100%; box-sizing:border-box;">
     <div class="btn active" id="authSubmit" style="padding:12px; border-radius:10px; background:linear-gradient(135deg,#ff5a3a,#a51f4c); color:#fff; font-weight:800; text-align:center; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent;">Đăng ký</div>
     <div class="authErr" id="authErr" style="color:#ff6b6b; font-size:.85rem; min-height:20px; text-align:center;"></div>
-    <div class="link" id="forgotLink" style="display:none; color:#a78bfa; font-size:.85rem; text-align:center; cursor:pointer;">Quên mật khẩu?</div>
+    <div class="link hidden" id="forgotLink" style="color:#a78bfa; font-size:.85rem; text-align:center; cursor:pointer;">Quên mật khẩu?</div>
     <div class="link" id="authToggle" style="color:#a78bfa; font-size:.9rem; text-align:center; cursor:pointer; padding:10px; text-decoration:underline; user-select:none; -webkit-tap-highlight-color:transparent;">Đã có tài khoản? Đăng nhập</div>
   </div>
 </div>
@@ -2705,8 +2705,6 @@ const Hell=(()=>{
 })();
 </script>
 
-</script>
-
 <!-- ============ FIREBASE SDK ============ -->
 
 <script>
@@ -2749,19 +2747,17 @@ function toggleAuthMode(e){
   if(forgot) forgot.classList.toggle('hidden', authMode==='register');
   console.log('Auth mode toggled to:', authMode);
 }
-document.getElementById('authToggle').onclick=toggleAuthMode;
-document.getElementById('authToggle').addEventListener('touchend', (e)=>{
-  e.preventDefault();
-  toggleAuthMode(e);
-}, {passive:false});
-document.getElementById('authToggle').addEventListener('click', toggleAuthMode);
-
-
-
+// Chỉ gắn 1 lần để tránh bị đảo chế độ 2 lần mỗi lần bấm
+(function(){
+  const t=document.getElementById('authToggle');
+  let lastTouch=0;
+  t.addEventListener('touchend',(e)=>{ e.preventDefault(); lastTouch=Date.now(); toggleAuthMode(e); },{passive:false});
+  t.addEventListener('click',(e)=>{ if(Date.now()-lastTouch<500){ e.preventDefault(); return; } toggleAuthMode(e); });
+})();
+// Trạng thái ban đầu (đang ở chế độ Đăng ký)
 document.getElementById('forgotLink').classList.toggle('hidden', authMode!=='login');
-  document.getElementById('authErr').style.color='';
-  document.getElementById('authErr').textContent='';
-};
+document.getElementById('authErr').style.color='';
+document.getElementById('authErr').textContent='';
 document.getElementById('authSubmit').onclick=async()=>{
   const email=document.getElementById('authEmail').value.trim();
   const pass=document.getElementById('authPass').value;
@@ -2842,6 +2838,9 @@ function translateAuthErr(code){
     'auth/user-not-found':'Không tìm thấy tài khoản.',
     'auth/wrong-password':'Sai mật khẩu.',
     'auth/invalid-credential':'Email hoặc mật khẩu không đúng.',
+    'auth/invalid-login-credentials':'Email hoặc mật khẩu không đúng.',
+    'auth/unauthorized-domain':'Tên miền này chưa được thêm vào Firebase (Authentication → Settings → Authorized domains).',
+    'auth/operation-not-allowed':'Chưa bật đăng nhập Email/Password trong Firebase Console.',
     'auth/too-many-requests':'Thử sai quá nhiều lần, hãy đợi một lúc hoặc đặt lại mật khẩu.',
     'auth/network-request-failed':'Lỗi mạng, thử lại nhé.',
     'auth/missing-email':'Nhập email.'
@@ -3236,7 +3235,6 @@ function renderFriendsBody(){
     header.style.cssText = 'font-size:.75rem; opacity:.6; padding:8px 0; text-align:center; border-bottom:1px solid rgba(255,255,255,0.05); margin-bottom:8px;';
     header.textContent = `${onlineCount} / ${sorted.length} bạn đang online`;
     body.prepend(header);
-  }
   } else if(friendTab==='req'){
     if(!friendReqs.length){ body.innerHTML='<div class="empty">Không có lời mời kết bạn nào.</div>'; return; }
     body.innerHTML='';
@@ -3914,12 +3912,10 @@ function hellThink(cb,bot,pen,timeLimit,version){
       }
       const srcEl = document.getElementById(srcId) || document.getElementById('hellSrc');
       const src=document.getElementById(srcId) ? document.getElementById(srcId).textContent : document.getElementById('hellSrc').textContent;
-      const pre='const SIZE='+SIZE+';const idx=(r,c)=>r*SIZE+c;const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;let board=new Uint8Array(SIZE*SIZE);
-';
-      const post='
-onmessage=function(e){board=new Uint8Array(e.data.b); if(e.data.t){ try{ HELL_TIME=e.data.t; HELL_SOFT=Math.min(HELL_TIME*0.45, 3500); }catch(err){} } var m=-1; try{m=Hell.think(e.data.pen);}catch(err){} postMessage({id:e.data.id,m:m,stats:Hell.stats});};';
+      const pre='const SIZE='+SIZE+';const idx=(r,c)=>r*SIZE+c;const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;let board=new Uint8Array(SIZE*SIZE);\n';
+      const post='\nonmessage=function(e){board=new Uint8Array(e.data.b); if(e.data.t){ try{ HELL_TIME=e.data.t; HELL_SOFT=Math.min(HELL_TIME*0.45, 3500); }catch(err){} } var m=-1; try{m=Hell.think(e.data.pen);}catch(err){} postMessage({id:e.data.id,m:m,stats:Hell.stats});};';
       const workerUrl=URL.createObjectURL(new Blob([pre+src+post],{type:'application/javascript'}));
-      const worker=new Worker(workerUrl);
+      let worker=new Worker(workerUrl);
       worker.__workerUrl=workerUrl;
       worker.onerror=()=>{ try{URL.revokeObjectURL(workerUrl);}catch(_){} worker=null; if(id===hellJob) cb(-1); };
       window.hellWorkers[ver] = {worker: worker, lastTime: timeLimit, url: workerUrl};
@@ -4320,6 +4316,7 @@ setInterval(updateCustomStatus, 600);
     if(typeof joinRoom==='function') joinRoom();
   });
 })();
+</script>
 <script>document.addEventListener("DOMContentLoaded",()=>{ setTimeout(()=>{ if(typeof clampOffsets==="function"){ clampOffsets(); if(typeof draw==="function") draw(); } }, 600); });</script>
 
 <script>
