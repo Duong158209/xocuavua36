@@ -134,7 +134,7 @@
 }
 
 /* Thêm viền sáng phụ chạy quanh */
-#authScreen .authBox::before{
+#authScreen .authBox::before{ pointer-events:none;
   content:'';
   position:absolute;
   inset:-3px;
@@ -550,7 +550,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 }
 
 /* Thêm viền sáng phụ chạy quanh */
-#authScreen .authBox::before{
+#authScreen .authBox::before{ pointer-events:none;
   content:'';
   position:absolute;
   inset:-3px;
@@ -732,6 +732,23 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 }
 
 </style>
+
+<style>
+/* FIX AUTH CLICKABLE - override LED blocking */
+#authScreen .authBox::before{ pointer-events:none !important; }
+#authScreen::after{ pointer-events:none !important; }
+#authScreen .authBox{ pointer-events:auto !important; position:relative !important; z-index:2 !important; }
+#authScreen .field, #authScreen .btn, #authScreen .link, #authScreen input{
+  pointer-events:auto !important;
+  position:relative !important;
+  z-index:20 !important;
+  touch-action: manipulation !important;
+}
+#authScreen{ pointer-events:auto !important; }
+#authScreen h1{ pointer-events:none !important; }
+#authErr{ pointer-events:none !important; }
+</style>
+
 </head>
 <body>
 
@@ -741,13 +758,13 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 <div id="authScreen">
   <h1 style="margin-bottom:4px;">Cờ X O: 5 ô liên tiếp</h1>
   <div class="authBox">
-    <input class="field" id="authUsername" placeholder="Tên hiển thị">
-    <input class="field" id="authEmail" placeholder="Email" type="email">
-    <input class="field" id="authPass" placeholder="Mật khẩu" type="password">
+    <input class="field" id="authUsername" style="pointer-events:auto; position:relative; z-index:10;" placeholder="Tên hiển thị">
+    <input class="field" id="authEmail" style="pointer-events:auto; position:relative; z-index:10;" placeholder="Email" type="email">
+    <input class="field" id="authPass" style="pointer-events:auto; position:relative; z-index:10;" placeholder="Mật khẩu" type="password">
     <div class="btn active" id="authSubmit">Đăng ký</div>
     <div class="authErr" id="authErr"></div>
     <div class="link hidden" id="forgotLink">Quên mật khẩu?</div>
-    <div class="link" id="authToggle" style="cursor:pointer; pointer-events:auto; position:relative; z-index:10; padding:12px; text-align:center; text-decoration:underline; color:#a78bfa; -webkit-tap-highlight-color: rgba(0,0,0,0);">Đã có tài khoản? Đăng nhập</div>
+    <div class="link" id="authToggle" style="cursor:pointer; pointer-events:auto; position:relative; z-index:20; pointer-events:auto; position:relative; z-index:10; padding:12px; text-align:center; text-decoration:underline; color:#a78bfa; -webkit-tap-highlight-color: rgba(0,0,0,0);">Đã có tài khoản? Đăng nhập</div>
   </div>
 </div>
 
@@ -2913,20 +2930,30 @@ let unsubFriends=null, unsubReqs=null, unsubInvites=null;
 
 // ---------- AUTH UI ----------
 let authMode='register';
-document.getElementById('authToggle').onclick=(e)=>{
-  if(e) e.preventDefault();
-  authMode = authMode==='register'?'login':'register';
-  document.getElementById('authSubmit').textContent = authMode==='register'?'Đăng ký':'Đăng nhập';
-  document.getElementById('authToggle').textContent = authMode==='register'?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Đăng ký';
-  document.getElementById('authUsername').classList.toggle('hidden', authMode==='login');
+function toggleAuthMode(e){
+  if(typeof window.authMode !== 'undefined') authMode = window.authMode;
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  authMode = authMode==='register'?'login':'register'; window.authMode = authMode;
+  const submit = document.getElementById('authSubmit');
+  const toggle = document.getElementById('authToggle');
+  const uname = document.getElementById('authUsername');
   const forgot = document.getElementById('forgotLink');
+  if(submit) submit.textContent = authMode==='register'?'Đăng ký':'Đăng nhập';
+  if(toggle) toggle.textContent = authMode==='register'?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Đăng ký';
+  if(uname) uname.classList.toggle('hidden', authMode==='login');
   if(forgot) forgot.classList.toggle('hidden', authMode==='register');
-};
+  console.log('Auth mode toggled to:', authMode);
+}
+document.getElementById('authToggle').onclick=toggleAuthMode;
 document.getElementById('authToggle').addEventListener('touchend', (e)=>{
   e.preventDefault();
-  document.getElementById('authToggle').click();
+  toggleAuthMode(e);
 }, {passive:false});
-  document.getElementById('forgotLink').classList.toggle('hidden', authMode!=='login');
+document.getElementById('authToggle').addEventListener('click', toggleAuthMode);
+
+
+
+document.getElementById('forgotLink').classList.toggle('hidden', authMode!=='login');
   document.getElementById('authErr').style.color='';
   document.getElementById('authErr').textContent='';
 };
@@ -2934,11 +2961,19 @@ document.getElementById('authSubmit').onclick=async()=>{
   const email=document.getElementById('authEmail').value.trim();
   const pass=document.getElementById('authPass').value;
   const uname=document.getElementById('authUsername').value.trim();
-  const errEl=document.getElementById('authErr'); errEl.textContent=''; errEl.style.color='';
+  const errEl=document.getElementById('authErr'); 
+  errEl.textContent=''; 
+  errEl.style.color='#ff6b6b';
+  errEl.style.display='block';
+  console.log('Auth submit clicked, mode:', typeof authMode !== 'undefined' ? authMode : window.authMode, 'email:', email);
   if(!email||!pass){errEl.textContent='Nhập đầy đủ email và mật khẩu.'; return;}
   try{
-    if(authMode==='register'){
+    const mode = (typeof authMode !== 'undefined' ? authMode : window.authMode) || 'register';
+    console.log('Auth mode:', mode);
+    if(mode==='register'){
       if(!uname){errEl.textContent='Nhập tên hiển thị.'; return;}
+      console.log('Creating user...');
+      errEl.textContent='Đang đăng ký...';
       const cred=await auth.createUserWithEmailAndPassword(email,pass);
       const myCode = cred.user.uid.slice(-6).toUpperCase();
       await db.collection('users').doc(cred.user.uid).set({
@@ -2946,12 +2981,30 @@ document.getElementById('authSubmit').onclick=async()=>{
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }, {merge:true});
       await db.collection('codes').doc(myCode).set({uid:cred.user.uid, name:uname});
-      currentUsername=uname; myFriendCode=myCode;
-      document.getElementById('whoName').textContent=uname;
+      if(typeof currentUsername !== 'undefined') currentUsername=uname;
+      if(typeof myFriendCode !== 'undefined') myFriendCode=myCode;
+      const whoName = document.getElementById('whoName');
+      if(whoName) whoName.textContent=uname;
+      errEl.textContent='Đăng ký thành công!';
+      errEl.style.color='#22c55e';
     } else {
+      console.log('Signing in...');
+      errEl.textContent='Đang đăng nhập...';
       await auth.signInWithEmailAndPassword(email,pass);
+      errEl.textContent='Đăng nhập thành công!';
+      errEl.style.color='#22c55e';
     }
-  }catch(e){ errEl.textContent = await explainAuthErr(e,email); }
+  }catch(e){ 
+    console.error('Auth error:', e);
+    errEl.textContent = e.message || (e.code ? e.code : 'Lỗi đăng nhập');
+    // Thử dịch lỗi đơn giản
+    if(e.code==='auth/wrong-password') errEl.textContent='Sai mật khẩu.';
+    else if(e.code==='auth/user-not-found') errEl.textContent='Tài khoản không tồn tại.';
+    else if(e.code==='auth/email-already-in-use') errEl.textContent='Email đã được đăng ký.';
+    else if(e.code==='auth/invalid-email') errEl.textContent='Email không hợp lệ.';
+    else if(e.code==='auth/weak-password') errEl.textContent='Mật khẩu tối thiểu 6 ký tự.';
+    else if(e.code==='auth/invalid-credential' || e.code==='auth/invalid-login-credentials') errEl.textContent='Email hoặc mật khẩu không đúng.';
+  }
 };
 // Phân biệt "sai mật khẩu" và "tài khoản không tồn tại" khi đăng nhập
 async function explainAuthErr(e,email){
