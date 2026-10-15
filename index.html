@@ -863,10 +863,10 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
           <div style="background:#1f162e; border:1.5px solid #3b7cff60; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; align-items:center; gap:6px;"><span style="width:24px; height:24px; border-radius:50%; background:#1a1526; border:2px solid #3b7cff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.75rem; color:#6ad4ff;">X</span><span style="font-weight:800; font-size:.8rem;">Đi trước</span></div>
             <select id="botXVersion" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700;">
-              <option value="v8">v8 - Cổ điển (1.5s)</option>
-              <option value="v9">v9 - Tấn công (3s)</option>
-              <option value="v10">v10 - Chiến thuật (5s)</option>
-              <option value="v11" selected>v11 - Địa ngục mới (8s)</option>
+              <option value="v8">v8 - Cổ điển - Nguyên bản 1.5s (1.5s)</option>
+              <option value="v9">v9 - Tấn công - Nguyên bản 3s (3s)</option>
+              <option value="v10">v10 - Chiến thuật - Nguyên bản 5s (5s)</option>
+              <option value="v11" selected>v11 - Địa ngục - 8sc mới - Nguyên bản 8sc mới (8s)</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botXScore" style="font-weight:800; color:#6ad4ff;">0</span></div>
           </div>
@@ -874,10 +874,10 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
           <div style="background:#17131f; border:1.5px solid #ff7a7a60; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; align-items:center; gap:6px;"><span style="width:24px; height:24px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.75rem; color:#ff9a9a;">O</span><span style="font-weight:800; font-size:.8rem;">Đi sau</span></div>
             <select id="botOVersion" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #4a355e; background:#0e0c15; color:#fff; font-weight:700;">
-              <option value="v8">v8 - Cổ điển (1.5s)</option>
-              <option value="v9" selected>v9 - Tấn công (3s)</option>
-              <option value="v10">v10 - Chiến thuật (5s)</option>
-              <option value="v11">v11 - Địa ngục mới (8s)</option>
+              <option value="v8">v8 - Cổ điển - Nguyên bản 1.5s (1.5s)</option>
+              <option value="v9" selected>v9 - Tấn công - Nguyên bản 3s (3s)</option>
+              <option value="v10">v10 - Chiến thuật - Nguyên bản 5s (5s)</option>
+              <option value="v11">v11 - Địa ngục - 8sc mới - Nguyên bản 8sc mới (8s)</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botOScore" style="font-weight:800; color:#ff9a9a;">0</span></div>
           </div>
@@ -2453,13 +2453,18 @@ function hellCancel(){
   hellJob++;
   if(hellWorker){ try{hellWorker.terminate();}catch(e){} try{if(hellWorker.__workerUrl)URL.revokeObjectURL(hellWorker.__workerUrl);}catch(e){} hellWorker=null; }
 }
-function hellThink(cb,bot,pen){
+function hellThink(cb,bot,pen,timeLimit){
   const id=++hellJob;
   try{
-    if(!hellWorker){
+    if(!hellWorker || (timeLimit && timeLimit < 2000)){
+      // Tạo worker mới nếu cần timeLimit khác nhau cho v8/v9 để tránh cache
+      if(hellWorker && timeLimit && timeLimit < 2000){
+        try{ hellWorker.terminate(); }catch(e){}
+        hellWorker=null;
+      }
       const src=document.getElementById('hellSrc').textContent;
       const pre='const SIZE='+SIZE+';const idx=(r,c)=>r*SIZE+c;const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;let board=new Uint8Array(SIZE*SIZE);\n';
-      const post='\nonmessage=function(e){board=new Uint8Array(e.data.b);var m=-1;try{m=Hell.think(e.data.pen);}catch(err){}postMessage({id:e.data.id,m:m,stats:Hell.stats});};';
+      const post='\nonmessage=function(e){board=new Uint8Array(e.data.b); if(e.data.t){ try{ HELL_TIME=e.data.t; HELL_SOFT=Math.min(HELL_TIME*0.45, 3500); }catch(err){} } var m=-1; try{m=Hell.think(e.data.pen);}catch(err){} postMessage({id:e.data.id,m:m,stats:Hell.stats});};';
       const workerUrl=URL.createObjectURL(new Blob([pre+src+post],{type:'application/javascript'}));
       hellWorker=new Worker(workerUrl);
       hellWorker.__workerUrl=workerUrl;
@@ -2467,7 +2472,7 @@ function hellThink(cb,bot,pen){
     }
     hellWorker.onmessage=e=>{ if(e.data.id===hellJob){ window.hellLastSearch=e.data.stats; cb(e.data.m); } };
     const snap=bot===1?board.map(v=>v?3-v:0):board.slice();
-    hellWorker.postMessage({id,b:snap.buffer,pen:pen||null},[snap.buffer]);
+    hellWorker.postMessage({id,b:snap.buffer,pen:pen||null,t:timeLimit||8000},[snap.buffer]);
   }catch(err){ cb(-1); }
 }
 
@@ -3401,22 +3406,29 @@ document.addEventListener('click', (e)=>{
 
 
 
+
+
+
+
+
+
 <script>
-// BOT VS BOT - FIXED SCORING + AUTO CONTINUOUS
+// BOT VS BOT - SỨC MẠNH VÀ TRÍ TUỆ NGUYÊN BẢN, THỜI GIAN NGHĨ ĐÚNG TỪNG PHIÊN BẢN
 (function(){
+  // Thời gian nghĩ nguyên bản của từng phiên bản - dùng đúng sức mạnh Hell V11
   const VERSIONS = {
-    v8:  { t: 1200, name: 'v8 Cổ điển' },
-    v9:  { t: 2500, name: 'v9 Tấn công' },
-    v10: { t: 4500, name: 'v10 Chiến thuật' },
-    v11: { t: 7000, name: 'v11 Địa ngục' }
+    v8:  { t: 1500, name: 'v8 - Cổ điển - Nguyên bản 1.5s - Nguyên bản 1.5s', desc: 'Phiên bản cổ điển, nghĩ 1.5s' },
+    v9:  { t: 3000, name: 'v9 - Tấn công - Nguyên bản 3s - Nguyên bản 3s', desc: 'Phiên bản tấn công, nghĩ 3s' },
+    v10: { t: 5000, name: 'v10 - Chiến thuật - Nguyên bản 5s - Nguyên bản 5s', desc: 'Phiên bản chiến thuật, nghĩ 5s' },
+    v11: { t: 8000, name: 'v11 - Địa ngục - 8sc mới - Nguyên bản 8sc mới - Nguyên bản 8s', desc: 'Phiên bản mạnh nhất, nghĩ 8s - Trí tuệ nguyên bản Hell V11' }
   };
   
   window.botVsBotRunning = false;
   window.botVsBotPaused = false;
-  window.botVsBotAuto = true; // chạy liên tục
+  window.botVsBotAuto = true;
   let timer = null;
   let botXWins = 0, botOWins = 0, botDraws = 0, moves = 0;
-  let lastWinner = 0; // lưu người thắng ván vừa rồi
+  let lastWinner = 0;
   
   function isBotMode(){
     return document.getElementById('modeBotVsBot')?.classList.contains('active');
@@ -3441,9 +3453,16 @@ document.addEventListener('click', (e)=>{
       labelO.textContent = `BOT ${ov.toUpperCase()} (O)`;
     }
     
-    // Cập nhật checkbox auto
     const autoChk = document.getElementById('botVsBotAutoChk');
     if(autoChk) window.botVsBotAuto = autoChk.checked;
+    
+    // Hiển thị thời gian nghĩ nguyên bản
+    const xVer = document.getElementById('botXVersion')?.value || 'v11';
+    const oVer = document.getElementById('botOVersion')?.value || 'v9';
+    const xInfo = document.getElementById('botXVersionInfo');
+    const oInfo = document.getElementById('botOVersionInfo');
+    if(xInfo) xInfo.textContent = VERSIONS[xVer]?.desc || '';
+    if(oInfo) oInfo.textContent = VERSIONS[oVer]?.desc || '';
   }
   
   function resetBoardBotVsBot(){
@@ -3467,23 +3486,22 @@ document.addEventListener('click', (e)=>{
     if(st && isBotMode()){
       const xv = document.getElementById('botXVersion')?.value?.toUpperCase() || 'V11';
       const ov = document.getElementById('botOVersion')?.value?.toUpperCase() || 'V9';
-      st.textContent = `BOT VS BOT - SẴN SÀNG - ${xv} vs ${ov}`;
+      st.textContent = `BOT VS BOT NGUYÊN BẢN - ${xv} vs ${ov} - SẴN SÀNG`;
       st.classList.remove('bot-thinking');
     }
   }
   
   function updateScoreDisplay(){
-    const scX = document.getElementById('scX');
-    const scO = document.getElementById('scO');
     const bx = document.getElementById('botXScore');
     const bo = document.getElementById('botOScore');
+    const scX = document.getElementById('scX');
+    const scO = document.getElementById('scO');
     
     if(bx) bx.textContent = botXWins;
     if(bo) bo.textContent = botOWins;
     if(scX) scX.innerHTML = `<span>${botXWins}</span><span style="font-size:.85em; opacity:.9;"> thắng</span>`;
     if(scO) scO.innerHTML = `<span>${botOWins}</span><span style="font-size:.85em; opacity:.9;"> thắng</span>`;
     
-    // Lưu vào localStorage để không mất khi reload
     try{
       localStorage.setItem('botVsBotScore', JSON.stringify({x:botXWins, o:botOWins, d:botDraws}));
     }catch(e){}
@@ -3497,31 +3515,28 @@ document.addEventListener('click', (e)=>{
     }catch(e){}
   }
   
-  function onGameOver(winnerParam){
-    // winnerParam là người thắng thực sự (1=X, 2=O, 0=hòa)
-    let winner = winnerParam;
+  function onGameOver(winner){
     if(!winner){
-      // Fallback đoán từ game
-      if(typeof lastWinner !== 'undefined' && lastWinner!==0) winner = lastWinner;
-      else if(typeof turn !== 'undefined') winner = 3-turn;
+      if(lastWinner!==0) winner = lastWinner;
+      else winner = 0;
     }
     
-    console.log('Game over, winner:', winner, 'lastWinner:', lastWinner);
+    console.log('BotVsBot GameOver winner:', winner);
     
     const statusEl = document.getElementById('botVsBotStatus');
     if(winner===1){
       botXWins++;
       const xv = document.getElementById('botXVersion')?.value || 'v11';
-      if(statusEl) statusEl.textContent = `BOT X ${xv.toUpperCase()} THẮNG! - ${moves} nước`;
+      if(statusEl) statusEl.textContent = `BOT X ${xv.toUpperCase()} THẮNG! ${moves} nước - Nguyên bản ${VERSIONS[xv].t/1000}s`;
       lastWinner = 1;
     } else if(winner===2){
       botOWins++;
       const ov = document.getElementById('botOVersion')?.value || 'v9';
-      if(statusEl) statusEl.textContent = `BOT O ${ov.toUpperCase()} THẮNG! - ${moves} nước`;
+      if(statusEl) statusEl.textContent = `BOT O ${ov.toUpperCase()} THẮNG! ${moves} nước - Nguyên bản ${VERSIONS[ov].t/1000}s`;
       lastWinner = 2;
     } else {
       botDraws++;
-      if(statusEl) statusEl.textContent = `Hòa! - ${moves} nước`;
+      if(statusEl) statusEl.textContent = `Hòa! ${moves} nước`;
       lastWinner = 0;
     }
     
@@ -3529,40 +3544,33 @@ document.addEventListener('click', (e)=>{
     
     const mainSt = document.getElementById('status');
     if(mainSt && statusEl){
-      mainSt.textContent = statusEl.textContent + (window.botVsBotAuto ? ' - Tự reset sau 2.5s...' : ' - Bấm Mới để tiếp');
+      mainSt.textContent = statusEl.textContent + (window.botVsBotAuto ? ' - Tự reset 2.5s...' : ' - Bấm Mới để tiếp');
       mainSt.classList.remove('bot-thinking');
     }
     
-    // Chạy liên tục nếu bật auto
-    if(window.botVsBotAuto && window.botVsBotRunning && !window.botVsBotPaused){
+    if(window.botVsBotAuto && isBotMode() && !window.botVsBotPaused){
+      console.log('Auto reset in 2.5s');
       timer = setTimeout(()=>{
         if(!isBotMode()) return;
         if(!window.botVsBotAuto) return;
+        if(window.botVsBotPaused) return;
         resetBoardBotVsBot();
         const st = document.getElementById('botVsBotStatus');
-        if(st) st.textContent = 'Ván mới - Đang chạy liên tục...';
+        if(st) st.textContent = 'Ván mới nguyên bản - Đang chạy...';
         if(window.botVsBotRunning) doBotMove();
       }, 2500);
     } else {
       window.botVsBotRunning = false;
       if(timer){ clearTimeout(timer); timer=null; }
-      const boardWrap = document.getElementById('boardWrap');
-      if(boardWrap) boardWrap.style.pointerEvents = 'auto';
-      const cv = document.getElementById('cv');
-      if(cv) cv.style.pointerEvents = 'auto';
       const startBtn = document.getElementById('botVsBotStart');
       if(startBtn) startBtn.textContent = '▶️ Bắt đầu';
     }
   }
   
-  async function doBotMove(){
+  function doBotMove(){
     if(!window.botVsBotRunning || window.botVsBotPaused) return;
     if(typeof gameOver !== 'undefined' && gameOver){
-      // Nếu gameOver mà chưa xử lý thắng, xử lý
-      if(lastWinner===0){
-        // Thử lấy winner từ turn
-        onGameOver(3-turn);
-      }
+      if(lastWinner!==0) onGameOver(lastWinner);
       return;
     }
     
@@ -3573,108 +3581,74 @@ document.addEventListener('click', (e)=>{
     
     const statusEl = document.getElementById('botVsBotStatus');
     if(statusEl){
-      statusEl.textContent = `BOT ${ver.toUpperCase()} (${curTurn===1?'X':'O'}) đang nghĩ ${cfg.t/1000}s`;
+      statusEl.textContent = `BOT ${ver.toUpperCase()} (${curTurn===1?'X':'O'}) nguyên bản đang nghĩ ${cfg.t/1000}s - ${cfg.name}`;
     }
     const mainSt = document.getElementById('status');
     if(mainSt){
-      mainSt.textContent = `LƯỢT BOT ${ver.toUpperCase()} (${curTurn===1?'X':'O'}) - ${cfg.name} ĐANG TÍNH...`;
+      mainSt.textContent = `LƯỢT BOT ${ver.toUpperCase()} (${curTurn===1?'X':'O'}) - NGUYÊN BẢN ${cfg.t/1000}s - ${cfg.name}`;
       mainSt.classList.add('bot-thinking');
     }
     
-    try{
-      if(typeof HELL_TIME !== 'undefined'){
-        window._oldHT = HELL_TIME;
-        HELL_TIME = cfg.t;
-      }
-      window.HELL_TIME = cfg.t;
-    }catch(e){}
-    
+    // Dùng sức mạnh và trí tuệ nguyên bản Hell V11 với thời gian nghĩ đúng gốc
     if(typeof hellThink === 'function'){
       hellThink((moveIdx)=>{
-        try{
-          if(typeof window._oldHT !== 'undefined') HELL_TIME = window._oldHT;
-        }catch(e){}
-        
         if(!window.botVsBotRunning || window.botVsBotPaused) return;
         
         if(moveIdx>=0 && moveIdx < SIZE*SIZE && board[moveIdx]===0){
           const r = Math.floor(moveIdx / SIZE);
           const c = moveIdx % SIZE;
-          lastWinner = 0; // reset
-          // placeLocal sẽ gọi endGame nếu thắng
-          const prevGameOver = gameOver;
-          let placed = false;
+          const prevOver = gameOver;
           if(typeof placeLocal === 'function'){
-            placed = placeLocal(r,c,curTurn);
-            // placeLocal đã gọi endGame nếu thắng, kiểm tra gameOver mới
-            if(!prevGameOver && gameOver){
-              // Thắng
-              lastWinner = curTurn;
-              moves++;
-              const mc = document.getElementById('botVsBotMoveCount');
-              if(mc) mc.textContent = moves + ' nước';
-              onGameOver(curTurn);
-              return;
-            }
-          } else {
-            board[moveIdx]=curTurn;
-            if(typeof draw === 'function') draw();
-            if(typeof turn !== 'undefined') turn = 3-curTurn;
-            placed = true;
-          }
-          if(placed){
+            placeLocal(r,c,curTurn);
             moves++;
             const mc = document.getElementById('botVsBotMoveCount');
             if(mc) mc.textContent = moves + ' nước';
-            
-            if(typeof gameOver !== 'undefined' && gameOver){
-              if(lastWinner===0) lastWinner = curTurn;
+            if(!prevOver && gameOver){
+              lastWinner = curTurn;
               onGameOver(curTurn);
               return;
             }
           }
         } else {
-          console.error('Invalid moveIdx', moveIdx);
+          console.error('Invalid moveIdx', moveIdx, 'board[moveIdx]=', board[moveIdx]);
+          // Fallback
+          const empties=[];
+          for(let i=0;i<board.length;i++) if(board[i]===0) empties.push(i);
+          if(empties.length){
+            const mv = empties[Math.floor(empties.length/2)];
+            const r = Math.floor(mv/SIZE), c = mv%SIZE;
+            if(typeof placeLocal === 'function'){
+              placeLocal(r,c,curTurn);
+              moves++;
+            }
+          }
         }
         
         if(window.botVsBotRunning && !window.botVsBotPaused){
           const speed = parseInt(document.getElementById('botVsBotSpeed')?.value || '800');
           timer = setTimeout(doBotMove, speed);
         }
-      }, curTurn, null);
+      }, curTurn, null, cfg.t); // Truyền thời gian nghĩ nguyên bản vào worker
     }
   }
   
-  // Override endGame để bắt thắng thua cho bot vs bot
+  // Override endGame để bắt thắng
   const origEndGame = window.endGame;
   window.endGame = function(winner, cells){
     if(isBotMode()){
-      // Lưu winner trước khi origEndGame xóa gì đó
       lastWinner = winner;
-      console.log('endGame called, winner:', winner);
+      console.log('endGame bot vs bot winner:', winner);
     }
     if(origEndGame) return origEndGame.apply(this, arguments);
-    // Fallback
     gameOver=true; winCells=cells||[];
-    if(winner===1){ if(typeof scores !== 'undefined') scores.X++; }
-    else if(winner===2){ if(typeof scores !== 'undefined') scores.O++; }
-    const scX = document.getElementById('scX');
-    const scO = document.getElementById('scO');
-    if(scX && typeof scores !== 'undefined') scX.textContent=scores.X;
-    if(scO && typeof scores !== 'undefined') scO.textContent=scores.O;
     if(typeof draw === 'function') draw();
   };
   try{ endGame = window.endGame; }catch(e){}
   
-  // Block human moves
   const origCellTapped = window.cellTapped;
   window.cellTapped = function(r,c){
-    if(isBotMode() && window.botVsBotRunning){
-      return;
-    }
-    if(isBotMode() && !window.botVsBotRunning){
-      // Trong bot vs bot mà chưa chạy thì cũng không cho người đánh
-      return;
+    if(isBotMode()){
+      return; // chặn người chơi
     }
     if(origCellTapped) return origCellTapped(r,c);
   };
@@ -3718,9 +3692,11 @@ document.addEventListener('click', (e)=>{
       window.botVsBotRunning = true;
       window.botVsBotPaused = false;
       if(typeof gameOver !== 'undefined' && gameOver) resetBoardBotVsBot();
-      else if(moves===0) {
-        // Kiểm tra board trống
-        if(typeof board !== 'undefined' && board.every(v=>v===0)) resetBoardBotVsBot();
+      else if(moves===0 && typeof board !== 'undefined' && board.every(v=>v===0)) resetBoardBotVsBot();
+      else if(typeof board !== 'undefined' && board.some(v=>v!==0)){
+        moves = board.filter(v=>v!==0).length;
+        const mc = document.getElementById('botVsBotMoveCount');
+        if(mc) mc.textContent = moves + ' nước';
       }
       btn.textContent = '▶️ Đang chạy';
       updateUI();
@@ -3746,7 +3722,7 @@ document.addEventListener('click', (e)=>{
       if(typeof hellCancel === 'function') hellCancel();
       resetBoardBotVsBot();
       const st = document.getElementById('botVsBotStatus');
-      if(st) st.textContent = 'Sẵn sàng';
+      if(st) st.textContent = 'Sẵn sàng nguyên bản';
       const sb = document.getElementById('botVsBotStart');
       if(sb) sb.textContent = '▶️ Bắt đầu';
       const pb = document.getElementById('botVsBotPause');
@@ -3768,7 +3744,7 @@ document.addEventListener('click', (e)=>{
     }
   });
   
-  // Zoom controls for bot vs bot
+  // Zoom
   (function(){
     const wrap = document.getElementById('boardWrap');
     const cv = document.getElementById('cv');
