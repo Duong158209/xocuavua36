@@ -701,7 +701,7 @@ self.addEventListener('fetch', e=>{
     <!-- HELL HEADER like image -->
     <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:linear-gradient(145deg,#1e162c,#14111e); border:1px solid #4a355e; border-radius:16px;">
       <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(145deg,#231b2f,#15111e); border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">H</div>
-      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v13</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
+      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v1.1</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
     </div>
 
         <!-- CHẾ ĐỘ CHƠI - restored -->
@@ -796,7 +796,8 @@ self.addEventListener('fetch', e=>{
               <option value="v10">v10 - Chiến thuật - 5s</option>
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
-              <option value="v13" selected>v13 - Địa ngục phòng thủ x5.5 - 8s - Mới nhất</option>
+              <option value="v1.1" selected>v1.1 - Hell nâng cấp (DEF-first + cân bằng) - 9s</option>
+              <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botXScore" style="font-weight:800; color:#6ad4ff;">0</span></div>
           </div>
@@ -809,7 +810,8 @@ self.addEventListener('fetch', e=>{
               <option value="v10">v10 - Chiến thuật - 5s</option>
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
-              <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s - Mới nhất</option>
+              <option value="v1.1">v1.1 - Hell nâng cấp (DEF-first + cân bằng) - 9s</option>
+              <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botOScore" style="font-weight:800; color:#ff9a9a;">0</span></div>
           </div>
@@ -2093,6 +2095,389 @@ const Hell=(()=>{
 })();
 
 
+</script>
+
+<script type="text/plain" id="hellSrcV1_1">// v1.1b - HELL UPGRADED - DEFENSE-FIRST + fix goingSecond + cân bằng công thủ
+// v1.1b: ưu tiên phòng thủ mạnh (không hăng công quên chặn), ATT vừa phải, DEF ×7.5, bonus chặn ba/tứ cao
+const HELL_TIME=9000, HELL_SOFT=5200;
+const Hell=(()=>{
+  const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
+  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=28, VCF_NODES=2200000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
+  const OPEN4=45000000, FOUR=1400000, OPEN3=280000, BRK3=90000, THREE3=16000, DBL3=1400000, OPEN2=2800, DBL_OPEN2=14000;
+  const W=[0,8,70,520,3600,0];
+  const DK=7.5; // v1.1b: tăng mạnh hệ số phòng thủ
+  // ATT vừa phải (không hăng quá), DEF boost mạnh để không quên chặn
+  const ATT=[280,14000,140000,1400000,35000000], DEF=[0,220,1800,16000,2400000].map(v=>Math.round(v*DK));
+  const cw=new Array(N), nbr=new Array(N);
+  const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const i=idx(r,c), L=[];
+    for(let d=0;d<4;d++)for(let k=0;k<5;k++){
+      const sr=r-k*DR[d], sc=c-k*DC[d], er=sr+4*DR[d], ec=sc+4*DC[d];
+      if(inb(sr,sc)&&inb(er,ec)){
+        const w=d*N+idx(sr,sc);
+        L.push(w);
+        wSt[w]=DR[d]*SIZE+DC[d];
+        const a1=sr-DR[d], a2=sc-DC[d], b1=er+DR[d], b2=ec+DC[d];
+        wB1[w]=inb(a1,a2)?idx(a1,a2):-1;
+        wB2[w]=inb(b1,b2)?idx(b1,b2):-1;
+      }
+    }
+    cw[i]=Int32Array.from(L);
+    const nb=[];
+    for(let dr=-3;dr<=3;dr++)for(let dc=-3;dc<=3;dc++){ if((dr||dc)&&inb(r+dr,c+dc)) nb.push(idx(r+dr,c+dc)); }
+    nbr[i]=Int16Array.from(nb);
+  }
+  let hb,w1,w2,near,E,won,nodes,deadline,aborted,vn;
+  const fs=[null,new Set(),new Set()], ts=[null,new Set(),new Set()];
+  let H1=0,H2=0;
+  const TTN=1<<23, TK=new Int32Array(TTN), TD=new Int8Array(TTN).fill(-1), TS=new Int32Array(TTN), TF=new Uint8Array(TTN), TM=new Int16Array(TTN);
+  let ttCount=0; const tt={get size(){return ttCount;},clear(){TD.fill(-1);ttCount=0;}};
+  const hist=new Int32Array(N), killer=new Int32Array(2*MAXPLY).fill(-1), S7=new Uint8Array(7), counter=new Int16Array(N).fill(-1);
+  const cv=(x,p)=>x===0?0:(x===p?1:2);
+  const Z1=new Int32Array(2*N), Z2=new Int32Array(2*N);
+  (()=>{let q=192837465; const rn=()=>{q^=q<<13; q^=q>>>17; q^=q<<5; return q|0;}; for(let i=0;i<2*N;i++){Z1[i]=rn(); Z2[i]=rn();}})();
+  function upd(i,p,d){
+    const L=cw[i];
+    for(let k=0;k<L.length;k++){
+      const w=L[k], a=w1[w], b=w2[w];
+      E-=(a===0?W[b]:0)-(b===0?W[a]:0);
+      if(a===4&&b===0) fs[1].delete(w);
+      if(b===4&&a===0) fs[2].delete(w);
+      if(a===3&&b===0) ts[1].delete(w);
+      if(b===3&&a===0) ts[2].delete(w);
+      const a2=p===1?a+d:a, b2=p===2?b+d:b;
+      w1[w]=a2; w2[w]=b2;
+      E+=(a2===0?W[b2]:0)-(b2===0?W[a2]:0);
+      if(a2===4&&b2===0) fs[1].add(w);
+      if(b2===4&&a2===0) fs[2].add(w);
+      if(a2===3&&b2===0) ts[1].add(w);
+      if(b2===3&&a2===0) ts[2].add(w);
+      if(d>0&&((p===1&&a2===5)||(p===2&&b2===5))) won=true;
+    }
+  }
+  function put(i,p){ hb[i]=p; won=false; H1^=Z1[i*2+p-1]; H2^=Z2[i*2+p-1]; upd(i,p,1); const nb=nbr[i]; for(let k=0;k<nb.length;k++) near[nb[k]]++; return won; }
+  function undo(i){ const p=hb[i]; hb[i]=0; H1^=Z1[i*2+p-1]; H2^=Z2[i*2+p-1]; upd(i,p,-1); const nb=nbr[i]; for(let k=0;k<nb.length;k++) near[nb[k]]--; }
+  function emptyOf(w){ const st=wSt[w], s=w%N; for(let k=0;k<5;k++){ const c=s+k*st; if(hb[c]===0) return c; } return -1; }
+  function wins(p){ const out=[]; for(const w of fs[p]){ const i=emptyOf(w); if(i>=0&&out.indexOf(i)<0) out.push(i); } return out; }
+  function openFourMove(p){
+    for(const w of fs[p]){
+      const i=emptyOf(w);
+      if(i<0) continue;
+      let open=0;
+      const b1=wB1[w], b2=wB2[w];
+      if(b1>=0&&hb[b1]===0) open++;
+      if(b2>=0&&hb[b2]===0) open++;
+      if(open>=1) return i;
+    }
+    return -1;
+  }
+  function checkTime(){ if(performance.now()>=deadline) aborted=true; return aborted; }
+  function evalSide(p){
+    const F=p===1?fs[1]:fs[2], T=p===1?ts[1]:ts[2];
+    let s=0, live3=0;
+    for(const w of F){
+      let open=0;
+      const b1=wB1[w], b2=wB2[w];
+      if(b1>=0&&hb[b1]===0) open++;
+      if(b2>=0&&hb[b2]===0) open++;
+      if(open===2) s+=OPEN4; else s+=FOUR;
+    }
+    for(const w of T){
+      const st=wSt[w], base=w%N;
+      const b1=wB1[w], b2=wB2[w];
+      S7[0]=b1<0?3:cv(hb[b1],p);
+      for(let k=0;k<5;k++) S7[k+1]=cv(hb[base+k*st],p);
+      S7[6]=b2<0?3:cv(hb[b2],p);
+      let m=-1;
+      for(let t=0;t<=2;t++) if(S7[t]===0&&S7[t+1]===1&&S7[t+2]===1&&S7[t+3]===1&&S7[t+4]===0){ m=t; break; }
+      const openL=m===0||(m>0&&S7[m-1]<2), openR=m>=0&&(m+5>=7||S7[m+5]<2);
+      let brk=false;
+      for(let t=0;t<=3&&!brk;t++){ const x=S7[t],y=S7[t+1],z=S7[t+2],u=S7[t+3]; if((x===1&&y===1&&z===0&&u===1)||(x===1&&y===0&&z===1&&u===1)) brk=true; }
+      if(m>=0&&openL&&openR){ s+=OPEN3; live3++; }
+      else if(brk) s+=BRK3;
+      else s+=THREE3;
+    }
+    if(live3>=2) s+=DBL3;
+    return s;
+  }
+  function ev(me){ const v=E+evalSide(2)-evalSide(1); return me===2?v:-v; }
+  function gen(me,forced,quiet,K,goingSecond){
+    const A=me===1?w1:w2, B=me===1?w2:w1;
+    const cells=[], scs=[], mks=[], blk=[];
+    const center=SIZE/2;
+    const opp=3-me;
+    const oppWins=wins(opp);
+    const isDefCon = oppWins.length>0 || ts[opp].size>=2;
+    for(let r=by0;r<=by1;r++)for(let c=bx0;c<=bx1;c++){
+      const i=r*SIZE+c;
+      if(hb[i]!==0||near[i]===0) continue;
+      const L=cw[i];
+      let s=0, mk=0, bl=false, th3=0, th4=0, oth3=0, oth4=0, open2=0;
+      for(let k=0;k<L.length;k++){
+        const w=L[k], a=A[w], b=B[w];
+        if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; if(a===2) open2++; }
+        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; } }
+      }
+      // DEFENSE-FIRST: ưu tiên chặn trước, chỉ công khi an toàn hoặc buộc phải
+      let defMul = goingSecond ? 3.2*DK : 2.0*DK;
+      if(isDefCon) defMul = Math.max(defMul, 4.5*DK);
+      // Chặn tứ / ba sống đối thủ — bonus rất cao
+      if(oth4>=1) s += 550000 * defMul;
+      if(oth3>=2) s += 280000 * defMul;
+      else if(oth3>=1) s += 48000 * defMul;   // single open-3 cũng phải ưu tiên chặn
+      // Tấn công: chỉ mạnh khi thật sự nguy hiểm, không hăng vô tội vạ
+      if(th4>=1) s += 200000;
+      if(th3>=2) s += 150000;
+      else if(th3>=1) s += 18000;
+      if(open2>=2) s += DBL_OPEN2 * 1.5;
+      // Ưu tiên nước vừa công vừa thủ (có cả mk lẫn bl)
+      if(mk && bl) s += 90000;
+      s += Math.max(0, 28 - (Math.abs(r-center)+Math.abs(c-center))) * (goingSecond ? 1.2 : 1.8);
+      if(bl) blk.push(i);
+      if(quiet&&!mk&&th4===0&&oth4===0&&oth3===0) continue;
+      cells.push(i); scs.push(s+Math.min(hist[i],12000)+(counter[i]>=0?600:0)); mks.push((mk||th4||oth4||oth3)?1:0);
+    }
+    if(forced&&blk.length){
+      if(blk.length===1){
+        const j=cells.indexOf(blk[0]);
+        return {lose:false,cells:[blk[0]],scs:[j>=0?scs[j]:999999],mks:[1]};
+      }
+      const bScored = blk.map(b=>{ const j=cells.indexOf(b); return [b, j>=0?scs[j]:0]; }).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+      if(bScored.length>1) return {lose:false,cells:bScored.slice(0,3),scs:[999999,999998,999997],mks:[1,1,1]};
+    }
+    const ord=cells.map((_,j)=>j).sort((x,y)=>scs[y]-scs[x]).slice(0,K);
+    return {lose:false,cells:ord.map(j=>cells[j]),scs:ord.map(j=>scs[j]),mks:ord.map(j=>mks[j])};
+  }
+  function nm(depth,alpha,beta,me,ply,ext){
+    if((++nodes&31)===0&&checkTime()) return 0;
+    if(aborted) return 0;
+    const mine=wins(me);
+    if(mine.length) return WINV-ply;
+    const enemy=wins(3-me);
+    if(enemy.length>=2) return -WINV+ply;
+    if(enemy.length===1){
+      const b=enemy[0];
+      if(put(b,me)){ undo(b); return WINV-ply-1; }
+      const v=nm(depth-1, -beta, -alpha, 3-me, ply+1, ext);
+      undo(b);
+      return -v;
+    }
+    if(depth<=0){
+      if(openFourMove(me)>=0) return WINV-ply-2;
+      if(ext<4 && openFourMove(3-me)>=0){ depth=1; ext++; }
+      else return ev(me);
+    }
+    const key=(H1^H2)&(TTN-1);
+    if(TK[key]===(H1|0) && TD[key]>=depth){
+      const sv=TS[key], fl=TF[key];
+      if(fl===1 && sv>=beta) return sv;
+      if(fl===2 && sv<=alpha) return sv;
+      if(fl===0) return sv;
+    }
+    let stonesCnt=0; for(let i=0;i<N;i++) if(hb[i]) stonesCnt++;
+    const isSecond = (stonesCnt % 2 === 1);
+    const g=gen(me,false,false, ext>0?14:(depth>3?36:24), isSecond);
+    if(!g.cells.length) return ev(me);
+    let best=-INF, bestM=g.cells[0];
+    let a=alpha;
+    for(let i=0;i<g.cells.length;i++){
+      const mv=g.cells[i];
+      const isKill = killer[ply*2]===mv || killer[ply*2+1]===mv;
+      let red=0;
+      if(depth>=3 && i>=7 && !g.mks[i] && !isKill) red=1;
+      if(depth>=5 && i>=14) red++;
+      const nd = Math.max(1, depth-1-red);
+      put(mv,me);
+      let sc;
+      if(i===0) sc=-nm(nd, -beta, -a, 3-me, ply+1, ext);
+      else {
+        sc=-nm(nd, -a-1, -a, 3-me, ply+1, ext);
+        if(sc>a && sc<beta) sc=-nm(nd, -beta, -a, 3-me, ply+1, ext);
+      }
+      undo(mv);
+      if(aborted) return 0;
+      if(sc>best){ best=sc; bestM=mv; }
+      if(sc>a) a=sc;
+      if(a>=beta){
+        if(killer[ply*2]!==mv){ killer[ply*2+1]=killer[ply*2]; killer[ply*2]=mv; }
+        hist[mv]=Math.min(hist[mv]+depth*depth, 30000);
+        break;
+      }
+    }
+    const fl = best<=alpha ? 2 : (best>=beta ? 1 : 0);
+    if(TD[key]<depth){ TK[key]=H1|0; TD[key]=depth; TS[key]=best|0; TF[key]=fl; TM[key]=bestM; ttCount++; }
+    return best;
+  }
+  function vcf(att,ply,maxPly){
+    if(vn++>vcfLim||ply>=maxPly||checkTime()) return -1;
+    const mine=wins(att);
+    if(mine.length) return mine[0];
+    const enemy=wins(3-att);
+    if(enemy.length>=2) return -1;
+    if(enemy.length===1){
+      const b=enemy[0];
+      put(b,att);
+      const r=vcf(att,ply+1,maxPly);
+      undo(b);
+      return r>=0?b:-1;
+    }
+    const cands=[];
+    for(const w of fs[att]){ const i=emptyOf(w); if(i>=0&&cands.indexOf(i)<0) cands.push(i); }
+    for(let i=0;i<cands.length;i++){
+      const mv=cands[i];
+      if(put(mv,att)){ undo(mv); return mv; }
+      const r=vcf(att,ply+1,maxPly);
+      undo(mv);
+      if(r>=0) return mv;
+    }
+    return -1;
+  }
+  function vct(att,ply,maxPly){
+    if(vn++>vcfLim||ply>=maxPly||checkTime()) return -1;
+    const mine=wins(att);
+    if(mine.length) return mine[0];
+    const enemy=wins(3-att);
+    if(enemy.length>=2) return -1;
+    if(enemy.length===1){
+      const b=enemy[0];
+      put(b,att);
+      const r=vct(att,ply+1,maxPly);
+      undo(b);
+      return r>=0?b:-1;
+    }
+    const g=gen(att,false,true,8,false);
+    for(let i=0;i<Math.min(6,g.cells.length);i++){
+      const mv=g.cells[i];
+      put(mv,att);
+      if(wins(att).length||openFourMove(att)>=0){
+        const r=vct(att,ply+1,maxPly);
+        undo(mv);
+        if(r>=0) return mv;
+      } else undo(mv);
+    }
+    return -1;
+  }
+  function doRoot(depth,a,b,order,fbest){
+    let bs=-INF, bi=order[0]||0;
+    const scored=[];
+    for(let i=0;i<order.length;i++){
+      const mv=order[i];
+      put(mv,2);
+      let sc;
+      if(i===0) sc=-nm(depth-1, -b, -a, 1, 1, 0);
+      else {
+        sc=-nm(depth-1, -a-1, -a, 1, 1, 0);
+        if(sc>a && sc<b) sc=-nm(depth-1, -b, -a, 1, 1, 0);
+      }
+      undo(mv);
+      if(aborted) return {aborted:true,bs,bi,order};
+      if(sc>bs){ bs=sc; bi=mv; }
+      if(sc>a) a=sc;
+      scored.push([mv,sc]);
+      if(a>=b) break;
+    }
+    scored.sort((x,y)=>y[1]-x[1]);
+    return {aborted:false,bs,bi,order:scored.map(x=>x[0])};
+  }
+  function think(pen){
+    const started=performance.now();
+    deadline=started+HELL_TIME; aborted=false; nodes=0; vn=0;
+    hb=new Uint8Array(N); w1=new Uint8Array(4*N); w2=new Uint8Array(4*N); near=new Uint8Array(N);
+    E=0; won=false; H1=0; H2=0;
+    fs[1].clear(); fs[2].clear(); ts[1].clear(); ts[2].clear();
+    killer.fill(-1);
+    let stones=0;
+    for(let i=0;i<N;i++) if(board[i]){ put(i,board[i]); stones++; }
+    stats={depth:0,nodes:0,vcfNodes:0,ms:0,reason:'search',tt:tt.size};
+    let r0=SIZE,r1=-1,c0=SIZE,c1=-1;
+    for(let i=0;i<N;i++) if(board[i]){ const r=(i/SIZE)|0, c=i%SIZE; if(r<r0)r0=r; if(r>r1)r1=r; if(c<c0)c0=c; if(c>c1)c1=c; }
+    by0=Math.max(0,r0-9); by1=Math.min(SIZE-1,r1+9); bx0=Math.max(0,c0-9); bx1=Math.min(SIZE-1,c1+9);
+    vcfLim=VCF_NODES;
+    if(!stones){ tt.clear(); hist.fill(0); stats.reason='center'; return idx(SIZE>>1,SIZE>>1); }
+    const immediate=wins(2);
+    if(immediate.length){ stats.reason='win'; return immediate[0]; }
+    const blocks=wins(1);
+    if(blocks.length===1){ stats.reason='forced-block'; return blocks[0]; }
+    if(blocks.length>=2){
+      let bestB=blocks[0], bestS=-INF;
+      for(const b of blocks){ put(b,2); const s=ev(2); undo(b); if(s>bestS){ bestS=s; bestB=b; } }
+      stats.reason='double-block-try'; return bestB;
+    }
+    // FIX: goingSecond đúng theo số quân (engine luôn là player 2)
+    const goingSecond = (stones % 2 === 1);
+    const g0=gen(2,false,false, 110, goingSecond);
+    const cand=[];
+    for(let j=0;j<g0.cells.length;j++){
+      const i=g0.cells[j];
+      put(i,2);
+      const v=ev(2);
+      undo(i);
+      cand.push([i, v + Math.min(hist[i],8000) + g0.scs[j]*0.05]);
+    }
+    if(!cand.length){ for(let i=0;i<N;i++) if(!hb[i]) return i; return -1; }
+    cand.sort((a,b)=>b[1]-a[1]);
+    let order=cand.slice(0, 80).map(c=>c[0]);
+    if(pen){ const lo=order.filter(i=>pen[i]>=500); if(lo.length&&lo.length<order.length){ let rest=order.filter(i=>!(pen[i]>=500)); order=rest.length>=3?rest.concat(lo.filter(i=>!(pen[i]>=900))):rest.concat(lo); } }
+    let best=order[0], completed=0, bestScore=-INF, stable=0;
+    const fullDeadline=deadline;
+    deadline=Math.min(fullDeadline, performance.now()+Math.min(3200,HELL_TIME*0.24));
+    const proof=vcf(2,0,72);
+    deadline=fullDeadline; aborted=false;
+    if(proof<0){
+      vn=0; vcfLim=Math.round(280000*DK); deadline=Math.min(fullDeadline,performance.now()+Math.min(1800*DK,HELL_TIME*0.5));
+      const thrV=vcf(1,0,64); aborted=false;
+      const thrO=(thrV<0)?openFourMove(1):-1;
+      if(thrV>=0||thrO>=0){
+        const key=thrV>=0?thrV:thrO;
+        if(order.indexOf(key)<0) order.unshift(key);
+        const safe=[]; let k=0;
+        for(;k<order.length;k++){
+          const i=order[k]; vn=0;
+          if(put(i,2)){ safe.push(i); undo(i); continue; }
+          const r=vcf(1,0,64);
+          const o4=(r<0&&!aborted)?openFourMove(1):-1;
+          undo(i);
+          if(aborted) break;
+          if(r<0&&o4<0) safe.push(i);
+        }
+        for(;k<order.length;k++) safe.push(order[k]);
+        aborted=false; if(safe.length) order=safe;
+      }
+      deadline=fullDeadline; vcfLim=VCF_NODES; vn=0;
+    }
+    if(proof>=0){ stats={depth:0,nodes:nodes,vcfNodes:vn,ms:Math.round(performance.now()-started),reason:'proved-vcf'}; return proof; }
+    vn=0; vcfLim=160000; deadline=Math.min(fullDeadline,performance.now()+Math.min(1200,HELL_TIME*0.14));
+    const vctProof=vct(2,0,40);
+    deadline=fullDeadline; aborted=false; vcfLim=VCF_NODES;
+    if(vctProof>=0&&order.indexOf(vctProof)>=0){ order=[vctProof].concat(order.filter(x=>x!==vctProof)); }
+    let lastIterMs=0;
+    for(let depth=1; depth<=48; depth++){
+      if(depth>=8&&lastIterMs>0){
+        const remaining=deadline-performance.now();
+        if(remaining<=0||lastIterMs*2.5>remaining) break;
+        if(performance.now()-started>HELL_SOFT&&stable>=2&&bestScore>-WINV/2) break;
+      }
+      if(order.length<=1&&depth>=4) break;
+      let a0=-INF,b0=INF;
+      if(depth>=6&&Math.abs(bestScore)<WINV-1000){ a0=bestScore-400; b0=bestScore+400; }
+      const tIt=performance.now();
+      let r=doRoot(depth,a0,b0,order,best);
+      if(r.aborted) break;
+      if(b0!==INF&&(r.bs<=a0||r.bs>=b0)&&!checkTime()){
+        r=doRoot(depth,-INF,INF,order,best);
+        if(r.aborted) break;
+      }
+      stable=(r.bi===best)?stable+1:0;
+      best=r.bi; bestScore=r.bs; completed=depth; order=r.order;
+      lastIterMs=performance.now()-tIt;
+      if(Math.abs(bestScore)>WINV-1000) break;
+    }
+    stats={depth:completed,nodes:nodes,vcfNodes:vn,ms:Math.round(performance.now()-started),score:bestScore,reason:'search',tt:tt.size};
+    return best;
+  }
+  return {think, get stats(){return stats;}};
+})();
 </script>
 
 <script type="text/plain" id="hellSrcV8">// v8 CƠ BẢN TRUNG BÌNH - MẠNH - TÁCH NÃO RIÊNG - KHÔNG DÙNG CHUNG
@@ -4822,9 +5207,9 @@ function hellCancel(){
 }
 function hellThink(cb,bot,pen,timeLimit,version){
   const id=++hellJob;
-  const verRaw = version || 'v13';
+  const verRaw = version || 'v1.1';
   const ver = verRaw.split('_')[0];
-  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : 'hellSrcV12';
+  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v1.1'||ver==='v1_1'||ver==='v1.1o'||ver==='v14') ? 'hellSrcV1_1' : 'hellSrcV1_1';
   const workerKey = verRaw;
   try{
     if(!window.hellWorkers) window.hellWorkers = {};
@@ -5830,7 +6215,8 @@ document.addEventListener('click', (e)=>{
     v10: { t: 5000, name: 'v10 - Phòng thủ siêu mạnh - 5s', info: 'Engine phòng thủ siêu mạnh, ATT 5,100,1k,8k,200k DEF 1k,10k,100k,5M TT 2M - TĂNG CẢ CÔNG THỦ', isHell: false },
     v11: { t: 8000, name: 'v11 - Kết hợp thông minh - 8s', info: 'Engine kết hợp v9+v10, ATT 20,600,6k,50k,1.5M DEF 600,6k,50k,1.5M TT 2M', isHell: true },
     v12: { t: 8500, name: 'v12 - Out trình - 8.5s - Mạnh nhất', info: 'Engine out trình, ATT 150,8k,80k,800k,20M DEF 8k,80k,800k,40M TT 8M VCF 8M K=96', isHell: true },
-    v13: { t: 8500, name: 'v13 - Phòng thủ x5.5 - 8.5s - Mới nhất', info: 'v12 + sửa VCF sai, nhận ba sống thật, lọc nước thủ, DEF x5.5, ngân sách dò đòn thủ x5.5', isHell: true }
+    v13: { t: 8500, name: 'v13 - Phòng thủ x5.5 - 8.5s', info: 'v12 + ba sống thật + DEF x5.5', isHell: true },
+    'v1.1': { t: 9000, name: 'v1.1 - Hell nâng cấp DEF-first + cân bằng - 9s', info: 'DEF-first, không hăng công quên chặn, fix goingSecond, DEF ×7.5', isHell: true }
   };
   
   window.botVsBotRunning = false; localStorage.setItem('botVsBotRunning','0'); try{ navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage('STOP'); }catch(e){} 
@@ -6012,12 +6398,14 @@ document.addEventListener('click', (e)=>{
     let hellPen = null, hellTime = cfg.t, hellVer = ver;
     if(isHellBot){
       hellTime = undefined;
-      hellVer = (ver==='v13') ? 'v13' : 'v12';   // v13 có engine riêng; v11/v12 giữ nguyên hành vi cũ (engine v12)
+      if(ver==='v1.1' || ver==='v1_1') hellVer = 'v1.1';
+      else if(ver==='v13') hellVer = 'v13';
+      else if(ver==='v12') hellVer = 'v12';
+      else hellVer = ver;
       const otherSel = curTurn===1 ? document.getElementById('botOVersion') : document.getElementById('botXVersion');
-      // v11 đấu v11: mỗi bên một worker riêng để không dùng chung bảng nhớ của engine
       if(curTurn===2 && otherSel && otherSel.value==='v11') hellVer = 'v11o';
-      // v13 đấu v13: mỗi bên một worker riêng
       if(curTurn===2 && ver==='v13' && otherSel && otherSel.value==='v13') hellVer = 'v13o';
+      if(curTurn===2 && (ver==='v1.1'||ver==='v1_1') && otherSel && (otherSel.value==='v1.1'||otherSel.value==='v1_1')) hellVer = 'v1.1o';
       try{ hellPen = (hellMemLoad().pen[posKey(board)] || null); }catch(e){ hellPen = null; }
     }
     
