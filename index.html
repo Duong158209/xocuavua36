@@ -681,11 +681,11 @@ self.addEventListener('fetch', e=>{
 
 <!-- APP -->
 <div id="app" class="hidden" style="height:100%; display:flex; flex-direction:column;">
-  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V12</h1>
+  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V1.2</h1>
 
   <div class="topbar" style="padding-left:8px;">
     <span class="who">Xin chào, <b id="whoName"></b></span>
-    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V12 • 64×64</span>
+    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V1.2 • 15×15</span>
   </div>
   <!-- VERTICAL ICON DOCK -->
   <div id="sideDock" class="collapsed">
@@ -701,7 +701,7 @@ self.addEventListener('fetch', e=>{
     <!-- HELL HEADER like image -->
     <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:linear-gradient(145deg,#1e162c,#14111e); border:1px solid #4a355e; border-radius:16px;">
       <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(145deg,#231b2f,#15111e); border:1px solid #4a355e; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">H</div>
-      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v1.1</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
+      <div><div style="font-weight:900; font-size:1.2rem; letter-spacing:.04em;">HELL BOT <span style="color:#ff3b5a;">v1.2</span></div><div style="font-size:.72rem; letter-spacing:.18em; opacity:.6;">SOLO • CỜ CARO 15×15 • DARK VIP</div></div>
     </div>
 
         <!-- CHẾ ĐỘ CHƠI - restored -->
@@ -796,7 +796,7 @@ self.addEventListener('fetch', e=>{
               <option value="v10">v10 - Chiến thuật - 5s</option>
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
-              <option value="v1.1" selected>v1.1 - Hell nâng cấp (DEF-first + cân bằng) - 9s</option>
+              <option value="v1.2" selected>v1.2 - Hell nâng cấp (MUST-BLOCK + nhìn sâu) - 11s</option>
               <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botXScore" style="font-weight:800; color:#6ad4ff;">0</span></div>
@@ -810,7 +810,7 @@ self.addEventListener('fetch', e=>{
               <option value="v10">v10 - Chiến thuật - 5s</option>
               <option value="v11">v11 - Địa ngục cũ - 8s</option>
               <option value="v12">v12 - Địa ngục mới - 8s</option>
-              <option value="v1.1">v1.1 - Hell nâng cấp (DEF-first + cân bằng) - 9s</option>
+              <option value="v1.2">v1.2 - Hell nâng cấp (MUST-BLOCK + nhìn sâu) - 11s</option>
               <option value="v13">v13 - Địa ngục phòng thủ x5.5 - 8s</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botOScore" style="font-weight:800; color:#ff9a9a;">0</span></div>
@@ -1043,7 +1043,7 @@ const Hell=(()=>{
     const center=SIZE/2;
     const opp=3-me;
     const oppWins=wins(opp);
-    const isDefCon = oppWins.length>0 || ts[opp].size>=2;
+    const isDefCon = oppWins.length>0 || ts[opp].size>=1;
     for(let r=by0;r<=by1;r++)for(let c=bx0;c<=bx1;c++){
       const i=r*SIZE+c;
       if(hb[i]!==0||near[i]===0) continue;
@@ -2097,15 +2097,15 @@ const Hell=(()=>{
 
 </script>
 
-<script type="text/plain" id="hellSrcV1_1">// v1.1b - HELL UPGRADED - DEFENSE-FIRST + fix goingSecond + cân bằng công thủ
-// v1.1b: ưu tiên phòng thủ mạnh (không hăng công quên chặn), ATT vừa phải, DEF ×7.5, bonus chặn ba/tứ cao
-const HELL_TIME=9000, HELL_SOFT=5200;
+<script type="text/plain" id="hellSrcV1_2">// v1.2 - HELL UPGRADED - MUST-BLOCK open-3 + deeper search + DEF-first
+// v1.2: open-3 đối thủ gần như bắt buộc phải chặn, không được bỏ để công; nhìn sâu hơn (~11s)
+const HELL_TIME=11000, HELL_SOFT=6500;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
-  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=28, VCF_NODES=2200000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
+  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=36, VCF_NODES=2800000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
   const OPEN4=45000000, FOUR=1400000, OPEN3=280000, BRK3=90000, THREE3=16000, DBL3=1400000, OPEN2=2800, DBL_OPEN2=14000;
   const W=[0,8,70,520,3600,0];
-  const DK=7.5; // v1.1b: tăng mạnh hệ số phòng thủ
+  const DK=7.5; // v1.2: tăng mạnh hệ số phòng thủ
   // ATT vừa phải (không hăng quá), DEF boost mạnh để không quên chặn
   const ATT=[280,14000,140000,1400000,35000000], DEF=[0,220,1800,16000,2400000].map(v=>Math.round(v*DK));
   const cw=new Array(N), nbr=new Array(N);
@@ -2219,21 +2219,21 @@ const Hell=(()=>{
         if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; if(a===2) open2++; }
         if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; } }
       }
-      // DEFENSE-FIRST: ưu tiên chặn trước, chỉ công khi an toàn hoặc buộc phải
-      let defMul = goingSecond ? 3.2*DK : 2.0*DK;
-      if(isDefCon) defMul = Math.max(defMul, 4.5*DK);
-      // Chặn tứ / ba sống đối thủ — bonus rất cao
-      if(oth4>=1) s += 550000 * defMul;
-      if(oth3>=2) s += 280000 * defMul;
-      else if(oth3>=1) s += 48000 * defMul;   // single open-3 cũng phải ưu tiên chặn
-      // Tấn công: chỉ mạnh khi thật sự nguy hiểm, không hăng vô tội vạ
-      if(th4>=1) s += 200000;
-      if(th3>=2) s += 150000;
-      else if(th3>=1) s += 18000;
-      if(open2>=2) s += DBL_OPEN2 * 1.5;
-      // Ưu tiên nước vừa công vừa thủ (có cả mk lẫn bl)
-      if(mk && bl) s += 90000;
-      s += Math.max(0, 28 - (Math.abs(r-center)+Math.abs(c-center))) * (goingSecond ? 1.2 : 1.8);
+      // DEFENSE-FIRST v1.1c: chặn open-3 của đối thủ gần như bắt buộc
+      let defMul = goingSecond ? 4.0*DK : 2.8*DK;
+      if(isDefCon || oth3>=1 || oth4>=1) defMul = Math.max(defMul, 6.0*DK);
+      // Chặn tứ / ba sống đối thủ — bonus CỰC CAO (không cho phép bỏ qua để công)
+      if(oth4>=1) s += 1200000 * defMul;
+      if(oth3>=2) s += 700000 * defMul;
+      else if(oth3>=1) s += 220000 * defMul;  // single open-3: phải ưu tiên chặn, không được hăng công
+      // Tấn công: chỉ mạnh khi thật sự nguy hiểm
+      if(th4>=1) s += 220000;
+      if(th3>=2) s += 160000;
+      else if(th3>=1) s += 14000;             // tạo ba thường không được hơn việc chặn ba đối thủ
+      if(open2>=2) s += DBL_OPEN2;
+      // Ưu tiên nước vừa công vừa thủ
+      if(mk && (bl || oth3>=1 || oth4>=1)) s += 150000;
+      s += Math.max(0, 26 - (Math.abs(r-center)+Math.abs(c-center))) * (goingSecond ? 1.0 : 1.5);
       if(bl) blk.push(i);
       if(quiet&&!mk&&th4===0&&oth4===0&&oth3===0) continue;
       cells.push(i); scs.push(s+Math.min(hist[i],12000)+(counter[i]>=0?600:0)); mks.push((mk||th4||oth4||oth3)?1:0);
@@ -2265,7 +2265,7 @@ const Hell=(()=>{
     }
     if(depth<=0){
       if(openFourMove(me)>=0) return WINV-ply-2;
-      if(ext<4 && openFourMove(3-me)>=0){ depth=1; ext++; }
+      if(ext<6 && (openFourMove(3-me)>=0 || wins(3-me).length)){ depth=1; ext++; }
       else return ev(me);
     }
     const key=(H1^H2)&(TTN-1);
@@ -2428,18 +2428,21 @@ const Hell=(()=>{
       vn=0; vcfLim=Math.round(280000*DK); deadline=Math.min(fullDeadline,performance.now()+Math.min(1800*DK,HELL_TIME*0.5));
       const thrV=vcf(1,0,64); aborted=false;
       const thrO=(thrV<0)?openFourMove(1):-1;
-      if(thrV>=0||thrO>=0){
-        const key=thrV>=0?thrV:thrO;
-        if(order.indexOf(key)<0) order.unshift(key);
+      if(thrV>=0||thrO>=0 || ts[1].size>=1){
+        const key=thrV>=0?thrV:(thrO>=0?thrO:-1);
+        if(key>=0 && order.indexOf(key)<0) order.unshift(key);
+        // Also prioritize cells that reduce opponent open-3s
         const safe=[]; let k=0;
         for(;k<order.length;k++){
           const i=order[k]; vn=0;
           if(put(i,2)){ safe.push(i); undo(i); continue; }
           const r=vcf(1,0,64);
           const o4=(r<0&&!aborted)?openFourMove(1):-1;
+          const leftOpen3 = ts[1].size; // after our move
           undo(i);
           if(aborted) break;
-          if(r<0&&o4<0) safe.push(i);
+          // Chỉ giữ nước không để đối thủ có VCF / open-4, và càng ít open-3 càng tốt
+          if(r<0 && o4<0) safe.push(i);
         }
         for(;k<order.length;k++) safe.push(order[k]);
         aborted=false; if(safe.length) order=safe;
@@ -5207,9 +5210,9 @@ function hellCancel(){
 }
 function hellThink(cb,bot,pen,timeLimit,version){
   const id=++hellJob;
-  const verRaw = version || 'v1.1';
+  const verRaw = version || 'v1.2';
   const ver = verRaw.split('_')[0];
-  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v1.1'||ver==='v1_1'||ver==='v1.1o'||ver==='v14') ? 'hellSrcV1_1' : 'hellSrcV1_1';
+  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : (ver==='v13'||ver==='v13o') ? 'hellSrcV13' : (ver==='v1.2'||ver==='v1_2'||ver==='v1.2o'||ver==='v1.1'||ver==='v1_1') ? 'hellSrcV1_2' : 'hellSrcV1_2';
   const workerKey = verRaw;
   try{
     if(!window.hellWorkers) window.hellWorkers = {};
@@ -6216,7 +6219,7 @@ document.addEventListener('click', (e)=>{
     v11: { t: 8000, name: 'v11 - Kết hợp thông minh - 8s', info: 'Engine kết hợp v9+v10, ATT 20,600,6k,50k,1.5M DEF 600,6k,50k,1.5M TT 2M', isHell: true },
     v12: { t: 8500, name: 'v12 - Out trình - 8.5s - Mạnh nhất', info: 'Engine out trình, ATT 150,8k,80k,800k,20M DEF 8k,80k,800k,40M TT 8M VCF 8M K=96', isHell: true },
     v13: { t: 8500, name: 'v13 - Phòng thủ x5.5 - 8.5s', info: 'v12 + ba sống thật + DEF x5.5', isHell: true },
-    'v1.1': { t: 9000, name: 'v1.1 - Hell nâng cấp DEF-first + cân bằng - 9s', info: 'DEF-first, không hăng công quên chặn, fix goingSecond, DEF ×7.5', isHell: true }
+    'v1.2': { t: 11000, name: 'v1.2 - Hell nâng cấp MUST-BLOCK + nhìn sâu - 11s', info: 'MUST-BLOCK open-3, không hăng công quên chặn, search sâu hơn, DEF ×7.5', isHell: true }
   };
   
   window.botVsBotRunning = false; localStorage.setItem('botVsBotRunning','0'); try{ navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage('STOP'); }catch(e){} 
@@ -6398,14 +6401,14 @@ document.addEventListener('click', (e)=>{
     let hellPen = null, hellTime = cfg.t, hellVer = ver;
     if(isHellBot){
       hellTime = undefined;
-      if(ver==='v1.1' || ver==='v1_1') hellVer = 'v1.1';
+      if(ver==='v1.2' || ver==='v1_2') hellVer = 'v1.2';
       else if(ver==='v13') hellVer = 'v13';
       else if(ver==='v12') hellVer = 'v12';
       else hellVer = ver;
       const otherSel = curTurn===1 ? document.getElementById('botOVersion') : document.getElementById('botXVersion');
       if(curTurn===2 && otherSel && otherSel.value==='v11') hellVer = 'v11o';
       if(curTurn===2 && ver==='v13' && otherSel && otherSel.value==='v13') hellVer = 'v13o';
-      if(curTurn===2 && (ver==='v1.1'||ver==='v1_1') && otherSel && (otherSel.value==='v1.1'||otherSel.value==='v1_1')) hellVer = 'v1.1o';
+      if(curTurn===2 && (ver==='v1.2'||ver==='v1_2') && otherSel && (otherSel.value==='v1.2'||otherSel.value==='v1_2')) hellVer = 'v1.2o';
       try{ hellPen = (hellMemLoad().pen[posKey(board)] || null); }catch(e){ hellPen = null; }
     }
     
