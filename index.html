@@ -933,13 +933,13 @@ self.addEventListener('fetch', e=>{
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
-<script type="text/plain" id="hellSrc">
+<!--patched hellSrc--> <script type="text/plain" id="hellSrc">
 
 
 
 // HELL VIP v12 — ĐỊA NGỤC TÁI SINH - FIX TOÀN BỘ YẾU ĐIỂM v11
 // - Defense-first khi đi sau, double-threat detector, VCT chain, TT 4M
-const HELL_TIME=8000, HELL_SOFT=4000;
+const HELL_TIME=8500, HELL_SOFT=4500;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
   const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=24, VCF_NODES=1500000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
@@ -1231,8 +1231,8 @@ const Hell=(()=>{
       for(const b of blocks){ put(b,2); const s=ev(2); undo(b); if(s>bestS){ bestS=s; bestB=b; } }
       stats.reason='double-block-try'; return bestB;
     }
-    const goingSecond = (stones%2===1);
-    const g0=gen(2,false,false, goingSecond?56:44, goingSecond);
+    const goingSecond = true; // FIX: luôn phòng thủ mạnh dù đi trước hay sau để không thua v9
+    const g0=gen(2,false,false, 64, goingSecond);
     const cand=[];
     for(let j=0;j<g0.cells.length;j++){
       const i=g0.cells[j];
@@ -1303,7 +1303,7 @@ const Hell=(()=>{
 
 
 </script>
-<script type="text/plain" id="hellSrcV12">
+<!--patched hellSrcV12--> <script type="text/plain" id="hellSrcV12">
 
 
 
@@ -1601,8 +1601,8 @@ const Hell=(()=>{
       for(const b of blocks){ put(b,2); const s=ev(2); undo(b); if(s>bestS){ bestS=s; bestB=b; } }
       stats.reason='double-block-try'; return bestB;
     }
-    const goingSecond = (stones%2===1);
-    const g0=gen(2,false,false, goingSecond?56:44, goingSecond);
+    const goingSecond = true; // FIX
+    const g0=gen(2,false,false, 64, goingSecond);
     const cand=[];
     for(let j=0;j<g0.cells.length;j++){
       const i=g0.cells[j];
@@ -3828,7 +3828,7 @@ async function declineInvite(inviteId){
 // =====================================================================
 // GAME LOGIC
 // =====================================================================
-const SIZE=64;
+const SIZE=15; // FIX: 15x15 chuẩn, trước để 64 nên nước bị lệch khỏi khung nhìn
 const idx=(r,c)=>r*SIZE+c;
 const inb=(r,c)=>r>=0&&r<SIZE&&c>=0&&c<SIZE;
 let board=new Uint8Array(SIZE*SIZE);
@@ -3839,7 +3839,7 @@ let scores={X:0,O:0,D:0};
 let hintCell=null, dangerCells=[], dangerLvl=0;
 let mode='ai', difficulty='medium';
 let mySide=1;   // 1 = X (đi trước), 2 = O (đi sau)
-let cellSize=22, offX=0, offY=0;
+let cellSize=28, offX=0, offY=0; // 15x15 cần ô to hơn
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 const wrap=document.getElementById('boardWrap');
 const statusEl=document.getElementById('status');
@@ -3849,8 +3849,11 @@ function resize(){
   cv.height=wrap.clientHeight*devicePixelRatio;
   cv.style.width=wrap.clientWidth+'px';
   cv.style.height=wrap.clientHeight+'px';
+  centerBoard();
+  clampOffsets();
   draw();
 }
+
 new ResizeObserver(resize).observe(wrap);
 function centerBoard(){
   offX=(wrap.clientWidth - SIZE*cellSize)/2;
