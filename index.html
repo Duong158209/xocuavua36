@@ -595,11 +595,11 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 
 <!-- APP -->
 <div id="app" class="hidden" style="height:100%; display:flex; flex-direction:column;">
-  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V11</h1>
+  <h1 style="margin:10px 0 6px; font-size:1.35rem; text-align:center; font-weight:900; letter-spacing:.08em; color:#ffe4b5; text-shadow:0 0 14px #ff512f90;">CỜ X O • HELL V12</h1>
 
   <div class="topbar" style="padding-left:8px;">
     <span class="who">Xin chào, <b id="whoName"></b></span>
-    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V11 • 15×15</span>
+    <span style="font-size:.75rem; opacity:.6; margin-left:auto;">HELL V12 • 15×15</span>
   </div>
   <!-- VERTICAL ICON DOCK -->
   <div id="sideDock" class="collapsed">
@@ -708,7 +708,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
               <option value="v8">v8 - Cổ điển - Nguyên bản 1.5s (1.5s)</option>
               <option value="v9">v9 - Tấn công - Nguyên bản 3s (3s)</option>
               <option value="v10">v10 - Chiến thuật - Nguyên bản 5s (5s)</option>
-              <option value="v11" selected>v11 - Địa ngục - y hệt bot chơi với người (8s)</option>
+              <option value="v11" selected>v11 - Địa ngục -  (8s)</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botXScore" style="font-weight:800; color:#6ad4ff;">0</span></div>
           </div>
@@ -719,7 +719,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
               <option value="v8">v8 - Cổ điển - Nguyên bản 1.5s (1.5s)</option>
               <option value="v9" selected>v9 - Tấn công - Nguyên bản 3s (3s)</option>
               <option value="v10">v10 - Chiến thuật - Nguyên bản 5s (5s)</option>
-              <option value="v11">v11 - Địa ngục - y hệt bot chơi với người (8s)</option>
+              <option value="v11">v11 - Địa ngục -  (8s)</option>
             </select>
             <div style="display:flex; justify-content:space-between; font-size:.75rem;"><span>Thắng:</span><span id="botOScore" style="font-weight:800; color:#ff9a9a;">0</span></div>
           </div>
@@ -846,6 +846,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
 <script type="text/plain" id="hellSrc">
+
 
 
 // HELL VIP v12 — ĐỊA NGỤC TÁI SINH - FIX TOÀN BỘ YẾU ĐIỂM v11
@@ -1212,8 +1213,378 @@ const Hell=(()=>{
   return {think, get stats(){return stats;}};
 })();
 
-</script>
 
+</script>
+<script type="text/plain" id="hellSrcV12">
+
+
+
+// HELL VIP v12 — ĐỊA NGỤC TÁI SINH - FIX TOÀN BỘ YẾU ĐIỂM v11
+// - Defense-first khi đi sau, double-threat detector, VCT chain, TT 4M
+const HELL_TIME=8000, HELL_SOFT=4000;
+const Hell=(()=>{
+  const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
+  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=24, VCF_NODES=1500000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
+  const OPEN4=8000000, FOUR=900000, OPEN3=150000, BRK3=45000, THREE3=8000, DBL3=700000, OPEN2=1200, DBL_OPEN2=5000;
+  const W=[0,6,48,360,2400,0];
+  const ATT=[6,90,650,5200,300000], DEF=[0,120,900,7800,1200000];
+  const cw=new Array(N), nbr=new Array(N);
+  const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const i=idx(r,c), L=[];
+    for(let d=0;d<4;d++)for(let k=0;k<5;k++){
+      const sr=r-k*DR[d], sc=c-k*DC[d], er=sr+4*DR[d], ec=sc+4*DC[d];
+      if(inb(sr,sc)&&inb(er,ec)){
+        const w=d*N+idx(sr,sc);
+        L.push(w);
+        wSt[w]=DR[d]*SIZE+DC[d];
+        const a1=sr-DR[d], a2=sc-DC[d], b1=er+DR[d], b2=ec+DC[d];
+        wB1[w]=inb(a1,a2)?idx(a1,a2):-1;
+        wB2[w]=inb(b1,b2)?idx(b1,b2):-1;
+      }
+    }
+    cw[i]=Int32Array.from(L);
+    const nb=[];
+    for(let dr=-3;dr<=3;dr++)for(let dc=-3;dc<=3;dc++){ if((dr||dc)&&inb(r+dr,c+dc)) nb.push(idx(r+dr,c+dc)); }
+    nbr[i]=Int16Array.from(nb);
+  }
+  let hb,w1,w2,near,E,won,nodes,deadline,aborted,vn;
+  const fs=[null,new Set(),new Set()], ts=[null,new Set(),new Set()];
+  let H1=0,H2=0;
+  const TTN=1<<22, TK=new Int32Array(TTN), TD=new Int8Array(TTN).fill(-1), TS=new Int32Array(TTN), TF=new Uint8Array(TTN), TM=new Int16Array(TTN);
+  let ttCount=0; const tt={get size(){return ttCount;},clear(){TD.fill(-1);ttCount=0;}};
+  const hist=new Int32Array(N), killer=new Int32Array(2*MAXPLY).fill(-1), S7=new Uint8Array(7), counter=new Int16Array(N).fill(-1);
+  const cv=(x,p)=>x===0?0:(x===p?1:2);
+  const Z1=new Int32Array(2*N), Z2=new Int32Array(2*N);
+  (()=>{let q=123456789; const rn=()=>{q^=q<<13; q^=q>>>17; q^=q<<5; return q|0;}; for(let i=0;i<2*N;i++){Z1[i]=rn(); Z2[i]=rn();}})();
+  function upd(i,p,d){
+    const L=cw[i];
+    for(let k=0;k<L.length;k++){
+      const w=L[k], a=w1[w], b=w2[w];
+      E-=(a===0?W[b]:0)-(b===0?W[a]:0);
+      if(a===4&&b===0) fs[1].delete(w);
+      if(b===4&&a===0) fs[2].delete(w);
+      if(a===3&&b===0) ts[1].delete(w);
+      if(b===3&&a===0) ts[2].delete(w);
+      const a2=p===1?a+d:a, b2=p===2?b+d:b;
+      w1[w]=a2; w2[w]=b2;
+      E+=(a2===0?W[b2]:0)-(b2===0?W[a2]:0);
+      if(a2===4&&b2===0) fs[1].add(w);
+      if(b2===4&&a2===0) fs[2].add(w);
+      if(a2===3&&b2===0) ts[1].add(w);
+      if(b2===3&&a2===0) ts[2].add(w);
+      if(d>0&&((p===1&&a2===5)||(p===2&&b2===5))) won=true;
+    }
+  }
+  function put(i,p){ hb[i]=p; won=false; H1^=Z1[i*2+p-1]; H2^=Z2[i*2+p-1]; upd(i,p,1); const nb=nbr[i]; for(let k=0;k<nb.length;k++) near[nb[k]]++; return won; }
+  function undo(i){ const p=hb[i]; hb[i]=0; H1^=Z1[i*2+p-1]; H2^=Z2[i*2+p-1]; upd(i,p,-1); const nb=nbr[i]; for(let k=0;k<nb.length;k++) near[nb[k]]--; }
+  function emptyOf(w){ const st=wSt[w], s=w%N; for(let k=0;k<5;k++){ const c=s+k*st; if(hb[c]===0) return c; } return -1; }
+  function wins(p){ const out=[]; for(const w of fs[p]){ const i=emptyOf(w); if(i>=0&&out.indexOf(i)<0) out.push(i); } return out; }
+  function checkTime(){ if(performance.now()>=deadline) aborted=true; return aborted; }
+  function evalSide(p){
+    const F=p===1?fs[1]:fs[2], T=p===1?ts[1]:ts[2];
+    let s=0, live3=0;
+    for(const w of F){
+      const st=wSt[w], base=w%N;
+      let epos=-1;
+      for(let k=0;k<5;k++){ if(hb[base+k*st]===0){ epos=k; break; } }
+      let open=0;
+      const b1=wB1[w], b2=wB2[w];
+      if(b1>=0&&hb[b1]===0) open++;
+      if(b2>=0&&hb[b2]===0) open++;
+      if(open===2) s+=OPEN4; else s+=FOUR;
+    }
+    for(const w of T){
+      const st=wSt[w], base=w%N;
+      const b1=wB1[w], b2=wB2[w];
+      S7[0]=b1<0?3:cv(hb[b1],p);
+      for(let k=0;k<5;k++) S7[k+1]=cv(hb[base+k*st],p);
+      S7[6]=b2<0?3:cv(hb[b2],p);
+      let m=-1;
+      for(let t=0;t<=2;t++) if(S7[t]===0&&S7[t+1]===1&&S7[t+2]===1&&S7[t+3]===1&&S7[t+4]===0){ m=t; break; }
+      const openL=m===0||(m>0&&S7[m-1]<2), openR=m>=0&&(m+5>=7||S7[m+5]<2);
+      let brk=false;
+      for(let t=0;t<=3&&!brk;t++){ const x=S7[t],y=S7[t+1],z=S7[t+2],u=S7[t+3]; if((x===1&&y===1&&z===0&&u===1)||(x===1&&y===0&&z===1&&u===1)) brk=true; }
+      if(m>=0&&openL&&openR){ s+=OPEN3; live3++; }
+      else if(brk) s+=BRK3;
+      else s+=THREE3;
+    }
+    if(live3>=2) s+=DBL3;
+    return s;
+  }
+  function ev(me){ const v=E+evalSide(2)-evalSide(1); return me===2?v:-v; }
+  function gen(me,forced,quiet,K,goingSecond){
+    const A=me===1?w1:w2, B=me===1?w2:w1;
+    const cells=[], scs=[], mks=[], blk=[];
+    const center=SIZE/2;
+    const opp=3-me;
+    const oppWins=wins(opp);
+    const isDefCon = oppWins.length>0 || ts[opp].size>=2;
+    for(let r=by0;r<=by1;r++)for(let c=bx0;c<=bx1;c++){
+      const i=r*SIZE+c;
+      if(hb[i]!==0||near[i]===0) continue;
+      const L=cw[i];
+      let s=0, mk=0, bl=false, th3=0, th4=0, oth3=0, oth4=0, open2=0;
+      for(let k=0;k<L.length;k++){
+        const w=L[k], a=A[w], b=B[w];
+        if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; if(a===2) open2++; }
+        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; } }
+      }
+      let defMul=1;
+      if(goingSecond) defMul=1.8;
+      if(isDefCon) defMul=Math.max(defMul,2.2);
+      if(oth4>=1) s+=180000*defMul;
+      if(oth3>=2) s+=90000*defMul;
+      else if(oth3>=1) s+=12000*defMul;
+      if(th4>=1) s+=80000;
+      if(th3>=2) s+=60000;
+      else if(th3>=1) s+=5000;
+      if(open2>=2) s+=DBL_OPEN2;
+      s+= Math.max(0, 25 - (Math.abs(r-center)+Math.abs(c-center)))* (goingSecond?2:1);
+      if(bl) blk.push(i);
+      if(quiet&&!mk&&th4===0&&oth4===0&&oth3===0) continue;
+      cells.push(i); scs.push(s+Math.min(hist[i],8000)+(counter[i]>=0?400:0)); mks.push((mk||th4||oth4||oth3)?1:0);
+    }
+    if(forced&&blk.length){
+      if(blk.length===1){
+        const j=cells.indexOf(blk[0]);
+        return {lose:false,cells:[blk[0]],scs:[j>=0?scs[j]:999999],mks:[1]};
+      }
+      const bScored = blk.map(b=>{ const j=cells.indexOf(b); return [b, j>=0?scs[j]:0]; }).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+      if(bScored.length>1) return {lose:false,cells:bScored.slice(0,2),scs:[999999,999998],mks:[1,1]};
+    }
+    const ord=cells.map((_,j)=>j).sort((x,y)=>scs[y]-scs[x]).slice(0,K);
+    return {lose:false,cells:ord.map(j=>cells[j]),scs:ord.map(j=>scs[j]),mks:ord.map(j=>mks[j])};
+  }
+  function nm(depth,alpha,beta,me,ply,ext){
+    if((++nodes&31)===0&&checkTime()) return 0;
+    if(aborted) return 0;
+    const mine=wins(me);
+    if(mine.length) return WINV-ply;
+    const enemy=wins(3-me);
+    if(enemy.length>=2) return -WINV+ply;
+    if(enemy.length===1){
+      const b=enemy[0];
+      if(put(b,me)){ undo(b); return WINV-ply-1; }
+      const v=nm(depth-1, -beta, -alpha, 3-me, ply+1, ext);
+      undo(b);
+      return -v;
+    }
+    if(depth<=0) return ev(me);
+    const key=(H1^H2)&(TTN-1);
+    if(TK[key]===(H1|0) && TD[key]>=depth){
+      const sv=TS[key], fl=TF[key];
+      if(fl===1 && sv>=beta) return sv;
+      if(fl===2 && sv<=alpha) return sv;
+      if(fl===0) return sv;
+    }
+    const goingSecond = (me===2);
+    const g=gen(me,false,false, depth>3?28:18, goingSecond);
+    if(!g.cells.length) return ev(me);
+    let best=-INF, bestM=g.cells[0];
+    let a=alpha;
+    for(let i=0;i<g.cells.length;i++){
+      const mv=g.cells[i];
+      const isKill = killer[ply*2]===mv || killer[ply*2+1]===mv;
+      let red=0;
+      if(depth>=3 && i>=6 && !g.mks[i] && !isKill) red=1;
+      if(depth>=5 && i>=12) red++;
+      const nd = Math.max(1, depth-1-red);
+      put(mv,me);
+      let sc;
+      if(i===0) sc=-nm(nd, -beta, -a, 3-me, ply+1, ext);
+      else {
+        sc=-nm(nd, -a-1, -a, 3-me, ply+1, ext);
+        if(sc>a && sc<beta) sc=-nm(depth-1, -beta, -a, 3-me, ply+1, ext);
+      }
+      undo(mv);
+      if(aborted) return 0;
+      if(sc>best){ best=sc; bestM=mv; }
+      if(sc>a){ a=sc; }
+      if(a>=beta){
+        if(mv!==killer[ply*2]){ killer[ply*2+1]=killer[ply*2]; killer[ply*2]=mv; }
+        hist[mv]+= depth*depth;
+        break;
+      }
+    }
+    if(!aborted){
+      TK[key]=H1|0; TS[key]=best; TD[key]=depth; TM[key]=bestM;
+      TF[key]= best<=alpha?2: best>=beta?1:0;
+      if(ttCount< TTN-100) ttCount++;
+    }
+    return best;
+  }
+  function vcf(att,ply,maxPly){
+    if((++vn&31)===0&&checkTime()) return -1;
+    if(aborted||vn>vcfLim||ply>=maxPly) return -1;
+    const own=wins(att); if(own.length) return own[0];
+    const dw=wins(3-att);
+    if(dw.length>1) return -1;
+    const moves=dw.length?dw:gen(att,false,true,32).cells;
+    for(const i of moves){
+      if(aborted) break;
+      const wonNow=put(i,att); let ok=wonNow;
+      if(!ok){
+        const replies=wins(att);
+        if(replies.length===0){
+          if(ts[att].size>=2) ok=true;
+        } else if(replies.length>1) ok=true;
+        else if(replies.length===1){
+          const b=replies[0];
+          const lost=put(b,3-att);
+          if(!lost) ok=vcf(att,ply+2,maxPly)>=0;
+          undo(b);
+        }
+      }
+      undo(i);
+      if(ok) return i;
+    }
+    return -1;
+  }
+  function vct(att,ply,maxPly){
+    if((++vn&63)===0&&checkTime()) return -1;
+    if(aborted||vn>vcfLim||ply>=maxPly) return -1;
+    const own=wins(att); if(own.length) return own[0];
+    if(ts[att].size>=2){
+      vn=0;
+      const p=vcf(att,0,36);
+      if(p>=0) return p;
+    }
+    const g=gen(att,false,false,36);
+    for(const i of g.cells){
+      if(aborted) break;
+      if(put(i,att)){ undo(i); return i; }
+      const oppWin=wins(3-att);
+      if(oppWin.length===0 && ts[att].size>=2){ undo(i); return i; }
+      if(ply+1<maxPly && oppWin.length<=1){
+        const nxt=vct(att,ply+1,maxPly);
+        if(nxt>=0){ undo(i); return i; }
+      }
+      undo(i);
+    }
+    return -1;
+  }
+  let stats={};
+  function doRoot(depth,a,b,order,fbest){
+    let bs=-INF, bi=fbest;
+    const scored=[];
+    let al=a;
+    for(let j=0;j<order.length;j++){
+      if((nodes&15)===0&&checkTime()) return {aborted:true,bs,bi,order};
+      const i=order[j];
+      let sc;
+      if(put(i,2)) sc=WINV;
+      else if(j===0) sc=-nm(depth-1,-b,-al,1,1,0);
+      else{
+        sc=-nm(depth-1,-al-1,-al,1,1,0);
+        if(!aborted&&sc>al&&sc<b) sc=-nm(depth-1,-b,-al,1,1,0);
+      }
+      undo(i);
+      if(aborted) return {aborted:true,bs,bi,order};
+      scored.push([i,sc]);
+      if(sc>bs){ bs=sc; bi=i; }
+      if(sc>al) al=sc;
+      if(al>=b) break;
+    }
+    scored.sort((x,y)=>y[1]-x[1]);
+    return {aborted:false,bs,bi,order:scored.map(x=>x[0])};
+  }
+  function think(pen){
+    const started=performance.now();
+    deadline=started+HELL_TIME; aborted=false; nodes=0; vn=0;
+    hb=new Uint8Array(N); w1=new Uint8Array(4*N); w2=new Uint8Array(4*N); near=new Uint8Array(N);
+    E=0; won=false; H1=0; H2=0;
+    fs[1].clear(); fs[2].clear(); ts[1].clear(); ts[2].clear();
+    killer.fill(-1);
+    let stones=0;
+    for(let i=0;i<N;i++) if(board[i]){ put(i,board[i]); stones++; }
+    stats={depth:0,nodes:0,vcfNodes:0,ms:0,reason:'search',tt:tt.size};
+    let r0=SIZE,r1=-1,c0=SIZE,c1=-1;
+    for(let i=0;i<N;i++) if(board[i]){ const r=(i/SIZE)|0, c=i%SIZE; if(r<r0)r0=r; if(r>r1)r1=r; if(c<c0)c0=c; if(c>c1)c1=c; }
+    by0=Math.max(0,r0-8); by1=Math.min(SIZE-1,r1+8); bx0=Math.max(0,c0-8); bx1=Math.min(SIZE-1,c1+8);
+    vcfLim=VCF_NODES;
+    if(!stones){ tt.clear(); hist.fill(0); stats.reason='center'; return idx(SIZE>>1,SIZE>>1); }
+    const immediate=wins(2);
+    if(immediate.length){ stats.reason='win'; return immediate[0]; }
+    const blocks=wins(1);
+    if(blocks.length===1){ stats.reason='forced-block'; return blocks[0]; }
+    if(blocks.length>=2){
+      let bestB=blocks[0], bestS=-INF;
+      for(const b of blocks){ put(b,2); const s=ev(2); undo(b); if(s>bestS){ bestS=s; bestB=b; } }
+      stats.reason='double-block-try'; return bestB;
+    }
+    const goingSecond = (stones%2===1);
+    const g0=gen(2,false,false, goingSecond?56:44, goingSecond);
+    const cand=[];
+    for(let j=0;j<g0.cells.length;j++){
+      const i=g0.cells[j];
+      put(i,2);
+      const v=ev(2);
+      undo(i);
+      cand.push([i, v + Math.min(hist[i],5000) + g0.scs[j]*0.04]);
+    }
+    if(!cand.length){ for(let i=0;i<N;i++) if(!hb[i]) return i; return -1; }
+    cand.sort((a,b)=>b[1]-a[1]);
+    let order=cand.slice(0, goingSecond?52:44).map(c=>c[0]);
+    if(pen){ const lo=order.filter(i=>pen[i]>=500); if(lo.length&&lo.length<order.length){ let rest=order.filter(i=>!(pen[i]>=500)); order=rest.length>=3?rest.concat(lo.filter(i=>!(pen[i]>=900))):rest.concat(lo); } }
+    let best=order[0], completed=0, bestScore=-INF, stable=0;
+    const fullDeadline=deadline;
+    deadline=Math.min(fullDeadline, performance.now()+Math.min(3000,HELL_TIME*0.22));
+    const proof=vcf(2,0,64);
+    deadline=fullDeadline; aborted=false;
+    if(proof<0){
+      vn=0; vcfLim=180000; deadline=Math.min(fullDeadline,performance.now()+1500);
+      const thr=vcf(1,0,56); aborted=false;
+      if(thr>=0){
+        if(order.indexOf(thr)<0) order.unshift(thr);
+        const safe=[]; let k=0;
+        for(;k<order.length;k++){
+          const i=order[k]; vn=0;
+          if(put(i,2)){ safe.push(i); undo(i); continue; }
+          const r=vcf(1,0,56); undo(i);
+          if(aborted) break;
+          if(r<0) safe.push(i);
+        }
+        for(;k<order.length;k++) safe.push(order[k]);
+        aborted=false; if(safe.length) order=safe;
+      }
+      deadline=fullDeadline; vcfLim=VCF_NODES; vn=0;
+    }
+    if(proof>=0){ stats={depth:0,nodes:nodes,vcfNodes:vn,ms:Math.round(performance.now()-started),reason:'proved-vcf'}; return proof; }
+    vn=0; vcfLim=100000; deadline=Math.min(fullDeadline,performance.now()+1000);
+    const vctProof=vct(2,0,32);
+    deadline=fullDeadline; aborted=false; vcfLim=VCF_NODES;
+    if(vctProof>=0){ order=[vctProof].concat(order.filter(x=>x!==vctProof)); }
+    let lastIterMs=0;
+    for(let depth=1; depth<=44; depth++){
+      if(depth>=8&&lastIterMs>0){
+        const remaining=deadline-performance.now();
+        if(remaining<=0||lastIterMs*2.6>remaining) break;
+        if(performance.now()-started>HELL_SOFT&&stable>=2&&bestScore>-WINV/2) break;
+      }
+      if(order.length<=1&&depth>=4) break;
+      let a0=-INF,b0=INF;
+      if(depth>=6&&Math.abs(bestScore)<WINV-1000){ a0=bestScore-350; b0=bestScore+350; }
+      const tIt=performance.now();
+      let r=doRoot(depth,a0,b0,order,best);
+      if(r.aborted) break;
+      if(b0!==INF&&(r.bs<=a0||r.bs>=b0)&&!checkTime()){
+        r=doRoot(depth,-INF,INF,order,best);
+        if(r.aborted) break;
+      }
+      stable=(r.bi===best)?stable+1:0;
+      best=r.bi; bestScore=r.bs; completed=depth; order=r.order;
+      lastIterMs=performance.now()-tIt;
+      if(Math.abs(bestScore)>WINV-1000) break;
+    }
+    stats={depth:completed,nodes:nodes,vcfNodes:vn,ms:Math.round(performance.now()-started),score:bestScore,reason:'search',tt:tt.size};
+    return best;
+  }
+  return {think, get stats(){return stats;}};
+})();
+
+
+</script>
 <script type="text/plain" id="hellSrcV8">
 
 // HELL VIP v10 — NÂNG CẤP TOÀN DIỆN TỪ v8
@@ -2344,16 +2715,16 @@ const Hell=(()=>{
 </script>
 <script type="text/plain" id="hellSrcV11">
 
-
-// HELL VIP v12 — ĐỊA NGỤC TÁI SINH - FIX TOÀN BỘ YẾU ĐIỂM v11
-// - Defense-first khi đi sau, double-threat detector, VCT chain, TT 4M
-const HELL_TIME=8000, HELL_SOFT=4000;
+// HELL VIP v10 — NÂNG CẤP TOÀN DIỆN TỪ v8
+// Fix yếu điểm v8: eval nông, TT nhỏ, VCF yếu, không có VCT, gen thiếu double threat, LMR quá gắt
+const HELL_TIME=8000, HELL_SOFT=3500;
 const Hell=(()=>{
   const N=SIZE*SIZE, DR=[0,1,1,1], DC=[1,0,1,-1];
-  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=24, VCF_NODES=1500000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
-  const OPEN4=8000000, FOUR=900000, OPEN3=150000, BRK3=45000, THREE3=8000, DBL3=700000, OPEN2=1200, DBL_OPEN2=5000;
-  const W=[0,6,48,360,2400,0];
-  const ATT=[6,90,650,5200,300000], DEF=[0,120,900,7800,1200000];
+  const WINV=10000000, INF=1e9, MAXPLY=96, EXTMAX=18, VCF_NODES=800000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
+  // Tăng trọng số để phân biệt rõ cấp độ nguy hiểm
+  const OPEN4=8000000, FOUR=800000, OPEN3=120000, BRK3=30000, THREE3=6000, DBL3=500000, OPEN2=800;
+  const W=[0,4,32,240,1800,0];
+  const ATT=[4,60,420,3800,200000], DEF=[0,80,620,5200,900000];
   const cw=new Array(N), nbr=new Array(N);
   const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
   for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -2371,18 +2742,18 @@ const Hell=(()=>{
     }
     cw[i]=Int32Array.from(L);
     const nb=[];
-    for(let dr=-3;dr<=3;dr++)for(let dc=-3;dc<=3;dc++){ if((dr||dc)&&inb(r+dr,c+dc)) nb.push(idx(r+dr,c+dc)); }
+    for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){ if((dr||dc)&&inb(r+dr,c+dc)) nb.push(idx(r+dr,c+dc)); }
     nbr[i]=Int16Array.from(nb);
   }
   let hb,w1,w2,near,E,won,nodes,deadline,aborted,vn;
   const fs=[null,new Set(),new Set()], ts=[null,new Set(),new Set()];
   let H1=0,H2=0;
-  const TTN=1<<22, TK=new Int32Array(TTN), TD=new Int8Array(TTN).fill(-1), TS=new Int32Array(TTN), TF=new Uint8Array(TTN), TM=new Int16Array(TTN);
+  const TTN=1<<21, TK=new Int32Array(TTN), TD=new Int8Array(TTN).fill(-1), TS=new Int32Array(TTN), TF=new Uint8Array(TTN), TM=new Int16Array(TTN);
   let ttCount=0; const tt={get size(){return ttCount;},clear(){TD.fill(-1);ttCount=0;}};
   const hist=new Int32Array(N), killer=new Int32Array(2*MAXPLY).fill(-1), S7=new Uint8Array(7), counter=new Int16Array(N).fill(-1);
   const cv=(x,p)=>x===0?0:(x===p?1:2);
   const Z1=new Int32Array(2*N), Z2=new Int32Array(2*N);
-  (()=>{let q=123456789; const rn=()=>{q^=q<<13; q^=q>>>17; q^=q<<5; return q|0;}; for(let i=0;i<2*N;i++){Z1[i]=rn(); Z2[i]=rn();}})();
+  (()=>{let q=987654321; const rn=()=>{q^=q<<13; q^=q>>>17; q^=q<<5; return q|0;}; for(let i=0;i<2*N;i++){Z1[i]=rn(); Z2[i]=rn();}})();
 
   function upd(i,p,d){
     const L=cw[i];
@@ -2411,19 +2782,11 @@ const Hell=(()=>{
     for(const w of fs[p]){ const i=emptyOf(w); if(i>=0&&out.indexOf(i)<0) out.push(i); }
     return out;
   }
-  function countOpen3(p){
-    let cnt=0;
-    for(const w of ts[p]) cnt++;
-    return cnt;
-  }
-  function isDoubleFour(opp){
-    return wins(opp).length>=2;
-  }
   function checkTime(){ if(performance.now()>=deadline) aborted=true; return aborted; }
 
   function evalSide(p){
     const F=p===1?fs[1]:fs[2], T=p===1?ts[1]:ts[2];
-    let s=0, live3=0;
+    let s=0, live3=0, live2=0;
     for(const w of F){
       const st=wSt[w], base=w%N;
       let epos=-1;
@@ -2432,8 +2795,7 @@ const Hell=(()=>{
       const b1=wB1[w], b2=wB2[w];
       if(b1>=0&&hb[b1]===0) open++;
       if(b2>=0&&hb[b2]===0) open++;
-      if(open===2) s+=OPEN4;
-      else s+=FOUR;
+      if((epos===0||epos===4)&&open===2) s+=OPEN4; else s+=FOUR;
     }
     for(const w of T){
       const st=wSt[w], base=w%N;
@@ -2451,56 +2813,39 @@ const Hell=(()=>{
       else s+=THREE3;
     }
     if(live3>=2) s+=DBL3;
-    if(live3>=1){
-      // bonus open2 xung quanh open3
-      s+= live3*OPEN2;
-    }
+    // thưởng thêm nếu có nhiều 2 mở
     return s;
   }
   function ev(me){ const v=E+evalSide(2)-evalSide(1); return me===2?v:-v; }
 
-  function gen(me,forced,quiet,K, goingSecond){
+  function gen(me,forced,quiet,K){
     const A=me===1?w1:w2, B=me===1?w2:w1;
     const cells=[], scs=[], mks=[], blk=[];
     const center=SIZE/2;
-    const opp=3-me;
-    const oppWins=wins(opp);
-    const isDefCon = oppWins.length>0 || ts[opp].size>=2;
     for(let r=by0;r<=by1;r++)for(let c=bx0;c<=bx1;c++){
       const i=r*SIZE+c;
       if(hb[i]!==0||near[i]===0) continue;
       const L=cw[i];
-      let s=0, mk=0, bl=false, th3=0, th4=0, oth3=0, oth4=0, open2=0;
+      let s=0, mk=0, bl=false, th3=0, th4=0, oth3=0, oth4=0;
       for(let k=0;k<L.length;k++){
         const w=L[k], a=A[w], b=B[w];
-        if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; if(a===2) open2++; }
-        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; } }
+        if(b===0){ s+=ATT[a]; if(a===3){ mk=1; th3++; } if(a===4) th4++; }
+        if(a===0){ s+=DEF[b]; if(b===4){ bl=true; oth4++; } if(b===3){ oth3++; s+=400; } }
       }
-      // defense multiplier when going second or under threat
-      let defMul = 1;
-      if(goingSecond) defMul = 1.8;
-      if(isDefCon) defMul = Math.max(defMul, 2.2);
-      if(oth4>=1) s+= 180000*defMul;
-      if(oth3>=2) s+= 90000*defMul;
-      else if(oth3>=1) s+= 12000*defMul;
-      if(th4>=1) s+=80000;
-      if(th3>=2) s+=60000;
-      else if(th3>=1) s+=5000;
-      if(open2>=2) s+= DBL_OPEN2;
-      s+= Math.max(0, 25 - (Math.abs(r-center)+Math.abs(c-center)))* (goingSecond?2:1);
+      if(th4>=1||th3>=2) s+=50000;
+      else if(th3>=1) s+=3000;
+      if(oth4>=1||oth3>=2) s+=120000;
+      else if(oth3>=1) s+=8000;
+      // center bias
+      s+= Math.max(0, 20 - (Math.abs(r-center)+Math.abs(c-center)));
       if(bl) blk.push(i);
-      if(quiet&&!mk&&th4===0&&oth4===0&&oth3===0) continue;
-      cells.push(i); scs.push(s+Math.min(hist[i],8000)+(counter[i]>=0?400:0)); mks.push((mk||th4||oth4||oth3)?1:0);
+      if(quiet&&!mk&&th4===0&&oth4===0) continue;
+      cells.push(i); scs.push(s+Math.min(hist[i],6000)+(counter[i]>=0?200:0)); mks.push((mk||th4||oth4)?1:0);
     }
     if(forced&&blk.length){
-      if(blk.length===1){
-        const j=cells.indexOf(blk[0]);
-        return {lose:false,cells:[blk[0]],scs:[j>=0?scs[j]:999999],mks:[1]};
-      }
-      // double four => try find intersection block that covers both? If not, it's losing but we still try best
-      // return all block cells ordered by score, let search prove loss
-      const bScored = blk.map(b=>{ const j=cells.indexOf(b); return [b, j>=0?scs[j]:0]; }).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
-      if(bScored.length>1) return {lose:false,cells:bScored.slice(0,2),scs:[999999,999998],mks:[1,1]};
+      if(blk.length>1) return {lose:true,cells:[],scs:[],mks:[]};
+      const j=cells.indexOf(blk[0]);
+      return {lose:false,cells:[blk[0]],scs:[j>=0?scs[j]:0],mks:[1]};
     }
     const ord=cells.map((_,j)=>j).sort((x,y)=>scs[y]-scs[x]).slice(0,K);
     return {lose:false,cells:ord.map(j=>cells[j]),scs:ord.map(j=>scs[j]),mks:ord.map(j=>mks[j])};
@@ -2512,58 +2857,70 @@ const Hell=(()=>{
     const mine=wins(me);
     if(mine.length) return WINV-ply;
     const enemy=wins(3-me);
-    if(enemy.length>=2) return -WINV+ply;
-    if(enemy.length===1) {
-      const b=enemy[0];
-      if(put(b,me)) { undo(b); return WINV-ply-1; }
-      const v=nm(depth-1, -beta, -alpha, 3-me, ply+1, ext);
-      undo(b);
-      return -v;
-    }
-    if(depth<=0) return ev(me);
-    // TT probe
-    const key=(H1^H2)&(TTN-1);
-    if(TK[key]===(H1|0) && TD[key]>=depth){
-      const sv=TS[key], fl=TF[key];
-      if(fl===1 && sv>=beta) return sv;
-      if(fl===2 && sv<=alpha) return sv;
-      if(fl===0) return sv;
-    }
-    const goingSecond = (me===2 && hb.filter(x=>x!==0).length %2===1) || false;
-    const g=gen(me,false,false, depth>3?28:18, goingSecond);
-    if(!g.cells.length) return ev(me);
-    let best=-INF, bestM=g.cells[0];
-    let a=alpha;
-    for(let i=0;i<g.cells.length;i++){
-      const mv=g.cells[i];
-      const isKill = killer[ply*2]===mv || killer[ply*2+1]===mv;
-      let red=0;
-      if(depth>=3 && i>=6 && !g.mks[i] && !isKill) red=1;
-      if(depth>=5 && i>=12) red++;
-      const nd = Math.max(1, depth-1-red);
-      put(mv,me);
-      let sc;
-      if(i===0) sc=-nm(nd, -beta, -a, 3-me, ply+1, ext);
-      else {
-        sc=-nm(nd, -a-1, -a, 3-me, ply+1, ext);
-        if(sc>a && sc<beta) sc=-nm(depth-1, -beta, -a, 3-me, ply+1, ext);
+    if(enemy.length>1) return -WINV+ply+1;
+    const forced=enemy.length===1;
+    if(ply>=MAXPLY) return ev(me);
+    const quiet=depth<=0;
+    if(quiet&&!forced&&ext>=EXTMAX) return ev(me);
+    const a0=alpha;
+    let best=-INF,bm=-1,ttm=-1,key=-1;
+    if(!quiet){
+      key=(H1>>>0)&(TTN-1);
+      if(TD[key]>=0&&TK[key]===(H2|0)){
+        ttm=TM[key];
+        const f=TF[key], sv=TS[key];
+        if(TD[key]>=depth&&(f===0||(f===1&&sv>=beta)||(f===2&&sv<=alpha))) return sv;
       }
-      undo(mv);
+    }
+    if(quiet&&!forced){
+      best=ev(me);
+      if(best>=beta) return best;
+      if(best>alpha) alpha=best;
+    }
+    const g=forced?{lose:false,cells:enemy.slice(),scs:enemy.map(()=>0),mks:enemy.map(()=>1)}
+                  :gen(me,false,quiet,quiet?20:(ply<=2?44:32));
+    if(g.lose) return -WINV+ply+1;
+    const cells=g.cells;
+    if(!cells.length) return quiet?best:ev(me);
+    let chosen;
+    if(cells.length<=2){ chosen=cells; }
+    else{
+      chosen=[];
+      const used=new Uint8Array(cells.length);
+      const take=(v)=>{ if(v<0)return; const j=cells.indexOf(v); if(j>=0&&!used[j]){ used[j]=1; chosen.push(v); } };
+      take(ttm);
+      take(killer[ply*2]); take(killer[ply*2+1]);
+      take(counter[ply>0?best:0]);
+      for(let j=0;j<cells.length;j++) if(!used[j]) chosen.push(cells[j]);
+    }
+    for(let j=0;j<chosen.length;j++){
+      const i=chosen[j];
+      let sc;
+      if(put(i,me)) sc=WINV-ply;
+      else{
+        const nd=depth-1, nx=quiet?ext+1:ext;
+        if(j===0) sc=-nm(nd,-beta,-alpha,3-me,ply+1,nx);
+        else{
+          let rd=0;
+          if(j>=6&&depth>=3&&!forced&&!quiet){ const q=g.cells.indexOf(i); if(q>=0&&!g.mks[q]) rd=1; }
+          sc=-nm(nd-rd,-alpha-1,-alpha,3-me,ply+1,nx);
+          if(!aborted&&rd&&sc>alpha) sc=-nm(nd,-alpha-1,-alpha,3-me,ply+1,nx);
+          if(!aborted&&sc>alpha&&sc<beta) sc=-nm(nd,-beta,-alpha,3-me,ply+1,nx);
+        }
+      }
+      undo(i);
       if(aborted) return 0;
-      if(sc>best){ best=sc; bestM=mv; }
-      if(sc>a){ a=sc; }
-      if(a>=beta){
-        if(mv!==killer[ply*2]){ killer[ply*2+1]=killer[ply*2]; killer[ply*2]=mv; }
-        hist[mv]+= depth*depth;
-        if(counter[mv]>=0) counter[counter[mv]]=mv;
+      if(sc>best){ best=sc; bm=i; if(ply>0) counter[ply]=i; }
+      if(sc>alpha) alpha=sc;
+      if(alpha>=beta){
+        hist[i]=Math.min(200000,hist[i]+Math.max(2,depth*depth*2));
+        if(!quiet&&j>0){ killer[ply*2+1]=killer[ply*2]; killer[ply*2]=i; }
         break;
       }
     }
-    // TT store
-    if(!aborted){
-      TK[key]=H1|0; TS[key]=best; TD[key]=depth; TM[key]=bestM;
-      TF[key]= best<=alpha?2: best>=beta?1:0;
-      if(ttCount< TTN-100) ttCount++;
+    if(!quiet&&bm>=0&&Math.abs(best)<WINV-1000&&(TD[key]<0||TD[key]<=depth+2)){
+      if(TD[key]<0) ttCount++;
+      TK[key]=H2|0; TD[key]=depth; TS[key]=best; TF[key]=best<=a0?2:(best>=beta?1:0); TM[key]=bm;
     }
     return best;
   }
@@ -2574,24 +2931,19 @@ const Hell=(()=>{
     const own=wins(att); if(own.length) return own[0];
     const dw=wins(3-att);
     if(dw.length>1) return -1;
-    const moves=dw.length?dw:gen(att,false,true,32).cells;
+    const moves=dw.length?dw:gen(att,false,true,64).cells;
     for(const i of moves){
       if(aborted) break;
       const wonNow=put(i,att); let ok=wonNow;
       if(!ok){
-        const replies=wins(att);
-        if(replies.length===0){
-          // check double threat creation
-          if(ts[att].size>=2) ok=true;
-        } else if(replies.length>1) ok=true;
-        else if(replies.length===1){
-          const b=replies[0]; 
-          const lost=put(b,3-att);
-          if(!lost) {
-            if(ts[att].size>=1) ok=vcf(att,ply+2,maxPly)>=0;
-            else ok=vcf(att,ply+2,maxPly)>=0;
+        const replies=wins(att), counter=wins(3-att);
+        if(!counter.length){
+          if(replies.length>1) ok=true;
+          else if(replies.length===1){
+            const b=replies[0]; const lost=put(b,3-att);
+            if(!lost) ok=vcf(att,ply+2,maxPly)>=0;
+            undo(b);
           }
-          undo(b);
         }
       }
       undo(i);
@@ -2600,45 +2952,21 @@ const Hell=(()=>{
     return -1;
   }
 
+  // VCT: tìm chuỗi tạo 3 mở liên tiếp ép thắng
   function vct(att,ply,maxPly){
     if((++vn&63)===0&&checkTime()) return -1;
     if(aborted||vn>vcfLim||ply>=maxPly) return -1;
     const own=wins(att); if(own.length) return own[0];
-    if(ts[att].size>=2) {
-      // try to convert double open3 to win via VCF
-      vn=0;
-      const p=vcf(att,0,36);
-      if(p>=0) return p;
-    }
-    const g=gen(att,false,false,36);
+    // tìm nước tạo 3 mở
+    const g=gen(att,false,false,32);
     for(const i of g.cells){
-      if(aborted) break;
       if(put(i,att)){
         undo(i); return i;
       }
-      // after move, if we have 2 open3 and opponent has no immediate 4, it's winning threat
-      const oppWin=wins(3-att);
-      if(oppWin.length===0 && ts[att].size>=2){
-        // verify opponent cannot block both
-        let blockCnt=0;
-        for(const w of ts[att]){
-          const b=emptyOf(w);
-          if(b>=0) blockCnt++;
-        }
-        if(blockCnt>=2){
-          undo(i);
-          return i;
-        }
-      }
-      // recursive VCT
-      if(ply+1<maxPly && oppWin.length<=1){
-        const nxt=vct(att,ply+1,maxPly);
-        if(nxt>=0){
-          undo(i);
-          return i;
-        }
-      }
+      // nếu tạo ra 2 mối đe dọa 4 thì coi như thắng
+      const cnt=wins(att).length + (ts[att].size>0?1:0);
       undo(i);
+      if(cnt>=2) return i;
     }
     return -1;
   }
@@ -2681,54 +3009,41 @@ const Hell=(()=>{
     stats={depth:0,nodes:0,vcfNodes:0,ms:0,reason:'search',tt:tt.size};
     let r0=SIZE,r1=-1,c0=SIZE,c1=-1;
     for(let i=0;i<N;i++) if(board[i]){ const r=(i/SIZE)|0, c=i%SIZE; if(r<r0)r0=r; if(r>r1)r1=r; if(c<c0)c0=c; if(c>c1)c1=c; }
-    by0=Math.max(0,r0-8); by1=Math.min(SIZE-1,r1+8); bx0=Math.max(0,c0-8); bx1=Math.min(SIZE-1,c1+8);
+    by0=Math.max(0,r0-7); by1=Math.min(SIZE-1,r1+7); bx0=Math.max(0,c0-7); bx1=Math.min(SIZE-1,c1+7);
     vcfLim=VCF_NODES;
     if(!stones){ tt.clear(); hist.fill(0); stats.reason='center'; return idx(SIZE>>1,SIZE>>1); }
     const immediate=wins(2);
     if(immediate.length){ stats.reason='win'; return immediate[0]; }
     const blocks=wins(1);
     if(blocks.length===1){ stats.reason='forced-block'; return blocks[0]; }
-    if(blocks.length>=2){
-      // double four from opponent - try best block, will lose but choose highest eval
-      let bestB=blocks[0], bestS=-INF;
-      for(const b of blocks){
-        put(b,2);
-        const s=ev(2);
-        undo(b);
-        if(s>bestS){ bestS=s; bestB=b; }
-      }
-      stats.reason='double-block-try';
-      return bestB;
-    }
-    const goingSecond = (stones%2===1);
-    const g0=gen(2,false,false, goingSecond?56:44, goingSecond);
+    const g0=gen(2,false,false,N);
     const cand=[];
     for(let j=0;j<g0.cells.length;j++){
       const i=g0.cells[j];
       put(i,2);
       const v=ev(2);
       undo(i);
-      cand.push([i, v + Math.min(hist[i],5000) + g0.scs[j]*0.04]);
+      cand.push([i, v + Math.min(hist[i],4000) + g0.scs[j]*0.03]);
     }
     if(!cand.length){ for(let i=0;i<N;i++) if(!hb[i]) return i; return -1; }
     cand.sort((a,b)=>b[1]-a[1]);
-    let order=cand.slice(0, goingSecond?52:44).map(c=>c[0]);
+    let order=cand.slice(0,44).map(c=>c[0]);
     if(pen){ const lo=order.filter(i=>pen[i]>=500); if(lo.length&&lo.length<order.length){ let rest=order.filter(i=>!(pen[i]>=500)); order=rest.length>=3?rest.concat(lo.filter(i=>!(pen[i]>=900))):rest.concat(lo); } }
     let best=order[0], completed=0, bestScore=-INF, stable=0;
     const fullDeadline=deadline;
-    deadline=Math.min(fullDeadline, performance.now()+Math.min(3000,HELL_TIME*0.22));
-    const proof=vcf(2,0,64);
+    deadline=Math.min(fullDeadline, performance.now()+Math.min(2500,HELL_TIME*0.18));
+    const proof=vcf(2,0,52);
     deadline=fullDeadline; aborted=false;
     if(proof<0){
-      vn=0; vcfLim=180000; deadline=Math.min(fullDeadline,performance.now()+1500);
-      const thr=vcf(1,0,56); aborted=false;
+      vn=0; vcfLim=120000; deadline=Math.min(fullDeadline,performance.now()+1200);
+      const thr=vcf(1,0,48); aborted=false;
       if(thr>=0){
         if(order.indexOf(thr)<0) order.unshift(thr);
         const safe=[]; let k=0;
         for(;k<order.length;k++){
           const i=order[k]; vn=0;
           if(put(i,2)){ safe.push(i); undo(i); continue; }
-          const r=vcf(1,0,56); undo(i);
+          const r=vcf(1,0,48); undo(i);
           if(aborted) break;
           if(r<0) safe.push(i);
         }
@@ -2738,22 +3053,24 @@ const Hell=(()=>{
       deadline=fullDeadline; vcfLim=VCF_NODES; vn=0;
     }
     if(proof>=0){ stats={depth:0,nodes:nodes,vcfNodes:vn,ms:Math.round(performance.now()-started),reason:'proved-vcf'}; return proof; }
-    vn=0; vcfLim=100000; deadline=Math.min(fullDeadline,performance.now()+1000);
-    const vctProof=vct(2,0,32);
+    // thử VCT nếu VCF không ra
+    vn=0; vcfLim=60000; deadline=Math.min(fullDeadline,performance.now()+800);
+    const vctProof=vct(2,0,24);
     deadline=fullDeadline; aborted=false; vcfLim=VCF_NODES;
-    if(vctProof>=0){
+    if(vctProof>=0&&order.indexOf(vctProof)>=0){
+      // ưu tiên nước VCT
       order=[vctProof].concat(order.filter(x=>x!==vctProof));
     }
     let lastIterMs=0;
-    for(let depth=1; depth<=44; depth++){
-      if(depth>=8&&lastIterMs>0){
+    for(let depth=1; depth<=40; depth++){
+      if(depth>=7&&lastIterMs>0){
         const remaining=deadline-performance.now();
-        if(remaining<=0||lastIterMs*2.6>remaining) break;
+        if(remaining<=0||lastIterMs*2.4>remaining) break;
         if(performance.now()-started>HELL_SOFT&&stable>=2&&bestScore>-WINV/2) break;
       }
-      if(order.length<=1&&depth>=4) break;
+      if(order.length<=1&&depth>=3) break;
       let a0=-INF,b0=INF;
-      if(depth>=6&&Math.abs(bestScore)<WINV-1000){ a0=bestScore-350; b0=bestScore+350; }
+      if(depth>=5&&Math.abs(bestScore)<WINV-1000){ a0=bestScore-300; b0=bestScore+300; }
       const tIt=performance.now();
       let r=doRoot(depth,a0,b0,order,best);
       if(r.aborted) break;
@@ -2771,7 +3088,6 @@ const Hell=(()=>{
   }
   return {think, get stats(){return stats;}};
 })();
-
 </script>
 
 <!-- ============ FIREBASE SDK ============ -->
@@ -3970,8 +4286,8 @@ function hellCancel(){
 }
 function hellThink(cb,bot,pen,timeLimit,version){
   const id=++hellJob;
-  const ver = version || 'v11';
-  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v12' ? 'hellSrcV12' : 'hellSrcV11';
+  const ver = version || 'v12';
+  const srcId = ver==='v8' ? 'hellSrcV8' : ver==='v9' ? 'hellSrcV9' : ver==='v10' ? 'hellSrcV10' : ver==='v11' ? 'hellSrcV11' : ver==='v12' ? 'hellSrcV12' : 'hellSrcV12';
   try{
     // Tạo worker mới cho mỗi version để đảm bảo trí tuệ nguyên bản không lẫn TT
     if(!window.hellWorkers) window.hellWorkers = {};
@@ -4975,7 +5291,7 @@ document.addEventListener('click', (e)=>{
     v8:  { t: 1500, name: 'v8 - Cổ điển - Nguyên bản 1.5s - Yếu', info: 'Engine v8 gốc, TT nhỏ, không VCT, depth 12' },
     v9:  { t: 3000, name: 'v9 - Tấn công - Nguyên bản 3s', info: 'Engine v9 gốc, VCF yếu, depth 20' },
     v10: { t: 5000, name: 'v10 - Chiến thuật - Nguyên bản 5s', info: 'Engine v10 gốc, VCF+VCT, depth 30' },
-    v11: { t: 8000, name: 'v11 - Địa ngục - y hệt bot chơi với người - 8s', info: 'Engine Địa ngục gốc (giống hệt chế độ chơi với người), full VCF+VCT, depth 40' }
+    v11: { t: 8000, name: 'v11 - Địa ngục -  - 8s', info: 'Engine Địa ngục gốc (giống hệt chế độ chơi với người), full VCF+VCT, depth 40' }
   };
   
   window.botVsBotRunning = false;
