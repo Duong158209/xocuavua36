@@ -747,7 +747,7 @@ input.field{width:100%; padding:12px 14px; border-radius:12px; border:1.5px soli
     <div class="btn active" id="authSubmit">Đăng ký</div>
     <div class="authErr" id="authErr"></div>
     <div class="link hidden" id="forgotLink">Quên mật khẩu?</div>
-    <div class="link" id="authToggle">Đã có tài khoản? Đăng nhập</div>
+    <div class="link" id="authToggle" style="cursor:pointer; pointer-events:auto; position:relative; z-index:10; padding:12px; text-align:center; text-decoration:underline; color:#a78bfa; -webkit-tap-highlight-color: rgba(0,0,0,0);">Đã có tài khoản? Đăng nhập</div>
   </div>
 </div>
 
@@ -2913,11 +2913,19 @@ let unsubFriends=null, unsubReqs=null, unsubInvites=null;
 
 // ---------- AUTH UI ----------
 let authMode='register';
-document.getElementById('authToggle').onclick=()=>{
+document.getElementById('authToggle').onclick=(e)=>{
+  if(e) e.preventDefault();
   authMode = authMode==='register'?'login':'register';
   document.getElementById('authSubmit').textContent = authMode==='register'?'Đăng ký':'Đăng nhập';
   document.getElementById('authToggle').textContent = authMode==='register'?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Đăng ký';
   document.getElementById('authUsername').classList.toggle('hidden', authMode==='login');
+  const forgot = document.getElementById('forgotLink');
+  if(forgot) forgot.classList.toggle('hidden', authMode==='register');
+};
+document.getElementById('authToggle').addEventListener('touchend', (e)=>{
+  e.preventDefault();
+  document.getElementById('authToggle').click();
+}, {passive:false});
   document.getElementById('forgotLink').classList.toggle('hidden', authMode!=='login');
   document.getElementById('authErr').style.color='';
   document.getElementById('authErr').textContent='';
@@ -2999,14 +3007,45 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
     setTimeout(()=>{resize(); centerBoard(); draw();},0);
+    // Presence: đánh dấu online
+    try{
+      const presenceRef = db.collection('presence').doc(user.uid);
+      await presenceRef.set({
+        uid: user.uid,
+        name: currentUsername,
+        online: true,
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        lastSeenMs: Date.now()
+      }, {merge:true});
+      // Cập nhật mỗi 30s
+      if(window.presenceInterval) clearInterval(window.presenceInterval);
+      window.presenceInterval = setInterval(()=>{
+        presenceRef.update({
+          lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+          lastSeenMs: Date.now(),
+          online: true
+        }).catch(()=>{});
+      }, 30000);
+      // Offline khi đóng tab
+      window.addEventListener('beforeunload', ()=>{
+        try{
+          presenceRef.update({online:false, lastSeen: firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
+        }catch(e){}
+      });
+    }catch(e){ console.error('presence error', e); }
     startFriendListeners();
     startFeatureListener();
+    startPresenceListener();
   } else {
     currentUser=null;
+    try{
+      if(window.presenceInterval){ clearInterval(window.presenceInterval); window.presenceInterval=null; }
+    }catch(e){}
     document.getElementById('app').classList.add('hidden');
     document.getElementById('authScreen').classList.remove('hidden');
     leaveOnlineIfAny();
     stopFriendListeners();
+    stopPresenceListener();
   }
 });
 
@@ -3282,17 +3321,64 @@ function showFriendTab(t){
   renderFriendsBody();
 }
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+let presenceMap = {};
+let unsubPresence = null;
+function startPresenceListener(){
+  if(unsubPresence) unsubPresence();
+  unsubPresence = db.collection('presence').onSnapshot(snap=>{
+    presenceMap = {};
+    snap.forEach(doc=>{
+      const d = doc.data();
+      presenceMap[d.uid] = d;
+    });
+    if(friendTab==='list') renderFriendsBody();
+  });
+}
+function stopPresenceListener(){
+  if(unsubPresence){ unsubPresence(); unsubPresence=null; }
+  presenceMap = {};
+}
+function isUserOnline(uid){
+  const p = presenceMap[uid];
+  if(!p) return false;
+  if(!p.online) return false;
+  const now = Date.now();
+  const last = p.lastSeenMs || 0;
+  // Online nếu lastSeen trong 2 phút
+  return (now - last) < 120000;
+}
+
 function renderFriendsBody(){
   const body=document.getElementById('friendsBody');
   if(friendTab==='list'){
     if(!friendsList.length){ body.innerHTML='<div class="empty">Chưa có bạn bè nào. Qua tab "Thêm bạn" để kết bạn nhé.</div>'; return; }
     body.innerHTML='';
-    friendsList.forEach(f=>{
+    // Sắp xếp: online lên trước
+    const sorted = [...friendsList].sort((a,b)=>{
+      const aOn = isUserOnline(a.uid) ? 1 : 0;
+      const bOn = isUserOnline(b.uid) ? 1 : 0;
+      return bOn - aOn;
+    });
+    sorted.forEach(f=>{
+      const online = isUserOnline(f.uid);
       const row=document.createElement('div'); row.className='frow';
-      row.innerHTML=`<span class="name">${escapeHtml(f.name)}</span><div class="acts"><div class="smallbtn accept">Mời chơi</div></div>`;
-      row.querySelector('.accept').onclick=()=>inviteFriendToPlay(f.uid,f.name);
+      row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.1);';
+      row.innerHTML=`<div style="display:flex; align-items:center; gap:10px;"><div style="width:10px; height:10px; border-radius:50%; background:${online ? '#22c55e' : '#6b7280'}; box-shadow:0 0 6px ${online ? '#22c55e80' : 'transparent'};"></div><div><div class="name" style="font-weight:600;">${escapeHtml(f.name)}</div><div style="font-size:.7rem; opacity:.6;">${online ? '<span style="color:#22c55e;">● Online</span>' : 'Offline'}</div></div></div><div class="acts"><div class="smallbtn ${online ? 'accept' : ''}" style="${online ? 'background:#3b82f6; cursor:pointer;' : 'background:#374151; cursor:not-allowed; opacity:.5;'}">${online ? 'Mời chơi' : 'Offline'}</div></div>`;
+      const btn = row.querySelector('.smallbtn');
+      if(online){
+        btn.onclick=()=>inviteFriendToPlay(f.uid,f.name);
+      } else {
+        btn.onclick=()=>{ alert(f.name + ' đang offline, chỉ có thể mời khi online'); };
+      }
       body.appendChild(row);
     });
+    // Thêm thống kê online
+    const onlineCount = sorted.filter(f=>isUserOnline(f.uid)).length;
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:.75rem; opacity:.6; padding:8px 0; text-align:center; border-bottom:1px solid rgba(255,255,255,0.05); margin-bottom:8px;';
+    header.textContent = `${onlineCount} / ${sorted.length} bạn đang online`;
+    body.prepend(header);
+  }
   } else if(friendTab==='req'){
     if(!friendReqs.length){ body.innerHTML='<div class="empty">Không có lời mời kết bạn nào.</div>'; return; }
     body.innerHTML='';
@@ -4401,6 +4487,18 @@ setInterval(updateCustomStatus, 600);
       }
     }
     
+    // Hiện panel online khi chọn Online
+    const onlinePanel = document.getElementById('onlinePanel');
+    if(onlinePanel){
+      onlinePanel.style.display = isOnline ? 'flex' : 'none';
+      if(isOnline){
+        const statusEl = document.getElementById('onlineStatus');
+        if(statusEl && !statusEl.textContent){
+          statusEl.textContent = 'Sẵn sàng - Tạo phòng hoặc nhập mã để vào';
+        }
+      }
+    }
+    
     // Hiện panel bot vs bot
     const botVsBotPanel = document.getElementById('botVsBotPanel');
     if(botVsBotPanel){
@@ -5347,6 +5445,59 @@ document.addEventListener('click', (e)=>{
   }, 500);
   
   setTimeout(()=>{ updateUI(); loadScore(); }, 800);
+})();
+</script>
+
+
+<script>
+// FIX ONLINE - Tạo phòng và hiện ai online
+(function(){
+  // Đảm bảo nút tạo phòng và vào phòng hoạt động
+  function setupOnlineButtons(){
+    const createBtn = document.getElementById('createRoomBtn');
+    const joinBtn = document.getElementById('joinRoomBtn');
+    
+    if(createBtn){
+      createBtn.onclick = async (e)=>{
+        e.preventDefault();
+        console.log('Create room clicked');
+        if(typeof createRoom === 'function'){
+          await createRoom();
+        } else {
+          console.error('createRoom not found');
+          const status = document.getElementById('onlineStatus');
+          if(status) status.textContent = 'Lỗi: Không tìm thấy hàm tạo phòng';
+        }
+      };
+    }
+    
+    if(joinBtn){
+      joinBtn.onclick = async (e)=>{
+        e.preventDefault();
+        console.log('Join room clicked');
+        if(typeof joinRoom === 'function'){
+          await joinRoom();
+        } else {
+          console.error('joinRoom not found');
+        }
+      };
+    }
+  }
+  
+  // Chờ DOM sẵn sàng
+  setTimeout(setupOnlineButtons, 1000);
+  document.addEventListener('DOMContentLoaded', setupOnlineButtons);
+  
+  // Fix authToggle lần nữa để chắc chắn
+  setTimeout(()=>{
+    const toggle = document.getElementById('authToggle');
+    if(toggle){
+      toggle.style.cursor = 'pointer';
+      toggle.style.pointerEvents = 'auto';
+      toggle.style.zIndex = '100';
+      toggle.style.position = 'relative';
+    }
+  }, 500);
 })();
 </script>
 
