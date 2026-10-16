@@ -7,6 +7,7 @@ on:
       - 'engine/hell_engine_v3_rapfi.cpp'
       - 'build.sh'
       - '.github/workflows/build-wasm-only.yml'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,31 +19,22 @@ jobs:
         uses: mymindstorm/setup-emsdk@v14
         with:
           version: 3.1.61
-      - name: Build WASM v3.0 Rapfi Hybrid
+      - name: Build WASM v3.0
         run: |
-          SRC="engine/hell_engine_v3_rapfi.cpp"
-          if [! -f "$SRC" ]; then
+          if [ -f "engine/hell_engine_v3_rapfi.cpp" ]; then
+            SRC="engine/hell_engine_v3_rapfi.cpp"
+          else
             SRC="engine/hell_engine.cpp"
           fi
           echo "Building $SRC"
-          emcc $SRC -O3 -std=c++17 -msimd128 -flto \
-            -s WASM=1 \
-            -s ALLOW_MEMORY_GROWTH=1 \
-            -s INITIAL_MEMORY=32MB \
-            -s MAXIMUM_MEMORY=256MB \
-            -s MODULARIZE=1 \
-            -s EXPORT_NAME=HellModule \
-            -s EXPORTED_FUNCTIONS='["_hell_board_ptr","_hell_pen_ptr","_hell_think","_hell_stat","_hell_new_game","_malloc","_free"]' \
-            -s EXPORTED_RUNTIME_METHODS='["HEAPU8","HEAPU16","ccall","cwrap","getValue","setValue"]' \
-            -s ENVIRONMENT=web,worker \
-            -o hell.js
+          emcc $SRC -O3 -std=c++17 -msimd128 -flto -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=32MB -s MAXIMUM_MEMORY=256MB -s MODULARIZE=1 -s EXPORT_NAME=HellModule -s EXPORTED_FUNCTIONS='["_hell_board_ptr","_hell_pen_ptr","_hell_think","_hell_stat","_hell_new_game","_malloc","_free"]' -s EXPORTED_RUNTIME_METHODS='["HEAPU8","HEAPU16","ccall","cwrap","getValue","setValue"]' -s ENVIRONMENT=web,worker -o hell.js
           ls -lh hell.js hell.wasm
           cp hell.js engine/hell.js
           cp hell.wasm engine/hell.wasm
-      - name: Commit built files
+      - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add hell.js hell.wasm engine/hell.js engine/hell.wasm
-          git diff --staged --quiet || git commit -m "build: hell v3.0 Rapfi Hybrid - TT 4M DEFx8.5"
+          git diff --staged --quiet || git commit -m "build v3 Rapfi"
           git push
