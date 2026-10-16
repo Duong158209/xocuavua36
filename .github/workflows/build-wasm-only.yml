@@ -7,7 +7,6 @@ on:
       - 'engine/hell_engine_v3_rapfi.cpp'
       - 'build.sh'
       - '.github/workflows/build-wasm-only.yml'
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,17 +14,14 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Emscripten
         uses: mymindstorm/setup-emsdk@v14
         with:
           version: 3.1.61
-
       - name: Build WASM v3.0 Rapfi Hybrid
         run: |
-          # Tìm file nguồn
           SRC="engine/hell_engine_v3_rapfi.cpp"
-          if [ ! -f "$SRC" ]; then
+          if [! -f "$SRC" ]; then
             SRC="engine/hell_engine.cpp"
           fi
           echo "Building $SRC"
@@ -41,10 +37,8 @@ jobs:
             -s ENVIRONMENT=web,worker \
             -o hell.js
           ls -lh hell.js hell.wasm
-          # Copy vào engine/ luôn để dễ quản lý
           cp hell.js engine/hell.js
           cp hell.wasm engine/hell.wasm
-
       - name: Commit built files
         run: |
           git config user.name "github-actions[bot]"
