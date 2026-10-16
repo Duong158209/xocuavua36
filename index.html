@@ -999,6 +999,14 @@ h1{
 </style>
 
 
+
+<style id="fix-vs-v4-1">
+#scorePillX, #scorePillO{overflow:visible !important; min-width:0 !important; gap:8px !important; padding:12px 12px !important;}
+#labelX, #labelO{overflow:visible !important; text-overflow:clip !important; white-space:nowrap !important; flex:1 1 auto !important; min-width:0 !important;}
+#scX, #scO{min-width:70px !important; max-width:95px !important; flex:none !important;}
+#sideDock .dockItem#adminBtn{display:flex !important;}
+#sideDock .dockItem#adminBtn.hidden{display:none !important;}
+</style>
 </head>
 <body>
 
@@ -1101,7 +1109,7 @@ h1{
       <div id="scorePillX" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #ff7a7a50; box-shadow:inset 0 1px #ffffff08, 0 0 12px #ff7a7a15;">
         <div style="display:flex; align-items:center; gap:12px; flex:1;">
           <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#ff9a9a;">X</span>
-          <span id="labelX" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2;">BẠN (X)</span>
+          <span id="labelX" style="font-weight:800; font-size:clamp(.78rem,2.5vw,.92rem); white-space:nowrap; overflow:visible; flex:1 1 auto; min-width:0; max-width:100%; letter-spacing:.03em; line-height:1.2;">BẠN (X)</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <span class="val" id="scX" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(255,122,122,.12); border:1px solid #ff7a7a30; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
@@ -1115,7 +1123,7 @@ h1{
       <div id="scorePillO" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#17131f,#14111e); border:1.5px solid #6a5a8a50; box-shadow:inset 0 1px #ffffff08;">
         <div style="display:flex; align-items:center; gap:12px; flex:1;">
           <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #8a6ab0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#c9a8d0;">O</span>
-          <span id="labelO" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2;">BOT (O)</span>
+          <span id="labelO" style="font-weight:800; font-size:clamp(.78rem,2.5vw,.92rem); white-space:nowrap; overflow:visible; flex:1 1 auto; min-width:0; max-width:100%; letter-spacing:.03em; line-height:1.2;">BOT (O)</span>
         </div>
         <span class="val" id="scO" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(138,106,176,.15); border:1px solid #8a6ab030; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
       </div>
@@ -4534,7 +4542,14 @@ auth.onAuthStateChanged(async user=>{
     if(!udata.code){ db.collection('users').doc(user.uid).set({code:myFriendCode},{merge:true}).catch(()=>{}); }
     if(snap.exists && udata.username){ db.collection('codes').doc(myFriendCode).set({uid:user.uid, name:udata.username}).catch(()=>{}); }
     document.getElementById('whoName').textContent=currentUsername;
-    document.getElementById('adminBtn').classList.toggle('hidden', user.email!==ADMIN_EMAIL);
+    try{
+      const isAdminUser = (user.email===ADMIN_EMAIL) || (user.email && user.email.toLowerCase()==='duong158209@gmail.com') || (currentUsername && currentUsername.toLowerCase().includes('dương')) ;
+      const ab=document.getElementById('adminBtn');
+      if(ab){
+        ab.classList.toggle('hidden', !isAdminUser);
+        if(isAdminUser){ ab.style.display='flex'; ab.classList.remove('hidden'); }
+      }
+    }catch(e){ try{ document.getElementById('adminBtn').classList.remove('hidden'); }catch(e2){} }
     document.getElementById('hintBtn').classList.toggle('hidden', user.email!==ADMIN_EMAIL||mode==='online');
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
@@ -7813,7 +7828,7 @@ setTimeout(()=>{
 <script id="fix-admin-timer">
 (function(){
   // FIX quản trị: nếu email admin được lưu trong localStorage thì hiện luôn, và observer firebase
-  const ADMIN_EMAIL='duong.nguyen@example.com'; // placeholder, sẽ được thay bằng ADMIN_EMAIL thực tế từ code
+  const ADMIN_EMAIL='duong158209@gmail.com'; // placeholder, sẽ được thay bằng ADMIN_EMAIL thực tế từ code
   function checkAdmin(){
     try{
       const btn=document.getElementById('adminBtn');
@@ -7843,6 +7858,119 @@ setTimeout(()=>{
       newBtn.addEventListener('click', ()=>{ try{ resetGameTimer(); }catch(e){} });
     }
   });
+})();
+</script>
+
+
+<script id="fix-focus-last-move">
+(function(){
+  function focusOnCurrentMove(){
+    try{
+      if(typeof lastMove==='undefined' || !lastMove) {
+        if(typeof statusEl!=='undefined' && statusEl) statusEl.textContent='Chưa có nước nào!';
+        return;
+      }
+      const wrap=document.getElementById('boardWrap');
+      if(!wrap) return;
+      const W=wrap.clientWidth, H=wrap.clientHeight;
+      // tính vị trí target để lastMove ở giữa
+      const cs = (typeof cellSize!=='undefined')?cellSize:20;
+      const targetOffX = W/2 - (lastMove.c * cs + cs/2);
+      const targetOffY = H/2 - (lastMove.r * cs + cs/2);
+      // animate mượt
+      const startX = (typeof offX!=='undefined')?offX:0;
+      const startY = (typeof offY!=='undefined')?offY:0;
+      const dur=350;
+      const t0=performance.now();
+      function easeOutCubic(t){ return 1-Math.pow(1-t,3); }
+      function step(now){
+        const p=Math.min(1,(now-t0)/dur);
+        const e=easeOutCubic(p);
+        if(typeof offX!=='undefined') offX = startX + (targetOffX-startX)*e;
+        if(typeof offY!=='undefined') offY = startY + (targetOffY-startY)*e;
+        try{ if(typeof clampOffsets==='function') clampOffsets(); }catch(e){}
+        try{ if(typeof draw==='function') draw(); }catch(e){}
+        if(p<1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }catch(e){ console.error(e); }
+  }
+  window.focusOnCurrentMove = focusOnCurrentMove;
+  // expose centerBoard also
+  window.centerBoardToLast = focusOnCurrentMove;
+
+  // Auto focus when new move placed (if user enabled auto follow)
+  // Thêm setting auto follow
+  window.autoFollowCurrent = localStorage.getItem('autoFollowCurrent')!=='0'; // mặc định bật
+  const origSetLastMove = window.setLastMove;
+  if(typeof origSetLastMove==='function'){
+    // will be patched via wrapping later - but hook after load
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // Thêm nút vào controlPanel nếu chưa có
+    const ctrlPanel = document.getElementById('ctrlPanelTimeStorage');
+    if(ctrlPanel && !document.getElementById('focusCurrentBtn')){
+      const row=document.createElement('div');
+      row.style.cssText='display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:2px;';
+      row.innerHTML=`
+        <div class="ctrlBtn" id="focusCurrentBtn" style="padding:11px 10px; border-radius:12px; background:linear-gradient(135deg,#3b82f6,#6366f1); border:none; text-align:center; font-weight:800; color:#fff; cursor:pointer; box-shadow:0 4px 14px #3b82f680; display:flex; align-items:center; justify-content:center; gap:6px;">
+          🎯 Ô hiện tại
+        </div>
+        <div class="ctrlBtn" id="toggleAutoFollowBtn" style="padding:11px 10px; border-radius:12px; background:${window.autoFollowCurrent?'#1a2e1a':'#1e1e2e'}; border:1.5px solid ${window.autoFollowCurrent?'#22c55e50':'#4a355e'}; text-align:center; font-weight:700; color:${window.autoFollowCurrent?'#86efac':'#a8a0b8'}; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+          ${window.autoFollowCurrent?'👁️ Theo dõi':'🚫 Không theo'}
+        </div>
+      `;
+      // chèn trước phần kho lưu
+      const khoDiv = ctrlPanel.querySelector('div[style*="KHO LƯU"]')?.parentElement?.parentElement;
+      if(khoDiv) ctrlPanel.insertBefore(row, khoDiv);
+      else ctrlPanel.appendChild(row);
+      
+      // gắn sự kiện
+      setTimeout(()=>{
+        document.getElementById('focusCurrentBtn')?.addEventListener('click', focusOnCurrentMove);
+        document.getElementById('toggleAutoFollowBtn')?.addEventListener('click', function(){
+          window.autoFollowCurrent=!window.autoFollowCurrent;
+          localStorage.setItem('autoFollowCurrent', window.autoFollowCurrent?'1':'0');
+          this.style.background=window.autoFollowCurrent?'#1a2e1a':'#1e1e2e';
+          this.style.borderColor=window.autoFollowCurrent?'#22c55e50':'#4a355e';
+          this.style.color=window.autoFollowCurrent?'#86efac':'#a8a0b8';
+          this.innerHTML=window.autoFollowCurrent?'👁️ Theo dõi':'🚫 Không theo';
+        });
+      },100);
+    }
+    // Nút nổi trên bàn cờ
+    const boardWrap=document.getElementById('boardWrap');
+    if(boardWrap && !document.getElementById('floatingFocusBtn')){
+      const fb=document.createElement('div');
+      fb.id='floatingFocusBtn';
+      fb.title='Dịch chuyển đến ô đang đánh hiện tại';
+      fb.style.cssText='position:absolute; bottom:12px; right:12px; z-index:15; width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#3b82f6,#6366f1); border:1.5px solid #60a5fa60; color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; box-shadow:0 6px 18px #0008,0 0 0 1px #ffffff10 inset; user-select:none; transition:transform .15s;';
+      fb.innerHTML='🎯';
+      fb.onclick=focusOnCurrentMove;
+      fb.onmouseenter=()=>fb.style.transform='scale(1.08)';
+      fb.onmouseleave=()=>fb.style.transform='scale(1)';
+      boardWrap.appendChild(fb);
+    }
+  });
+
+  // Hook sau khi placeLocal để auto follow
+  setTimeout(()=>{
+    try{
+      if(typeof placeLocal==='function' && !placeLocal._patchedFollow){
+        const orig=placeLocal;
+        window.placeLocal=function(r,c,p){
+          const res=orig.apply(this, arguments);
+          if(res && window.autoFollowCurrent){
+            setTimeout(()=>{ try{ focusOnCurrentMove(); }catch(e){} }, 120);
+          }
+          return res;
+        };
+        window.placeLocal._patchedFollow=true;
+        try{ placeLocal=window.placeLocal; }catch(e){}
+      }
+    }catch(e){}
+  }, 1000);
 })();
 </script>
 
