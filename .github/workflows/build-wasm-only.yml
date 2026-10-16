@@ -1,22 +1,54 @@
-# Dùng khi web của mày ĐÃ CÓ SẴN (Pages kiểu "Deploy from a branch").
-# Bấm Actions -> "build-hell-js" -> Run workflow: nó build hell.js rồi tự commit vào repo cạnh index.html.
-# Đặt file này ở: .github/workflows/build-wasm-only.yml
 name: build-hell-js
 on:
   workflow_dispatch:
-permissions:
-  contents: write
+  push:
+    paths:
+      - 'engine/hell_engine.cpp'
+      - 'engine/hell_engine_v3_rapfi.cpp'
+      - 'build.sh'
+      - '.github/workflows/build-wasm-only.yml'
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: mymindstorm/setup-emsdk@v14
-      - run: bash build.sh
-      - name: Commit hell.js
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.61
+
+      - name: Build WASM v3.0 Rapfi Hybrid
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add hell.js
-          git commit -m "build hell.js" || echo "khong co thay doi"
+          # Tìm file nguồn
+          SRC="engine/hell_engine_v3_rapfi.cpp"
+          if [ ! -f "$SRC" ]; then
+            SRC="engine/hell_engine.cpp"
+          fi
+          echo "Building $SRC"
+          emcc $SRC -O3 -std=c++17 -msimd128 -flto \
+            -s WASM=1 \
+            -s ALLOW_MEMORY_GROWTH=1 \
+            -s INITIAL_MEMORY=32MB \
+            -s MAXIMUM_MEMORY=256MB \
+            -s MODULARIZE=1 \
+            -s EXPORT_NAME=HellModule \
+            -s EXPORTED_FUNCTIONS='["_hell_board_ptr","_hell_pen_ptr","_hell_think","_hell_stat","_hell_new_game","_malloc","_free"]' \
+            -s EXPORTED_RUNTIME_METHODS='["HEAPU8","HEAPU16","ccall","cwrap","getValue","setValue"]' \
+            -s ENVIRONMENT=web,worker \
+            -o hell.js
+          ls -lh hell.js hell.wasm
+          # Copy vào engine/ luôn để dễ quản lý
+          cp hell.js engine/hell.js
+          cp hell.wasm engine/hell.wasm
+
+      - name: Commit built files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hell.js hell.wasm engine/hell.js engine/hell.wasm
+          git diff --staged --quiet || git commit -m "build: hell v3.0 Rapfi Hybrid - TT 4M DEFx8.5"
           git push
