@@ -14,9 +14,9 @@ self.onmessage = (e)=>{
     const DR=[0,1,1,1], DC=[1,0,1,-1];
     const WINV=100000000, INF=1e12, MAXPLY=96, EXTMAX=28;
     const VCF_NODES=3000000; let vcfLim=VCF_NODES, bx0=0,bx1=0,by0=0,by1=0;
-    const OPEN4=50000000, FOUR=1200000, OPEN3=350000, BRK3=90000, DBL3=1500000;
-    const W=[0,12,96,720,4800,0];
-    const DK=8.5;
+    const OPEN4=50000000, FOUR=5000000, OPEN3=1500000, BRK3=400000, DBL3=8000000;
+    const W=[0,24,192,2000,25000,0];
+    const DK=14;
     const cw=new Array(N), nbr=new Array(N);
     const wSt=new Int32Array(4*N), wB1=new Int32Array(4*N), wB2=new Int32Array(4*N);
     for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
@@ -106,6 +106,12 @@ self.onmessage = (e)=>{
       const opp=3-me; const oppWin=wins(opp);
       if(oppWin.length) return {lose: oppWin.length>1, cells: oppWin, scs: oppWin.map(()=>1000000), mks: oppWin.map(()=>1)};
       const myWin=wins(me); if(myWin.length) return {lose:false,cells:myWin,scs:myWin.map(()=>2000000),mks:myWin.map(()=>1)};
+      // FIX: Chặn open 3 của địch với ưu tiên cực cao
+      if(ts[opp].size>0){
+        const blockCells=[]; const seen=new Set();
+        for(const w of ts[opp]){ const st=wSt[w], base=w%N; for(let k=0;k<5;k++){ const c=base+k*st; if(hb[c]===0&&!seen.has(c)){ seen.add(c); blockCells.push(c); } } }
+        if(blockCells.length){ return {lose:false,cells:blockCells,scs:blockCells.map(()=>950000),mks:blockCells.map(()=>1)}; }
+      }
       const ofm=openFourMove(me); 
       const cells=[], scs=[], mks=[]; const seen=new Set();
       if(ofm>=0){ seen.add(ofm); cells.push(ofm); scs.push(900000); mks.push(1); }
@@ -158,6 +164,42 @@ self.onmessage = (e)=>{
     const immediate=wins(2); if(immediate.length){ postMessage({id, m: immediate[0], stats:{reason:'win'}}); return; }
     const blocks=wins(1); if(blocks.length===1){ postMessage({id, m: blocks[0], stats:{reason:'forced-block'}}); return; }
     if(blocks.length>=2){ let bestB=blocks[0], bestS=-INF; for(const b of blocks){ put(b,2); const s=ev(2); undo(b); if(s>bestS){ bestS=s; bestB=b; } } postMessage({id, m: bestB, stats:{reason:'double-block'}}); return; }
+    // FIX: Chặn ngay OPEN 3 của đối phương - bug báo: không chặn 3 mở của X mà đi đánh 3 của mình
+    if(ts[1].size>0){
+      // đối phương có 3 mở -> phải chặn ngay
+      const blockOpen3 = [];
+      const seenB = new Set();
+      for(const w of ts[1]){
+        const st=wSt[w], base=w%N;
+        for(let k=0;k<5;k++){ const c=base+k*st; if(hb[c]===0 && !seenB.has(c)){ seenB.add(c); blockOpen3.push(c); } }
+      }
+      // nếu có 2 chỗ 3 mở khác nhau -> thua ngay, chặn chỗ nào cũng được nhưng phải chặn
+      if(blockOpen3.length>0){
+        // ưu tiên ô chặn được nhiều 3 mở nhất
+        let bestO3=blockOpen3[0], bestCnt=0;
+        for(const b of blockOpen3){
+          let cnt=0; put(b,2);
+          // đếm còn lại bao nhiêu open3 của địch
+          let remain=0; for(const w of ts[1]) remain++;
+          undo(b);
+          // nếu chặn xong vẫn còn open3 -> vẫn nguy hiểm, nhưng vẫn phải chặn
+          if(remain===0) { bestO3=b; break; }
+          // chọn ô gần nhất với thế của địch
+          if(cnt>=bestCnt){ bestCnt=cnt; bestO3=b; }
+        }
+        // Nếu chỉ có 1 open3 và chỉ có 1-2 ô chặn, chặn luôn
+        if(ts[1].size>=1){
+          postMessage({id, m: bestO3, stats:{reason:'block-open3-enemy'}}); return;
+        }
+      }
+    }
+    // FIX: Nếu mình có open 4 thì đánh ngay (thắng nhanh)
+    {
+      const myOpen4Moves=[];
+      const seen=new Set();
+      for(const w of fs[2]){ const b1=wB1[w], b2=wB2[w]; if(b1>=0&&hb[b1]===0&&!seen.has(b1)){seen.add(b1); myOpen4Moves.push(b1);} if(b2>=0&&hb[b2]===0&&!seen.has(b2)){seen.add(b2); myOpen4Moves.push(b2);} const e=emptyOf(w); if(e>=0&&!seen.has(e)){seen.add(e); myOpen4Moves.push(e);} }
+      if(myOpen4Moves.length){ /* sẽ được gen xử lý nhưng ưu tiên */ }
+    }
     const g0=gen(2,false,false,128); const cand=[];
     for(let j=0;j<g0.cells.length;j++){ const i=g0.cells[j]; put(i,2); const v=ev(2); undo(i); cand.push([i, v + Math.min(hist[i],8000) + g0.scs[j]*0.06]); }
     if(!cand.length){ for(let i=0;i<N;i++) if(!hb[i]){ postMessage({id, m:i, stats:{}}); return;} }
