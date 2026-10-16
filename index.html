@@ -939,9 +939,7 @@ input.field,#chatInput{
 
 <style id="fix-admin-force">
 /* Ép hiện nút quản trị */
-#adminBtn{ display:flex !important; }
 #adminBtn.hidden{ display:none !important; }
-#adminBtn.force-show{ display:flex !important; }
 #sideDock{ max-height:95vh !important; overflow-y:auto !important; }
 #sideDock::-webkit-scrollbar{ display:none; }
 </style>
@@ -4484,13 +4482,10 @@ auth.onAuthStateChanged(async user=>{
     try{
       const ab=document.getElementById('adminBtn');
       if(ab){
-        // FORCE hiện quản trị cho Dương - luôn hiện nếu đã đăng nhập
-        const isMe = true; // ép hiện để fix lỗi mất quản trị
-        // Nếu muốn chỉ admin thật, đổi isMe thành (user.email===ADMIN_EMAIL)
-        ab.classList.remove('hidden');
-        ab.style.display='flex';
-        ab.classList.add('force-show');
-        console.log('Admin btn forced show for', user.email, currentUsername);
+        const okAdmin = !!user.email && String(user.email).toLowerCase()===String(ADMIN_EMAIL).toLowerCase();
+        ab.classList.toggle('hidden', !okAdmin);
+        ab.classList.remove('force-show');
+        ab.style.display = okAdmin ? 'flex' : 'none';
       }
     }catch(e){ console.error(e); }
 
@@ -4572,7 +4567,7 @@ function startFeatureListener(){
     applyFeatureUI();
   });
 }
-const isAdmin=()=>!!currentUser&&currentUser.email===ADMIN_EMAIL;
+const isAdmin=()=>!!currentUser&&!!currentUser.email&&String(currentUser.email).toLowerCase()===String(ADMIN_EMAIL).toLowerCase();
 function isFeatureOn(key){ return featureFlags[key] !== false; }
 
 function markMaint(el, on, labelHtml){
@@ -4655,6 +4650,7 @@ function applyFeatureUI(){
 
 // ---------- ADMIN DASHBOARD ----------
 document.getElementById('adminBtn').onclick=()=>{
+  if(!isAdmin()) return;
   document.getElementById('adminScreen').style.display='flex';
   showAdminTab('matches');
 };
@@ -4666,6 +4662,7 @@ document.getElementById('adminTabBot').onclick=()=>showAdminTab('bot');
 
 let adminTab='matches';
 function showAdminTab(t){
+  if(!isAdmin()) return;
   adminTab=t;
   document.getElementById('adminTabMatches').classList.toggle('active', t==='matches');
   document.getElementById('adminTabUsers').classList.toggle('active', t==='users');
@@ -5195,7 +5192,15 @@ function saveAllModesHistory(resultData){
       playerX: resultData.playerX || '',
       playerO: resultData.playerO || ''
     };
+    entry.gameId = (window.botVsBotGameId||0);
     let hist = JSON.parse(localStorage.getItem('xo5_all_history')||'[]');
+    // Một ván có thể bị gọi lưu 2 lần (endGame + onGameOver) -> bỏ lần thứ 2
+    const last = hist[0];
+    if(last && last.mode===entry.mode && last.winner===entry.winner){
+      const sameBvbGame = entry.mode==='botVsBot' && last.gameId===entry.gameId;
+      const sameInstant = (entry.timestamp - (last.timestamp||0)) < 1500;
+      if(sameBvbGame || sameInstant) return last;
+    }
     hist.unshift(entry);
     if(hist.length>200) hist=hist.slice(0,200);
     localStorage.setItem('xo5_all_history', JSON.stringify(hist));
@@ -5843,7 +5848,40 @@ function hellThinkWasm(cb,bot,pen,timeLimit,verRaw){
     rec.worker.postMessage({id,b:snap.buffer,size:SIZE,pen:pen||null,t:timeLimit||8000,botId:verRaw+'_'+(bot===1?'X':'O'),gameId:window.botVsBotGameId||0},[snap.buffer]);
   }catch(err){ console.error('hellThinkWasm error',err); fallback(); }
 }
+// Bot vs Bot: bot luôn tính giống hệt nhau nên cùng thế cờ ra cùng nước -> mọi ván y hệt.
+// Cho vài nước đầu chọn ngẫu nhiên (gần các quân đã đánh), từ đó trở đi bot tự tính như cũ.
+function hellOpeningPick(){
+  try{
+    let stones=0; for(let i=0;i<board.length;i++) if(board[i]) stones++;
+    if(stones>3) return -1;
+    const mid=Math.floor(SIZE/2);
+    if(stones===0){
+      const r=mid+Math.floor(Math.random()*3)-1, c=mid+Math.floor(Math.random()*3)-1;
+      return r*SIZE+c;
+    }
+    const seen=new Set(), opts=[];
+    for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+      if(!board[r*SIZE+c]) continue;
+      for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+        if(!dr&&!dc) continue;
+        const rr=r+dr, cc=c+dc;
+        if(rr<0||rr>=SIZE||cc<0||cc>=SIZE) continue;
+        const k=rr*SIZE+cc;
+        if(board[k]||seen.has(k)) continue;
+        seen.add(k); opts.push(k);
+      }
+    }
+    return opts.length ? opts[Math.floor(Math.random()*opts.length)] : -1;
+  }catch(e){ return -1; }
+}
 function hellThink(cb,bot,pen,timeLimit,version){
+  try{
+    const isBvb0 = window.botVsBotRunning || document.getElementById('modeBotVsBot')?.classList.contains('active');
+    if(isBvb0){
+      const pk=hellOpeningPick();
+      if(pk>=0){ const id0=++hellJob; setTimeout(()=>{ if(id0===hellJob) cb(pk); },150); return; }
+    }
+  }catch(e){}
   const verRaw = version || (window.hellWasmBroken ? 'v1.8' : 'v2.0');
   if(verRaw.split('_')[0].indexOf('v2')===0) return hellThinkWasm(cb,bot,pen,timeLimit,verRaw);
   const id=++hellJob;
@@ -6728,7 +6766,6 @@ document.addEventListener('click', (e)=>{
     dock.insertBefore(handle, dock.firstChild);
   }
 
-  let isDragging=false, startX=0, startY=0, hasMoved=false;
   let savedPos = (()=>{ try{ return JSON.parse(localStorage.getItem('sideDockPos')||'null') || {side:'left', percent:50}; }catch(e){ return {side:'left', percent:50}; } })();
 let isDragging=false, hasMoved=false, startX=0, startY=0, startTop=0, startLeft=0;
 function getClient(e){ const t=e.touches?e.touches[0]:e; return {x:t.clientX, y:t.clientY}; }
@@ -7732,15 +7769,38 @@ setTimeout(()=>{
 (function(){
   function focusCurrent(){
     try{
-      if(!window.lastMove){ if(window.statusEl) statusEl.textContent='Chưa có nước nào!'; return; }
+      // lastMove / cellSize / offX / offY là biến let của game (không nằm trên window) nên phải dùng tên trần
+      const lm = (typeof lastMove!=='undefined') ? lastMove : null;
+      if(!lm){ try{ statusEl.textContent='Chưa có nước nào!'; }catch(e){} return; }
       const wrap=document.getElementById('boardWrap'); if(!wrap) return;
-      const W=wrap.clientWidth, H=wrap.clientHeight, cs=window.cellSize||20;
-      const tx=W/2-(lastMove.c*cs+cs/2), ty=H/2-(lastMove.r*cs+cs/2);
-      const sx=window.offX||0, sy=window.offY||0, t0=performance.now(), dur=350;
+      const W=wrap.clientWidth, H=wrap.clientHeight, cs=cellSize;
+      const tx=W/2-(lm.c*cs+cs/2), ty=H/2-(lm.r*cs+cs/2);
+      const sx=offX, sy=offY, t0=performance.now(), dur=350;
       function ease(t){return 1-Math.pow(1-t,3);}
-      function step(now){ const p=Math.min(1,(now-t0)/dur); const e=ease(p); window.offX=sx+(tx-sx)*e; window.offY=sy+(ty-sy)*e; try{window.clampOffsets();}catch(e){} try{window.draw();}catch(e){} if(p<1) requestAnimationFrame(step); }
+      function step(now){
+        const p=Math.min(1,(now-t0)/dur), e=ease(p);
+        offX=sx+(tx-sx)*e; offY=sy+(ty-sy)*e;
+        try{ clampOffsets(); }catch(_){}
+        try{ draw(); }catch(_){}
+        if(p<1) requestAnimationFrame(step);
+      }
       requestAnimationFrame(step);
+    }catch(e){ console.error('focusCurrent',e); }
+  }
+  // Theo dõi: bật thì mỗi khi có nước mới, bàn cờ tự dịch tới ô vừa đánh
+  let autoFollow=false, lastFollowT=-1;
+  setInterval(()=>{
+    try{
+      if(!autoFollow) return;
+      if(typeof lastMove==='undefined'||!lastMove) return;
+      if(lastMoveT!==lastFollowT){ lastFollowT=lastMoveT; focusCurrent(); }
     }catch(e){}
+  }, 300);
+  function toggleFollow(){
+    autoFollow=!autoFollow;
+    const b=document.getElementById('autoFollowBtn');
+    if(b){ b.style.background=autoFollow?'linear-gradient(135deg,#16a34a,#22c55e)':'#1e1e2e'; b.style.color=autoFollow?'#fff':'#a8a0b8'; }
+    if(autoFollow){ lastFollowT=-1; }
   }
   window.focusOnCurrentMove=focusCurrent;
   document.addEventListener('DOMContentLoaded', ()=>{
@@ -7750,7 +7810,7 @@ setTimeout(()=>{
       row.innerHTML='<div class="ctrlBtn" id="focusCurrentBtn" style="padding:11px; border-radius:12px; background:linear-gradient(135deg,#3b82f6,#6366f1); color:#fff; font-weight:800; text-align:center; cursor:pointer;">🎯 Ô hiện tại</div><div class="ctrlBtn" id="autoFollowBtn" style="padding:11px; border-radius:12px; background:#1e1e2e; border:1px solid #4a355e; color:#a8a0b8; font-weight:700; text-align:center; cursor:pointer;">👁️ Theo dõi</div>';
       const kho=panel.querySelector('#timeStorageCount')?.closest('div')?.parentElement?.parentElement;
       if(kho) panel.insertBefore(row, kho); else panel.appendChild(row);
-      setTimeout(()=>{ document.getElementById('focusCurrentBtn')?.addEventListener('click', focusCurrent); },200);
+      setTimeout(()=>{ document.getElementById('focusCurrentBtn')?.addEventListener('click', focusCurrent); document.getElementById('autoFollowBtn')?.addEventListener('click', toggleFollow); },200);
     }
     const bw=document.getElementById('boardWrap');
     if(bw && !document.getElementById('floatingFocusBtn')){
@@ -7758,7 +7818,7 @@ setTimeout(()=>{
     }
   });
   // also force admin visible repeatedly
-  setInterval(()=>{ try{ const ab=document.getElementById('adminBtn'); if(ab){ ab.classList.remove('hidden'); ab.style.display='flex'; } }catch(e){} }, 1000);
+  setInterval(()=>{ try{ const ab=document.getElementById('adminBtn'); if(ab){ const ok=(typeof isAdmin==='function')&&isAdmin(); ab.classList.toggle('hidden',!ok); ab.style.display= ok?'flex':'none'; } }catch(e){} }, 1000);
 })();
 </script>
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
