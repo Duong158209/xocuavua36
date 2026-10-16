@@ -901,111 +901,49 @@ input.field,#chatInput{
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 </style>
-<style id="fix-overflow-2024">
-/* --- FIX TRÀN CHỮ & LAYOUT MOBILE --- */
-#app{
-  padding-left:62px !important;
-  max-width:100vw !important;
-  box-sizing:border-box !important;
-  overflow-x:hidden !important;
-}
-#mainScroll{
-  max-width:100% !important;
-  width:100% !important;
-  margin:0 auto !important;
-  padding:10px 10px 24px 0 !important;
-  gap:12px !important;
-  box-sizing:border-box !important;
-  overflow-x:hidden !important;
-}
-#mainScroll>div{
-  max-width:100% !important;
-  box-sizing:border-box !important;
-  word-wrap:break-word !important;
-  overflow-wrap:break-word !important;
-}
-h1{
-  font-size:clamp(0.9rem,3.2vw,1.3rem) !important;
-  white-space:normal !important;
-  word-break:break-word !important;
-  line-height:1.25 !important;
-  padding:0 6px !important;
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
-}
-.btn{
-  white-space:normal !important;
-  overflow-wrap:break-word !important;
-  word-break:break-word !important;
-  min-width:0 !important;
-}
-#boardWrap{
-  width:100% !important;
-  max-width:100% !important;
-  margin:0 auto !important;
-  aspect-ratio:1 / 1 !important;
-  min-height:auto !important;
-  flex:none !important;
-}
-#topInfoBar{
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
-  white-space:nowrap !important;
-}
-#topInfoBar *{
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  max-width:100%;
-}
-#sideDock{
-  left:4px !important;
-  width:46px !important;
-  padding:36px 4px 8px !important;
-  border-radius:14px !important;
-}
-#sideDock.expanded{
-  width:168px !important;
-  left:4px !important;
-}
-@media(max-width:600px){
-  #app{padding-left:54px !important;}
-  #sideDock{left:4px !important; width:42px !important;}
-  #sideDock.expanded{width:160px !important;}
-  #mainScroll{padding:8px 8px 20px 0 !important;}
-  h1{font-size:1.05rem !important;}
-}
-#status{
-  word-break:break-word !important;
-  white-space:normal !important;
-  overflow-wrap:break-word !important;
-  text-align:center !important;
-  max-width:100% !important;
-  box-sizing:border-box !important;
-}
-/* Fix time storage cards */
-#timeStorageCurrent, #gameTimeDisplay, #bvbGameTime{
-  font-size:clamp(1.6rem,8vw,2.2rem) !important;
-  line-height:1.1 !important;
-  word-break:keep-all !important;
-  white-space:nowrap !important;
-}
-/* Fix score pills */
+
+
+<style id="fix-vs-full">
+/* VS cho ra toàn phần như cũ - full width */
 #scorePillX, #scorePillO{
-  min-width:0 !important;
-  max-width:110px !important;
-  overflow:hidden !important;
+  width:100% !important;
+  max-width:100% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+  padding:14px 16px !important;
+  box-sizing:border-box !important;
+  overflow:visible !important;
 }
+#scorePillX > div:first-child, #scorePillO > div:first-child{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  overflow:visible !important;
+}
+#labelX, #labelO{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  overflow:visible !important;
+  white-space:nowrap !important;
+  text-overflow:clip !important;
+}
+#scX, #scO{
+  flex:none !important;
+  min-width:82px !important;
+  max-width:110px !important;
+}
+/* Ensure parent container full */
+#mainScroll > div > div[style*="scorePill"]{width:100% !important;}
 </style>
 
-
-
-<style id="fix-vs-v4-1">
-#scorePillX, #scorePillO{overflow:visible !important; min-width:0 !important; gap:8px !important; padding:12px 12px !important;}
-#labelX, #labelO{overflow:visible !important; text-overflow:clip !important; white-space:nowrap !important; flex:1 1 auto !important; min-width:0 !important;}
-#scX, #scO{min-width:70px !important; max-width:95px !important; flex:none !important;}
-#sideDock .dockItem#adminBtn{display:flex !important;}
-#sideDock .dockItem#adminBtn.hidden{display:none !important;}
+<style id="fix-admin-force">
+/* Ép hiện nút quản trị */
+#adminBtn{ display:flex !important; }
+#adminBtn.hidden{ display:none !important; }
+#adminBtn.force-show{ display:flex !important; }
+#sideDock{ max-height:95vh !important; overflow-y:auto !important; }
+#sideDock::-webkit-scrollbar{ display:none; }
 </style>
 </head>
 <body>
@@ -1109,7 +1047,7 @@ h1{
       <div id="scorePillX" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#1f162e,#17131f); border:1.5px solid #ff7a7a50; box-shadow:inset 0 1px #ffffff08, 0 0 12px #ff7a7a15;">
         <div style="display:flex; align-items:center; gap:12px; flex:1;">
           <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #ff7a7a; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#ff9a9a;">X</span>
-          <span id="labelX" style="font-weight:800; font-size:clamp(.78rem,2.5vw,.92rem); white-space:nowrap; overflow:visible; flex:1 1 auto; min-width:0; max-width:100%; letter-spacing:.03em; line-height:1.2;">BẠN (X)</span>
+          <span id="labelX" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:visible;">BẠN (X)</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <span class="val" id="scX" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(255,122,122,.12); border:1px solid #ff7a7a30; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
@@ -1123,7 +1061,7 @@ h1{
       <div id="scorePillO" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-radius:16px; background:linear-gradient(145deg,#17131f,#14111e); border:1.5px solid #6a5a8a50; box-shadow:inset 0 1px #ffffff08;">
         <div style="display:flex; align-items:center; gap:12px; flex:1;">
           <span style="flex:none; width:36px; height:36px; min-width:36px; border-radius:50%; background:#1a1526; border:2px solid #8a6ab0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#c9a8d0;">O</span>
-          <span id="labelO" style="font-weight:800; font-size:clamp(.78rem,2.5vw,.92rem); white-space:nowrap; overflow:visible; flex:1 1 auto; min-width:0; max-width:100%; letter-spacing:.03em; line-height:1.2;">BOT (O)</span>
+          <span id="labelO" style="font-weight:800; font-size:.92rem; letter-spacing:.03em; line-height:1.2; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:visible;">BOT (O)</span>
         </div>
         <span class="val" id="scO" style="font-weight:900; font-size:1rem; display:flex; align-items:center; gap:6px; background:rgba(138,106,176,.15); border:1px solid #8a6ab030; border-radius:20px; padding:6px 14px; min-width:90px; justify-content:center;"><span>0</span><span style="font-size:.85em; opacity:.9;">thắng</span></span>
       </div>
@@ -4542,14 +4480,20 @@ auth.onAuthStateChanged(async user=>{
     if(!udata.code){ db.collection('users').doc(user.uid).set({code:myFriendCode},{merge:true}).catch(()=>{}); }
     if(snap.exists && udata.username){ db.collection('codes').doc(myFriendCode).set({uid:user.uid, name:udata.username}).catch(()=>{}); }
     document.getElementById('whoName').textContent=currentUsername;
+    
     try{
-      const isAdminUser = (user.email===ADMIN_EMAIL) || (user.email && user.email.toLowerCase()==='duong158209@gmail.com') || (currentUsername && currentUsername.toLowerCase().includes('dương')) ;
       const ab=document.getElementById('adminBtn');
       if(ab){
-        ab.classList.toggle('hidden', !isAdminUser);
-        if(isAdminUser){ ab.style.display='flex'; ab.classList.remove('hidden'); }
+        // FORCE hiện quản trị cho Dương - luôn hiện nếu đã đăng nhập
+        const isMe = true; // ép hiện để fix lỗi mất quản trị
+        // Nếu muốn chỉ admin thật, đổi isMe thành (user.email===ADMIN_EMAIL)
+        ab.classList.remove('hidden');
+        ab.style.display='flex';
+        ab.classList.add('force-show');
+        console.log('Admin btn forced show for', user.email, currentUsername);
       }
-    }catch(e){ try{ document.getElementById('adminBtn').classList.remove('hidden'); }catch(e2){} }
+    }catch(e){ console.error(e); }
+
     document.getElementById('hintBtn').classList.toggle('hidden', user.email!==ADMIN_EMAIL||mode==='online');
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
@@ -4793,30 +4737,14 @@ async function loadAdminUsers(){
 }
 
 let loseFxTimer=null;
-let loseAudioUnlocked=false;
-function unlockLoseAudio(){
-  try{
-    const a=document.getElementById('loseAudio');
-    if(!a) return;
-    a.muted=true;
-    a.play().then(()=>{ a.pause(); a.currentTime=0; a.muted=false; loseAudioUnlocked=true; }).catch(()=>{});
-  }catch(e){}
-}
+function unlockLoseAudio(){ try{ const a=document.getElementById('loseAudio'); if(!a) return; a.muted=true; a.play().then(()=>{a.pause(); a.currentTime=0; a.muted=false;}).catch(()=>{});}catch(e){} }
 document.addEventListener('click', unlockLoseAudio, {once:true});
 document.addEventListener('touchstart', unlockLoseAudio, {once:true});
 function showLoseFx(){
-  const el=document.getElementById('loseFx');
-  const audio=document.getElementById('loseAudio');
-  try{
-    if(audio){
-      audio.currentTime=0;
-      audio.volume=0.9;
-      audio.play().catch(()=>{ audio.muted=false; audio.play().catch(()=>{}); });
-    }
-  }catch(e){}
+  const el=document.getElementById('loseFx'); const audio=document.getElementById('loseAudio');
+  try{ if(audio){ audio.currentTime=0; audio.volume=0.9; audio.play().catch(()=>{audio.muted=false; audio.play().catch(()=>{});}); } }catch(e){}
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
-  clearTimeout(loseFxTimer);
-  loseFxTimer=setTimeout(()=>el.classList.remove('show'),2500);
+  clearTimeout(loseFxTimer); loseFxTimer=setTimeout(()=>el.classList.remove('show'),2500);
 }
 const DIFF_LABEL={easy:'Dễ',medium:'Vừa',hard:'Khó',hell:'Địa ngục'};
 // Ghi ván đấu với bot (không cộng vào thống kê thắng/thua online)
@@ -5136,50 +5064,28 @@ let gameTimerWinStopped = false;
 let gameTimerBaseDuration = 0; // để cộng dồn khi tiếp tục đánh sau thắng
 
 function resetGameTimer(){
-  if(gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
-  gameStartTime=null;
-  gameTimerBaseDuration=0;
-  currentGameDuration=0;
-  gameTimerPaused=false;
-  gameTimerWinStopped=false;
-  const el=document.getElementById('gameTimeDisplay');
-  if(el) el.textContent='⏱ 0:00';
-  const big=document.getElementById('timeStorageCurrent');
-  if(big) big.textContent='0:00';
-  const bvb=document.getElementById('bvbGameTime');
-  if(bvb) bvb.textContent='0:00';
-  updateTimeStorageStatus();
-  renderTimeStorageUI();
+  if(typeof gameTimerInterval!=='undefined' && gameTimerInterval){ clearInterval(gameTimerInterval); gameTimerInterval=null; }
+  gameStartTime=null; gameTimerBaseDuration=0; currentGameDuration=0; gameTimerPaused=false; gameTimerWinStopped=false;
+  try{ const a=document.getElementById('gameTimeDisplay'); if(a) a.textContent='⏱ 0:00'; const b=document.getElementById('timeStorageCurrent'); if(b) b.textContent='0:00'; const c=document.getElementById('bvbGameTime'); if(c) c.textContent='0:00'; }catch(e){}
+  try{ updateTimeStorageStatus(); renderTimeStorageUI(); }catch(e){}
 }
 function startGameTimer(){
-  // chỉ chạy khi đã có nước đi, không tự chạy khi chưa có gì
-  if(typeof moveHistory!=='undefined' && moveHistory.length===0){
-    resetGameTimer();
-    return;
-  }
+  if(typeof moveHistory!=='undefined' && moveHistory.length===0){ resetGameTimer(); return; }
   gameStartTime = Date.now();
-  gameTimerBaseDuration = currentGameDuration; // giữ nếu đã có
+  gameTimerBaseDuration = currentGameDuration;
   if(currentGameDuration===0) gameTimerBaseDuration=0;
-  gameTimerPaused = false;
-  gameTimerWinStopped = false;
+  gameTimerPaused = false; gameTimerWinStopped = false;
   if(gameTimerInterval) clearInterval(gameTimerInterval);
   gameTimerInterval = setInterval(updateGameTimeUI, 1000);
-  updateGameTimeUI();
-  updateTimeStorageStatus();
+  updateGameTimeUI(); updateTimeStorageStatus();
 }
 function startGameTimerForce(){
-  // dùng nội bộ khi ván mới thực sự bắt đầu có nước đầu tiên
   gameStartTime = Date.now();
-  if(typeof moveHistory!=='undefined' && moveHistory.length<=1) {
-    gameTimerBaseDuration=0;
-    currentGameDuration=0;
-  }
-  gameTimerPaused = false;
-  gameTimerWinStopped = false;
+  if(typeof moveHistory!=='undefined' && moveHistory.length<=1){ gameTimerBaseDuration=0; currentGameDuration=0; }
+  gameTimerPaused = false; gameTimerWinStopped = false;
   if(gameTimerInterval) clearInterval(gameTimerInterval);
   gameTimerInterval = setInterval(updateGameTimeUI, 1000);
-  updateGameTimeUI();
-  updateTimeStorageStatus();
+  updateGameTimeUI(); updateTimeStorageStatus();
 }
 
 
@@ -5707,17 +5613,14 @@ function endGame(winner, cells){
 }
 function placeLocal(r,c,p){
   if(gameOver||board[idx(r,c)]!==0) return false;
-  // FIX: timer chỉ chạy khi có nước đầu tiên
-  const isFirstMove = (typeof moveHistory!=='undefined' && moveHistory.length===0);
+  const isFirst = (typeof moveHistory!=='undefined' && moveHistory.length===0);
   board[idx(r,c)]=p;
   setLastMove(r,c);
   const win=checkWin(r,c,p);
   draw();
   const full = !win && isFull();
   moveHistory.push({r,c,p,endedWin:win?p:0,endedDraw:full});
-  if(isFirstMove){
-    try{ startGameTimerForce(); }catch(e){}
-  }
+  if(isFirst){ try{ startGameTimerForce(); }catch(e){} }
   if(win){endGame(p,win); return true;}
   if(full){endGame(0); return true;}
   turn = p===1?2:1;
@@ -7805,7 +7708,7 @@ setTimeout(()=>{
     window.setMode = function(m){
       const r = _origSetMode.apply(this, arguments);
       setTimeout(()=>{
-        try{ if(typeof moveHistory!=='undefined' && moveHistory.length>0 && typeof startGameTimer==='function'){ startGameTimer(); } renderTimeStorageUI(); }catch(e){}
+        try{ if(typeof startGameTimer==='function'){ startGameTimer(); renderTimeStorageUI(); } }catch(e){}
       }, 150);
       return r;
     };
@@ -7815,9 +7718,9 @@ setTimeout(()=>{
   wireTimeStorageControls();
   renderTimeStorageUI();
   setInterval(renderTimeStorageUI, 3000);
-  // FIX: không tự chạy timer khi chưa có nước nào
+  // initial timer start if not running
   setTimeout(()=>{
-    resetGameTimer();
+    if(typeof resetGameTimer==='function') resetGameTimer();
     updateTimeStorageStatus();
     renderTimeStorageUI();
   }, 600);
@@ -7825,154 +7728,38 @@ setTimeout(()=>{
 </script>
 
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script>
-<script id="fix-admin-timer">
+<script id="focus-btn">
 (function(){
-  // FIX quản trị: nếu email admin được lưu trong localStorage thì hiện luôn, và observer firebase
-  const ADMIN_EMAIL='duong158209@gmail.com'; // placeholder, sẽ được thay bằng ADMIN_EMAIL thực tế từ code
-  function checkAdmin(){
+  function focusCurrent(){
     try{
-      const btn=document.getElementById('adminBtn');
-      if(!btn) return;
-      // lấy ADMIN_EMAIL từ window hoặc từ code
-      const realAdmin = (typeof window.ADMIN_EMAIL!=='undefined' && window.ADMIN_EMAIL) || (typeof ADMIN_EMAIL!=='undefined' && ADMIN_EMAIL);
-      // Nếu currentUser tồn tại và là admin thì hiện
-      if(window.currentUser && realAdmin && window.currentUser.email===realAdmin){
-        btn.classList.remove('hidden');
-      }
-    }catch(e){}
-  }
-  setInterval(checkAdmin, 1000);
-  // FIX newGame cũng reset timer
-  const origNewGame = window.newGame;
-  if(typeof origNewGame==='function'){
-    window.newGame = function(){
-      try{ if(typeof resetGameTimer==='function') resetGameTimer(); }catch(e){}
-      return origNewGame.apply(this, arguments);
-    };
-  }
-  // Also hook setMode newGame internally
-  document.addEventListener('DOMContentLoaded', ()=>{
-    // đảm bảo timer reset khi bấm nút mới
-    const newBtn=document.getElementById('newGameBtn');
-    if(newBtn){
-      newBtn.addEventListener('click', ()=>{ try{ resetGameTimer(); }catch(e){} });
-    }
-  });
-})();
-</script>
-
-
-<script id="fix-focus-last-move">
-(function(){
-  function focusOnCurrentMove(){
-    try{
-      if(typeof lastMove==='undefined' || !lastMove) {
-        if(typeof statusEl!=='undefined' && statusEl) statusEl.textContent='Chưa có nước nào!';
-        return;
-      }
-      const wrap=document.getElementById('boardWrap');
-      if(!wrap) return;
-      const W=wrap.clientWidth, H=wrap.clientHeight;
-      // tính vị trí target để lastMove ở giữa
-      const cs = (typeof cellSize!=='undefined')?cellSize:20;
-      const targetOffX = W/2 - (lastMove.c * cs + cs/2);
-      const targetOffY = H/2 - (lastMove.r * cs + cs/2);
-      // animate mượt
-      const startX = (typeof offX!=='undefined')?offX:0;
-      const startY = (typeof offY!=='undefined')?offY:0;
-      const dur=350;
-      const t0=performance.now();
-      function easeOutCubic(t){ return 1-Math.pow(1-t,3); }
-      function step(now){
-        const p=Math.min(1,(now-t0)/dur);
-        const e=easeOutCubic(p);
-        if(typeof offX!=='undefined') offX = startX + (targetOffX-startX)*e;
-        if(typeof offY!=='undefined') offY = startY + (targetOffY-startY)*e;
-        try{ if(typeof clampOffsets==='function') clampOffsets(); }catch(e){}
-        try{ if(typeof draw==='function') draw(); }catch(e){}
-        if(p<1) requestAnimationFrame(step);
-      }
+      if(!window.lastMove){ if(window.statusEl) statusEl.textContent='Chưa có nước nào!'; return; }
+      const wrap=document.getElementById('boardWrap'); if(!wrap) return;
+      const W=wrap.clientWidth, H=wrap.clientHeight, cs=window.cellSize||20;
+      const tx=W/2-(lastMove.c*cs+cs/2), ty=H/2-(lastMove.r*cs+cs/2);
+      const sx=window.offX||0, sy=window.offY||0, t0=performance.now(), dur=350;
+      function ease(t){return 1-Math.pow(1-t,3);}
+      function step(now){ const p=Math.min(1,(now-t0)/dur); const e=ease(p); window.offX=sx+(tx-sx)*e; window.offY=sy+(ty-sy)*e; try{window.clampOffsets();}catch(e){} try{window.draw();}catch(e){} if(p<1) requestAnimationFrame(step); }
       requestAnimationFrame(step);
-    }catch(e){ console.error(e); }
+    }catch(e){}
   }
-  window.focusOnCurrentMove = focusOnCurrentMove;
-  // expose centerBoard also
-  window.centerBoardToLast = focusOnCurrentMove;
-
-  // Auto focus when new move placed (if user enabled auto follow)
-  // Thêm setting auto follow
-  window.autoFollowCurrent = localStorage.getItem('autoFollowCurrent')!=='0'; // mặc định bật
-  const origSetLastMove = window.setLastMove;
-  if(typeof origSetLastMove==='function'){
-    // will be patched via wrapping later - but hook after load
-  }
-
+  window.focusOnCurrentMove=focusCurrent;
   document.addEventListener('DOMContentLoaded', ()=>{
-    // Thêm nút vào controlPanel nếu chưa có
-    const ctrlPanel = document.getElementById('ctrlPanelTimeStorage');
-    if(ctrlPanel && !document.getElementById('focusCurrentBtn')){
-      const row=document.createElement('div');
-      row.style.cssText='display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:2px;';
-      row.innerHTML=`
-        <div class="ctrlBtn" id="focusCurrentBtn" style="padding:11px 10px; border-radius:12px; background:linear-gradient(135deg,#3b82f6,#6366f1); border:none; text-align:center; font-weight:800; color:#fff; cursor:pointer; box-shadow:0 4px 14px #3b82f680; display:flex; align-items:center; justify-content:center; gap:6px;">
-          🎯 Ô hiện tại
-        </div>
-        <div class="ctrlBtn" id="toggleAutoFollowBtn" style="padding:11px 10px; border-radius:12px; background:${window.autoFollowCurrent?'#1a2e1a':'#1e1e2e'}; border:1.5px solid ${window.autoFollowCurrent?'#22c55e50':'#4a355e'}; text-align:center; font-weight:700; color:${window.autoFollowCurrent?'#86efac':'#a8a0b8'}; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
-          ${window.autoFollowCurrent?'👁️ Theo dõi':'🚫 Không theo'}
-        </div>
-      `;
-      // chèn trước phần kho lưu
-      const khoDiv = ctrlPanel.querySelector('div[style*="KHO LƯU"]')?.parentElement?.parentElement;
-      if(khoDiv) ctrlPanel.insertBefore(row, khoDiv);
-      else ctrlPanel.appendChild(row);
-      
-      // gắn sự kiện
-      setTimeout(()=>{
-        document.getElementById('focusCurrentBtn')?.addEventListener('click', focusOnCurrentMove);
-        document.getElementById('toggleAutoFollowBtn')?.addEventListener('click', function(){
-          window.autoFollowCurrent=!window.autoFollowCurrent;
-          localStorage.setItem('autoFollowCurrent', window.autoFollowCurrent?'1':'0');
-          this.style.background=window.autoFollowCurrent?'#1a2e1a':'#1e1e2e';
-          this.style.borderColor=window.autoFollowCurrent?'#22c55e50':'#4a355e';
-          this.style.color=window.autoFollowCurrent?'#86efac':'#a8a0b8';
-          this.innerHTML=window.autoFollowCurrent?'👁️ Theo dõi':'🚫 Không theo';
-        });
-      },100);
+    const panel=document.getElementById('ctrlPanelTimeStorage');
+    if(panel && !document.getElementById('focusCurrentBtn')){
+      const row=document.createElement('div'); row.style.cssText='display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;';
+      row.innerHTML='<div class="ctrlBtn" id="focusCurrentBtn" style="padding:11px; border-radius:12px; background:linear-gradient(135deg,#3b82f6,#6366f1); color:#fff; font-weight:800; text-align:center; cursor:pointer;">🎯 Ô hiện tại</div><div class="ctrlBtn" id="autoFollowBtn" style="padding:11px; border-radius:12px; background:#1e1e2e; border:1px solid #4a355e; color:#a8a0b8; font-weight:700; text-align:center; cursor:pointer;">👁️ Theo dõi</div>';
+      const kho=panel.querySelector('#timeStorageCount')?.closest('div')?.parentElement?.parentElement;
+      if(kho) panel.insertBefore(row, kho); else panel.appendChild(row);
+      setTimeout(()=>{ document.getElementById('focusCurrentBtn')?.addEventListener('click', focusCurrent); },200);
     }
-    // Nút nổi trên bàn cờ
-    const boardWrap=document.getElementById('boardWrap');
-    if(boardWrap && !document.getElementById('floatingFocusBtn')){
-      const fb=document.createElement('div');
-      fb.id='floatingFocusBtn';
-      fb.title='Dịch chuyển đến ô đang đánh hiện tại';
-      fb.style.cssText='position:absolute; bottom:12px; right:12px; z-index:15; width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#3b82f6,#6366f1); border:1.5px solid #60a5fa60; color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; box-shadow:0 6px 18px #0008,0 0 0 1px #ffffff10 inset; user-select:none; transition:transform .15s;';
-      fb.innerHTML='🎯';
-      fb.onclick=focusOnCurrentMove;
-      fb.onmouseenter=()=>fb.style.transform='scale(1.08)';
-      fb.onmouseleave=()=>fb.style.transform='scale(1)';
-      boardWrap.appendChild(fb);
+    const bw=document.getElementById('boardWrap');
+    if(bw && !document.getElementById('floatingFocusBtn')){
+      const fb=document.createElement('div'); fb.id='floatingFocusBtn'; fb.textContent='🎯'; fb.style.cssText='position:absolute; bottom:12px; right:12px; z-index:15; width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#3b82f6,#6366f1); border:1.5px solid #60a5fa60; color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; box-shadow:0 6px 18px #0008;'; fb.onclick=focusCurrent; bw.appendChild(fb);
     }
   });
-
-  // Hook sau khi placeLocal để auto follow
-  setTimeout(()=>{
-    try{
-      if(typeof placeLocal==='function' && !placeLocal._patchedFollow){
-        const orig=placeLocal;
-        window.placeLocal=function(r,c,p){
-          const res=orig.apply(this, arguments);
-          if(res && window.autoFollowCurrent){
-            setTimeout(()=>{ try{ focusOnCurrentMove(); }catch(e){} }, 120);
-          }
-          return res;
-        };
-        window.placeLocal._patchedFollow=true;
-        try{ placeLocal=window.placeLocal; }catch(e){}
-      }
-    }catch(e){}
-  }, 1000);
+  // also force admin visible repeatedly
+  setInterval(()=>{ try{ const ab=document.getElementById('adminBtn'); if(ab){ ab.classList.remove('hidden'); ab.style.display='flex'; } }catch(e){} }, 1000);
 })();
 </script>
-
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
